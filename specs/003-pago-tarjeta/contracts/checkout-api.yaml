@@ -1,0 +1,365 @@
+openapi: 3.0.3
+info:
+  title: API de Checkout y Pago Seguro con Tarjeta - TiendaOnline
+  description: Contratos de interfaz para la gestión del cobro seguro con tarjeta, 3D Secure, reservas de stock y confirmación condicionada.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Servidor principal de la tienda
+
+paths:
+  /pagos/iniciar:
+    post:
+      summary: Iniciar sesión de pago y reserva temporal de stock
+      description: Bloquea las unidades requeridas en el inventario durante un máximo de 10 minutos para la sesión de pago activa.
+      operationId: iniciarPago
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IniciarPagoRequest'
+      responses:
+        '200':
+          description: Sesión de pago iniciada y stock bloqueado con éxito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IniciarPagoResponse'
+        '400':
+          description: Datos de solicitud inválidos o cesta vacía.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflicto de stock - Uno o más artículos no tienen unidades suficientes disponibles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pagos/procesar:
+    post:
+      summary: Procesar cobro con tarjeta
+      description: Envía los datos de pago. Si el total es <= 100 €, procesa la autorización directa; si es > 100 €, devuelve un desafío 3D Secure.
+      operationId: procesarPago
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcesarPagoRequest'
+      responses:
+        '200':
+          description: Operación procesada. Puede estar autorizada o requerir acción 3D Secure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcesarPagoResponse'
+        '400':
+          description: Datos de tarjeta o contacto inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: La reserva temporal de 10 minutos ha expirado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pagos/verificar-3ds:
+    post:
+      summary: Validar desafío de autenticación bancaria 3D Secure
+      description: Verifica el código OTP bancario introducido por el comprador para autorizar compras superiores a 100 €.
+      operationId: verificar3DS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Verificar3DSRequest'
+      responses:
+        '200':
+          description: Desafío validado y pago formalizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcesarPagoResponse'
+        '400':
+          description: Código OTP bancario inválido o desafío fallido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pagos/webhook:
+    post:
+      summary: Webhook bancario server-to-server para notificación asíncrona
+      description: Endpoint seguro invocado por la pasarela bancaria para notificar el cobro, garantizando idempotencia.
+      operationId: webhookBancario
+      parameters:
+        - name: X-Signature
+          in: header
+          required: true
+          description: Firma criptográfica del mensaje bancario.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookNotification'
+      responses:
+        '200':
+          description: Notificación recibida y procesada correctamente (o ignorada si ya existía el pedido).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recibido:
+                    type: boolean
+                    example: true
+        '401':
+          description: Firma de notificación bancaria inválida.
+
+  /pedidos/{codigoReferencia}:
+    get:
+      summary: Consultar comprobante de pedido pagado
+      description: Recupera la información del pedido confirmado para mostrar en la pantalla de recibo.
+      operationId: obtenerPedido
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          description: Código de referencia del pedido (ej. PED-20261014-A1B2).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pedido localizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoResponse'
+        '404':
+          description: Pedido no encontrado.
+
+components:
+  schemas:
+    ItemCesta:
+      type: object
+      required:
+        - productoId
+        - varianteId
+        - cantidad
+        - precioUnitario
+        - titulo
+      properties:
+        productoId:
+          type: string
+        varianteId:
+          type: string
+        cantidad:
+          type: integer
+          minimum: 1
+        precioUnitario:
+          type: number
+          format: float
+        titulo:
+          type: string
+
+    IniciarPagoRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemCesta'
+
+    IniciarPagoResponse:
+      type: object
+      required:
+        - sesionPagoId
+        - total
+        - moneda
+        - expiresAt
+        - minutosRestantes
+      properties:
+        sesionPagoId:
+          type: string
+          format: uuid
+        total:
+          type: number
+          format: float
+          example: 125.50
+        moneda:
+          type: string
+          example: "EUR"
+        expiresAt:
+          type: string
+          format: date-time
+        minutosRestantes:
+          type: integer
+          example: 10
+
+    ProcesarPagoRequest:
+      type: object
+      required:
+        - sesionPagoId
+        - clienteNombre
+        - clienteEmail
+        - tokenTarjeta
+      properties:
+        sesionPagoId:
+          type: string
+          format: uuid
+        clienteNombre:
+          type: string
+          example: "María García Ruiz"
+        clienteEmail:
+          type: string
+          format: email
+          example: "maria.garcia@example.es"
+        cuentaId:
+          type: string
+          nullable: true
+        tokenTarjeta:
+          type: string
+          description: Token de tarjeta emitido por el componente seguro del navegador.
+          example: "tok_visa_4242_success"
+
+    ProcesarPagoResponse:
+      type: object
+      required:
+        - estado
+        - transaccionId
+      properties:
+        estado:
+          type: string
+          enum: [autorizado, requiere_3ds, denegado]
+          example: "autorizado"
+        transaccionId:
+          type: string
+          format: uuid
+        pedido:
+          $ref: '#/components/schemas/PedidoResponse'
+        desafio3ds:
+          type: object
+          properties:
+            mensaje:
+              type: string
+              example: "Introduce el código SMS de seguridad enviado a tu móvil para autorizar compras superiores a 100 €"
+            transaccionId:
+              type: string
+
+    Verificar3DSRequest:
+      type: object
+      required:
+        - transaccionId
+        - codigoOtp
+      properties:
+        transaccionId:
+          type: string
+          format: uuid
+        codigoOtp:
+          type: string
+          example: "1234"
+
+    WebhookNotification:
+      type: object
+      required:
+        - transaccionId
+        - pasarelaRef
+        - importe
+        - estado
+        - sesionPagoId
+      properties:
+        transaccionId:
+          type: string
+        pasarelaRef:
+          type: string
+        importe:
+          type: number
+        estado:
+          type: string
+          enum: [autorizado, denegado]
+        sesionPagoId:
+          type: string
+        clienteNombre:
+          type: string
+        clienteEmail:
+          type: string
+
+    PedidoResponse:
+      type: object
+      required:
+        - id
+        - codigoReferencia
+        - clienteNombre
+        - clienteEmail
+        - total
+        - estado
+        - fechaCreacion
+        - lineas
+        - reciboTarjeta
+      properties:
+        id:
+          type: string
+        codigoReferencia:
+          type: string
+          example: "PED-20261014-98F1"
+        clienteNombre:
+          type: string
+        clienteEmail:
+          type: string
+        total:
+          type: number
+          example: 125.50
+        estado:
+          type: string
+          example: "pagado"
+        fechaCreacion:
+          type: string
+          format: date-time
+        reciboTarjeta:
+          type: object
+          properties:
+            marca:
+              type: string
+              example: "Visa"
+            ultimosCuatro:
+              type: string
+              example: "4242"
+        lineas:
+          type: array
+          items:
+            type: object
+            properties:
+              titulo:
+                type: string
+              cantidad:
+                type: integer
+              precioUnitario:
+                type: number
+              subtotal:
+                type: number
+
+    ErrorResponse:
+      type: object
+      required:
+        - codigo
+        - mensaje
+      properties:
+        codigo:
+          type: string
+          example: "STOCK_INSUFICIENTE"
+        mensaje:
+          type: string
+          example: "El artículo seleccionado no dispone de existencias suficientes."
