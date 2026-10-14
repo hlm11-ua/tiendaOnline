@@ -28,24 +28,44 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
 
+// Rutas de gestión logística y seguimiento de envíos (Feature 007)
+app.get('/logistica', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
+});
+
+app.get('/logistica.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
+});
+
+app.get('/seguimiento', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
+});
+
+app.get('/seguimiento.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
+});
+
 // Endpoint de salud del sistema
 app.get('/api/health', (req, res) => {
   res.json({
     estado: 'ok',
-    servicio: 'TiendaOnline - Pasarela de Pago',
+    servicio: 'TiendaOnline - Pasarela de Pago y Logística',
     version: '1.0.0',
     moneda: CONSTANTS.CURRENCY,
     idioma: CONSTANTS.LOCALE
   });
 });
 
-// Los routers de pagos y pedidos se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter) {
+// Los routers de pagos, pedidos y logística se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter) {
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
   }
   if (orderRouter) {
     app.use('/api/pedidos', orderRouter);
+  }
+  if (logisticsRouter) {
+    app.use('/api/logistica', logisticsRouter);
   }
   // Middleware de error al final de la cadena
   app.use(errorHandler);
@@ -55,9 +75,15 @@ export function registerRoutes(paymentRouter, orderRouter) {
 try {
   const { paymentRoutes } = await import('./routes/payment.routes.js');
   const { orderRoutes } = await import('./routes/order.routes.js');
-  registerRoutes(paymentRoutes, orderRoutes);
+  let logisticsRoutes = null;
+  try {
+    const logisticsModule = await import('./routes/logistics.routes.js');
+    logisticsRoutes = logisticsModule.logisticsRoutes;
+  } catch (errLogistics) {
+    // Rutas de logística aún no inicializadas
+  }
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes);
 } catch (e) {
-  // Las rutas se registrarán formalmente en T019
   app.use(errorHandler);
 }
 

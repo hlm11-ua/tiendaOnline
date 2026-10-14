@@ -138,7 +138,12 @@ class MemoryStore {
   // === MÉTODOS DE PEDIDOS ===
 
   saveOrder(order) {
-    this.orders.set(order.id, { ...order });
+    const orderData = {
+      ...order,
+      envio: order.envio || null,
+      avisosEnvio: Array.isArray(order.avisosEnvio) ? [...order.avisosEnvio] : []
+    };
+    this.orders.set(order.id, orderData);
     this.ordersByCode.set(order.codigoReferencia, order.id);
     return this.orders.get(order.id);
   }
@@ -164,6 +169,77 @@ class MemoryStore {
 
   getAllOrders() {
     return Array.from(this.orders.values());
+  }
+
+  // === MÉTODOS LOGÍSTICOS Y EXPEDICIONES (007) ===
+
+  /**
+   * Obtiene la lista de pedidos con filtrado opcional por estado y orden cronológico
+   * @param {string} [estado='todos']
+   */
+  getOrdersByStatus(estado = 'todos') {
+    const all = Array.from(this.orders.values());
+    const filtered = estado && estado !== 'todos'
+      ? all.filter(o => o.estado === estado)
+      : all;
+
+    // Ordenar de más reciente a más antiguo por fechaCreacion
+    return filtered.sort((a, b) => new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0));
+  }
+
+  /**
+   * Actualiza el estado de un pedido por su código de referencia
+   * @param {string} codigoReferencia
+   * @param {string} nuevoEstado
+   */
+  updateOrderStatus(codigoReferencia, nuevoEstado) {
+    const order = this.getOrderByCode(codigoReferencia);
+    if (!order) return null;
+
+    order.estado = nuevoEstado;
+    order.updatedAt = new Date().toISOString();
+    return order;
+  }
+
+  /**
+   * Asigna o actualiza los datos de envío de un pedido
+   * @param {string} codigoReferencia
+   * @param {object} datosExpedicion
+   */
+  updateOrderShipment(codigoReferencia, datosExpedicion) {
+    const order = this.getOrderByCode(codigoReferencia);
+    if (!order) return null;
+
+    order.envio = datosExpedicion;
+    order.updatedAt = new Date().toISOString();
+    return order;
+  }
+
+  /**
+   * Registra una notificación de envío emitida para el pedido
+   * @param {string} codigoReferencia
+   * @param {object} aviso
+   */
+  addOrderNotification(codigoReferencia, aviso) {
+    const order = this.getOrderByCode(codigoReferencia);
+    if (!order) return null;
+
+    if (!Array.isArray(order.avisosEnvio)) {
+      order.avisosEnvio = [];
+    }
+    order.avisosEnvio.push(aviso);
+    order.updatedAt = new Date().toISOString();
+    return aviso;
+  }
+
+  /**
+   * Obtiene todas las notificaciones emitidas de un pedido
+   * @param {string} codigoReferencia
+   */
+  getOrderNotifications(codigoReferencia) {
+    const order = this.getOrderByCode(codigoReferencia);
+    if (!order) return [];
+    return order.avisosEnvio || [];
   }
 }
 
