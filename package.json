@@ -1,0 +1,23 @@
+{
+  "name": "tienda-online",
+  "version": "1.0.0",
+  "description": "Comercio electrónico de artesanías - Tienda Online",
+  "main": "backend/src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "ecommerce",
+    "artesania",
+    "pago-seguro",
+    "3d-secure"
+  ],
+  "author": "Desarrollador 3",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

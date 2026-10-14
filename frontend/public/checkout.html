@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pasarela de Pago Seguro con Tarjeta | TiendaOnline</title>
+  <meta name="description" content="Tramita tu compra online de forma rápida y segura con tarjeta bancaria. Confirmación condicionada, reserva de existencias y autenticación reforzada 3D Secure.">
+
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Estilos de la pasarela de pago -->
+  <link rel="stylesheet" href="/src/styles/checkout.css">
+</head>
+<body>
+  <!-- Encabezado del sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="/" class="brand-wrapper" id="link-home">
+        <span class="brand-icon" aria-hidden="true">🛍️</span>
+        <span class="brand-title">TiendaOnline</span>
+      </a>
+      <div class="header-badge" id="badge-seguridad">
+        <span aria-hidden="true">🔒</span>
+        <span>Pasarela Bancaria Segura (PSD2 / TLS)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal de Checkout -->
+  <main class="main-content" role="main">
+    <h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">Pasarela de Pago Seguro con Tarjeta Bancaria</h1>
+
+    <!-- Temporizador regresivo de reserva de stock -->
+    <div id="reservation-timer-container"></div>
+
+    <!-- Vista de Checkout (Formulario + Cesta) -->
+    <div class="checkout-grid-layout" id="checkout-view">
+      <!-- Columna Izquierda: Formulario de pago -->
+      <div id="checkout-form-container"></div>
+
+      <!-- Columna Derecha: Resumen de compra y selector de prueba -->
+      <aside class="summary-card" id="order-summary-sidebar" aria-labelledby="summary-title">
+        <div class="card-header">
+          <h2 id="summary-title" class="card-title">Resumen de la Cesta</h2>
+          <p class="card-subtitle">Artículos reservados para esta compra</p>
+        </div>
+
+        <!-- Selector de cestas para verificación rápida de escenarios -->
+        <div class="cart-preset-selector">
+          <span class="preset-title">Seleccionar Cesta de Prueba:</span>
+          <div class="preset-options">
+            <label class="preset-option-label">
+              <input type="radio" name="cart-preset" value="direct" id="preset-cesta-direct" checked>
+              <span><strong>Cesta 1 (45,00 €)</strong> — Jarrón cerámica (&le; 100 €)</span>
+            </label>
+            <label class="preset-option-label">
+              <input type="radio" name="cart-preset" value="3ds" id="preset-cesta-3ds">
+              <span><strong>Cesta 2 (140,00 €)</strong> — Manta artesanal (&gt; 100 €)</span>
+            </label>
+            <label class="preset-option-label">
+              <input type="radio" name="cart-preset" value="orfebreria" id="preset-cesta-orfebreria">
+              <span><strong>Cesta 3 (220,00 €)</strong> — Pieza de orfebrería (Stock único: 1 ud)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="cart-items-list" id="cart-items-container">
+          <!-- Se inyecta dinámicamente con JavaScript -->
+        </div>
+
+        <div class="summary-totals">
+          <div class="total-line">
+            <span>Subtotal de artículos:</span>
+            <span class="font-mono" id="label-subtotal">45,00 €</span>
+          </div>
+          <div class="total-line">
+            <span>Gastos de envío:</span>
+            <span class="font-bold text-success" style="color: #10b981;">Gratis</span>
+          </div>
+          <div class="total-line total-final">
+            <span>Total a pagar:</span>
+            <span class="font-mono text-primary" id="label-total-sidebar" style="color: #818cf8;">45,00 €</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Vista de Justificante / Confirmación de Pedido (inicialmente oculta) -->
+    <div id="receipt-container" class="hidden"></div>
+
+    <!-- Contenedor del Modal 3D Secure -->
+    <div id="modal-3ds-container"></div>
+  </main>
+
+  <!-- Orquestación frontend mediante módulos ES6 -->
+  <script type="module">
+    import { PaymentApiService } from '/src/services/payment-api.service.js';
+    import { ReservationTimer } from '/src/components/reservation-timer.js';
+    import { Payment3DSModal } from '/src/components/payment-3ds-modal.js';
+    import { OrderReceipt } from '/src/components/order-receipt.js';
+    import { CheckoutForm } from '/src/components/checkout-form.js';
+
+    // Cestas predefinidas para validar los escenarios del Quickstart
+    const PRESETS = {
+      direct: [
+        { varianteId: 'var-001-azul', cantidad: 1, nombre: 'Jarrón de Cerámica Esmaltada Azul', precioUnitario: 45.00 }
+      ],
+      '3ds': [
+        { varianteId: 'var-002-natural', cantidad: 1, nombre: 'Manta de Lana Merina Tejida a Mano', precioUnitario: 140.00 }
+      ],
+      orfebreria: [
+        { varianteId: 'var-004-unico', cantidad: 1, nombre: 'Pieza Única de Orfebrería en Cobre', precioUnitario: 220.00 }
+      ]
+    };
+
+    let activeItems = PRESETS.direct;
+    let currentSession = null;
+
+    // 1. Instanciar componentes
+    const timer = new ReservationTimer({
+      containerId: 'reservation-timer-container',
+      onExpired: () => {
+        checkoutForm.showError('La sesión de reserva de stock ha expirado (10 minutos superados). Por favor, revisa tu cesta para continuar.');
+        checkoutForm.setSubmitting(true); // Bloquear botón
+      }
+    });
+
+    const modal3ds = new Payment3DSModal({
+      containerId: 'modal-3ds-container',
+      onConfirm: async ({ transaccionId, codigoOtp }) => {
+        try {
+          const resultado = await PaymentApiService.verificar3DS({ transaccionId, codigoOtp });
+          modal3ds.close();
+          finalizarConExito(resultado.pedido);
+        } catch (err) {
+          modal3ds.showError(err.message || 'Código 3D Secure incorrecto o caducado.');
+          // Si el 3DS falló definitivamente, informar en el formulario
+          if (err.codigo === '3DS_FALLIDO') {
+            setTimeout(() => {
+              modal3ds.close();
+              checkoutForm.showError('Autenticación bancaria 3D Secure denegada. La reserva de inventario ha sido liberada.');
+              checkoutForm.setSubmitting(false);
+            }, 1800);
+          }
+        }
+      },
+      onCancel: () => {
+        checkoutForm.setSubmitting(false);
+        checkoutForm.showError('Verificación bancaria cancelada por el comprador.');
+      }
+    });
+
+    const receipt = new OrderReceipt({
+      containerId: 'receipt-container',
+      onNewOrder: () => {
+        // Reiniciar flujo con una nueva sesión
+        document.getElementById('receipt-container').classList.add('hidden');
+        document.getElementById('checkout-view').classList.remove('hidden');
+        iniciarSesionCheckout(activeItems);
+      }
+    });
+
+    const checkoutForm = new CheckoutForm({
+      containerId: 'checkout-form-container',
+      onSubmit: async (datos) => {
+        try {
+          const res = await PaymentApiService.procesarPago({
+            sesionPagoId: currentSession.sesionPagoId,
+            clienteNombre: datos.clienteNombre,
+            clienteEmail: datos.clienteEmail,
+            tokenTarjeta: datos.tokenTarjeta
+          });
+
+          if (res.estado === 'requiere_3ds') {
+            modal3ds.open({
+              transaccionId: res.transaccionId,
+              desafio3ds: res.desafio3ds
+            });
+          } else if (res.estado === 'autorizado') {
+            finalizarConExito(res.pedido);
+          }
+        } catch (err) {
+          checkoutForm.showError(err.message || 'Error al procesar el pago.');
+        }
+      }
+    });
+
+    // 2. Transición a pantalla de justificante al confirmar compra
+    function finalizarConExito(pedido) {
+      timer.stop();
+      document.getElementById('reservation-timer-container').innerHTML = '';
+      document.getElementById('checkout-view').classList.add('hidden');
+      document.getElementById('receipt-container').classList.remove('hidden');
+      receipt.render(pedido);
+    }
+
+    // 3. Renderizar artículos en la barra lateral
+    function renderSidebarItems(items, total) {
+      const container = document.getElementById('cart-items-container');
+      const subtotalLabel = document.getElementById('label-subtotal');
+      const totalLabel = document.getElementById('label-total-sidebar');
+
+      const totalFormateado = `${Number(total).toFixed(2).replace('.', ',')} €`;
+      subtotalLabel.textContent = totalFormateado;
+      totalLabel.textContent = totalFormateado;
+
+      container.innerHTML = items.map(item => `
+        <div class="cart-item-row">
+          <div class="item-info">
+            <div class="item-title">${item.nombre}</div>
+            <div class="item-meta">Cant: ${item.cantidad} × ${Number(item.precioUnitario).toFixed(2).replace('.', ',')} €</div>
+          </div>
+          <div class="item-subtotal font-mono">${Number(item.precioUnitario * item.cantidad).toFixed(2).replace('.', ',')} €</div>
+        </div>
+      `).join('');
+    }
+
+    // 4. Iniciar sesión de checkout y bloqueo de 10 min
+    async function iniciarSesionCheckout(items) {
+      try {
+        checkoutForm.clearError();
+        const payload = items.map(it => ({ varianteId: it.varianteId, cantidad: it.cantidad }));
+        const sesion = await PaymentApiService.iniciarPago(payload);
+        currentSession = sesion;
+
+        // Iniciar temporizador regresivo de 10 minutos
+        timer.start(sesion.expiresAt);
+
+        // Actualizar formulario y barra lateral
+        checkoutForm.setSessionData({
+          sesionPagoId: sesion.sesionPagoId,
+          items,
+          total: sesion.total
+        });
+        renderSidebarItems(items, sesion.total);
+      } catch (err) {
+        checkoutForm.showError(`No se pudo iniciar la reserva de compra: ${err.message}`);
+      }
+    }
+
+    // 5. Manejar selector de cestas de prueba
+    document.querySelectorAll('input[name="cart-preset"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        activeItems = PRESETS[e.target.value] || PRESETS.direct;
+        iniciarSesionCheckout(activeItems);
+      });
+    });
+
+    // Iniciar con la cesta por defecto
+    iniciarSesionCheckout(activeItems);
+  </script>
+</body>
+</html>
