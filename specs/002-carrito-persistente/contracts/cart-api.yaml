@@ -1,0 +1,389 @@
+openapi: 3.0.3
+info:
+  title: API de Carrito de Compras Persistente con Control de Stock
+  description: Contratos de interfaz para la gestión del carrito, validación en tiempo real de stock y fusión de cestas.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de desarrollo local
+
+paths:
+  /carrito:
+    get:
+      summary: Obtener el carrito actual del usuario autenticado
+      description: Retorna la cesta guardada en la cuenta del usuario o un carrito vacío si no hay artículos.
+      parameters:
+        - in: header
+          name: x-usuario-id
+          schema:
+            type: string
+          required: false
+          description: Identificador del usuario (simulación de sesión para pruebas)
+      responses:
+        '200':
+          description: Carrito obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+
+    delete:
+      summary: Vaciar el carrito completo
+      description: Elimina todas las líneas de la cesta activa.
+      parameters:
+        - in: header
+          name: x-usuario-id
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Carrito vaciado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+
+  /carrito/items:
+    post:
+      summary: Añadir un producto o variante al carrito
+      description: Añade una cantidad deseada a la cesta validando que no exceda las existencias en stock.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - varianteId
+                - cantidad
+              properties:
+                varianteId:
+                  type: string
+                  example: "var-001-azul"
+                cantidad:
+                  type: integer
+                  minimum: 1
+                  example: 2
+      responses:
+        '200':
+          description: Artículo añadido con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+        '400':
+          description: Cantidad no válida o menor que 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '409':
+          description: La cantidad solicitada supera el stock físico real
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockErrorRespuesta'
+
+  /carrito/items/{varianteId}:
+    put:
+      summary: Modificar la cantidad de una línea del carrito
+      description: Actualiza las unidades deseadas. Si la cantidad es 0, elimina el artículo.
+      parameters:
+        - in: path
+          name: varianteId
+          required: true
+          schema:
+            type: string
+          example: "var-001-azul"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cantidad
+              properties:
+                cantidad:
+                  type: integer
+                  minimum: 0
+                  example: 3
+      responses:
+        '200':
+          description: Cantidad actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+        '400':
+          description: Entrada no válida (decimal, negativo o no entero)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+        '409':
+          description: Supera el stock disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockErrorRespuesta'
+
+    delete:
+      summary: Eliminar una línea del carrito
+      parameters:
+        - in: path
+          name: varianteId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Línea eliminada con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Carrito'
+
+  /carrito/validar-stock:
+    post:
+      summary: Verificar stock y sincronizar precios vigentes de la cesta en tiempo real
+      description: Llamado síncronamente al abrir la cesta, alterar cantidades o pulsar "Tramitar pedido".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - varianteId
+                      - cantidad
+                    properties:
+                      varianteId:
+                        type: string
+                      cantidad:
+                        type: integer
+                      precioUnitario:
+                        type: number
+      responses:
+        '200':
+          description: Resultado de la validación de inventario y precios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valido:
+                    type: boolean
+                    description: True si todas las líneas tienen stock y están disponibles
+                  bloqueaTramitacion:
+                    type: boolean
+                    description: True si hay artículos agotados o despublicados
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LineaValidada'
+                  avisos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvisoReajuste'
+
+  /carrito/fusionar:
+    post:
+      summary: Fusionar carrito local anónimo con el carrito de la cuenta al iniciar sesión
+      description: Combina artículos distintos y suma cantidades coincidentes sin exceder el stock disponible.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - usuarioId
+                - itemsLocales
+              properties:
+                usuarioId:
+                  type: string
+                  example: "usr-12345"
+                itemsLocales:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/LineaInput'
+      responses:
+        '200':
+          description: Fusión completada con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  carrito:
+                    $ref: '#/components/schemas/Carrito'
+                  avisosReajuste:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvisoReajuste'
+
+components:
+  schemas:
+    Carrito:
+      type: object
+      required:
+        - id
+        - items
+        - subtotal
+        - gastosEnvioEstimados
+        - total
+        - moneda
+        - estado
+        - fechaActualizacion
+      properties:
+        id:
+          type: string
+        usuarioId:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineaCarrito'
+        subtotal:
+          type: number
+          example: 90.00
+        gastosEnvioEstimados:
+          type: number
+          example: 0.00
+        total:
+          type: number
+          example: 90.00
+        moneda:
+          type: string
+          example: "EUR"
+        estado:
+          type: string
+          enum: ["vacio", "listo", "bloqueado"]
+          example: "listo"
+        fechaActualizacion:
+          type: string
+          format: date-time
+
+    LineaCarrito:
+      type: object
+      required:
+        - varianteId
+        - productoId
+        - titulo
+        - precioUnitario
+        - cantidad
+        - stockDisponible
+        - subtotalLinea
+        - estado
+      properties:
+        varianteId:
+          type: string
+          example: "var-001-azul"
+        productoId:
+          type: string
+          example: "art-001"
+        titulo:
+          type: string
+          example: "Jarrón de Cerámica Esmaltada Azul"
+        precioUnitario:
+          type: number
+          example: 45.00
+        cantidad:
+          type: integer
+          example: 2
+        stockDisponible:
+          type: integer
+          example: 5
+        subtotalLinea:
+          type: number
+          example: 90.00
+        estado:
+          type: string
+          enum: ["disponible", "reajustado", "agotado", "no_disponible"]
+          example: "disponible"
+
+    LineaInput:
+      type: object
+      required:
+        - varianteId
+        - cantidad
+      properties:
+        varianteId:
+          type: string
+        cantidad:
+          type: integer
+        precioUnitario:
+          type: number
+
+    LineaValidada:
+      type: object
+      properties:
+        varianteId:
+          type: string
+        titulo:
+          type: string
+        cantidadDeseada:
+          type: integer
+        cantidadAjustada:
+          type: integer
+        stockDisponible:
+          type: integer
+        precioVigente:
+          type: number
+        estado:
+          type: string
+          enum: ["disponible", "reajustado", "agotado", "no_disponible"]
+
+    AvisoReajuste:
+      type: object
+      properties:
+        varianteId:
+          type: string
+        titulo:
+          type: string
+        tipo:
+          type: string
+          enum: ["stock_reajustado", "stock_agotado", "precio_actualizado", "producto_no_disponible"]
+        mensaje:
+          type: string
+          example: "El artículo 'Jarrón Azul' ha sido reajustado a 1 unidad por compras recientes."
+        cantidadPrevia:
+          type: integer
+        cantidadNueva:
+          type: integer
+        precioPrevio:
+          type: number
+        precioNuevo:
+          type: number
+
+    ErrorRespuesta:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "La cantidad debe ser un número entero mayor o igual a 0."
+
+    StockErrorRespuesta:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Existencias insuficientes para la cantidad solicitada."
+        varianteId:
+          type: string
+        stockDisponible:
+          type: integer
+          example: 2
+        cantidadSolicitada:
+          type: integer
+          example: 3
