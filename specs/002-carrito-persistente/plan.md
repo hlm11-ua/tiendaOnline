@@ -10,7 +10,7 @@
 
 Implementar un sistema de carrito de compras resiliente y transparente para la tienda de artesanías que garantice:
 1. **Persistencia dual**: Uso de `window.localStorage` en el navegador para visitantes anónimos y almacenamiento en memoria del servidor (`MemoryStore`) para usuarios autenticados.
-2. **Control estricto de inventario**: Validación síncrona en tiempo real frente a las existencias físicas en stock en tres momentos determinantes: apertura de la cesta, modificación de cantidades y pulsación de "Tramitar pedido".
+2. **Control estricto de inventario**: Validación síncrona en el backend al consultar y modificar el carrito, utilizando la disponibilidad de stock calculada por el servicio de inventario compartido. Al iniciar el checkout, la funcionalidad 003-pago-tarjeta revalidará la disponibilidad y gestionará las reservas temporales.
 3. **Fusión determinista con advertencias**: Al iniciar sesión, combinar los carritos sumando cantidades coincidentes hasta el límite de stock disponible y notificando al comprador en caso de recorte.
 4. **Respeto a la Constitución**: Moneda oficial euro (`€`) con formato `es-ES`, estimación de envío gratuito fija en `0,00 €` en v1, tratamiento de cesta vacía (*Zero-state*) y ausencia total de complejidad anticipada o reservas artificiales con temporizador en la cesta.
 
@@ -18,7 +18,7 @@ Implementar un sistema de carrito de compras resiliente y transparente para la t
 
 ## Technical Context
 
-**Language/Version**: JavaScript (Node.js >= 18 con ES Modules nativos en backend y ES2022 en navegador).
+**Language/Version**: JavaScript (Node.js con ES Modules nativos en backend y ES2022 en navegador), utilizando la versión de Node.js definida en la configuración común del repositorio.
 
 **Primary Dependencies**:
 - Backend: `express` (^4.21.2) sin dependencias adicionales pesadas.
@@ -26,7 +26,7 @@ Implementar un sistema de carrito de compras resiliente y transparente para la t
 
 **Storage**:
 - Visitantes anónimos: `window.localStorage` (clave `tienda_online_cart_v1`).
-- Usuarios registrados / Backend: `MemoryStore` en `backend/src/models/store.js` (`store.carts`).
+- Usuarios registrados / Backend: `MemoryStore` en `backend/src/models/store.js` (`store.carts`), reutilizando el almacenamiento y el servicio de inventario compartidos con checkout. La persistencia de carritos tras reiniciar el servidor dependerá del mecanismo de almacenamiento común adoptado por el proyecto.
 
 **Testing**: Test runner nativo de Node.js (`node:test` y `node:assert`), ejecutado mediante `npm test`.
 
@@ -40,7 +40,7 @@ Implementar un sistema de carrito de compras resiliente y transparente para la t
 
 **Constraints**:
 - Persistencia del 100% al reabrir el navegador en el mismo perfil de usuario (SC-002).
-- Prohibición estricta de reservas temporales con cuenta atrás en la cesta (el stock solo se descuenta en la confirmación del pedido).
+- Prohibición estricta de reservas temporales desde el carrito. La funcionalidad 003-pago-tarjeta gestiona las reservas de stock durante el checkout, y el descuento definitivo de existencias se realiza conforme al flujo de confirmación del pedido.
 - Formato monetario estricto en euros con convención española `es-ES` (ej. `45,00 €`).
 
 **Scale/Scope**: Catálogo artesanal de piezas únicas o series limitadas (< 100 variantes activas), volumen ágil de compra sin concurrencia masiva.
@@ -103,7 +103,7 @@ backend/
 frontend/
 ├── public/
 │   ├── cart.html                   # Vista dedicada del carrito y cesta de compras
-│   └── checkout.html               # [Existente] Pasarela de pago integrada
+│   └── checkout.html               # [Existente] Pasarela de pago integrada. Se reutiliza e integra con 003-pago-tarjeta, sin duplicar su implementación.
 └── src/
     ├── components/
     │   └── cart-view.js            # Renderizado reactivo de la tabla de artículos y avisos
@@ -125,6 +125,7 @@ tests/
 ```
 
 **Structure Decision**: Se mantiene la arquitectura modular de dos capas ya presente en el repositorio (`backend/` y `frontend/`), reutilizando la infraestructura existente de Express en `server.js` y el catálogo en `store.js`, integrando limpiamente el router `/api/carrito`.
+Los archivos compartidos de configuración, servidor, inventario y pedidos se reutilizarán sin duplicar su implementación. Las modificaciones deberán mantener la compatibilidad con 003-pago-tarjeta, que es responsable del flujo de checkout, las reservas temporales y el procesamiento del pago.
 
 ---
 
