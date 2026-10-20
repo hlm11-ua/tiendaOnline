@@ -67,6 +67,40 @@ export const CONSTANTS = {
   // Firma fija de prueba para Webhook bancario en local (FR-007, SC-004)
   WEBHOOK_TEST_SIGNATURE: 'firma_segura_banco_prueba',
 
+  // Configuración de Catálogo, Alertas e Imágenes (Feature 006)
+  CATALOG: {
+    DEFAULT_ALERT_THRESHOLD: 3,
+    DEFAULT_VARIANT_NAME: 'Única',
+    CATEGORY_STATUS: {
+      ACTIVE: 'activa',
+      ARCHIVED: 'archivada'
+    },
+    PRODUCT_STATUS: {
+      ACTIVE: 'activo',
+      ARCHIVED: 'archivado'
+    },
+    VARIANT_STATUS: {
+      ACTIVE: 'activa',
+      ARCHIVED: 'archivada'
+    },
+    STOCK_ALERT_STATUS: {
+      NORMAL: 'normal',
+      LOW: 'stock_bajo',
+      OUT_OF_STOCK: 'agotado'
+    },
+    IMAGE_LIMITS: {
+      MAX_COUNT: 5,
+      MAX_SIZE_BYTES: 5 * 1024 * 1024, // 5 MB
+      ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp']
+    }
+  },
+
+  // Roles de usuario (FR-001)
+  ROLES: {
+    ADMIN: 'admin',
+    CUSTOMER: 'cliente'
+  },
+
   // Puerto por defecto
   PORT: process.env.PORT || 3000
 };

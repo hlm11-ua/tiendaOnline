@@ -45,19 +45,32 @@ app.get('/seguimiento.html', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
 });
 
+// Rutas del panel de administración del catálogo (Feature 006)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'admin', 'catalogo.html'));
+});
+
+app.get('/admin/catalogo', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'admin', 'catalogo.html'));
+});
+
+app.get('/admin/catalogo.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'admin', 'catalogo.html'));
+});
+
 // Endpoint de salud del sistema
 app.get('/api/health', (req, res) => {
   res.json({
     estado: 'ok',
-    servicio: 'TiendaOnline - Pasarela de Pago y Logística',
+    servicio: 'TiendaOnline - Pasarela de Pago, Logística y Catálogo',
     version: '1.0.0',
     moneda: CONSTANTS.CURRENCY,
     idioma: CONSTANTS.LOCALE
   });
 });
 
-// Los routers de pagos, pedidos y logística se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter) {
+// Los routers de pagos, pedidos, logística y administración de catálogo se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter) {
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
   }
@@ -66,6 +79,9 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter) {
   }
   if (logisticsRouter) {
     app.use('/api/logistica', logisticsRouter);
+  }
+  if (catalogAdminRouter) {
+    app.use('/api/admin', catalogAdminRouter);
   }
   // Middleware de error al final de la cadena
   app.use(errorHandler);
@@ -82,14 +98,24 @@ try {
   } catch (errLogistics) {
     // Rutas de logística aún no inicializadas
   }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes);
+  let catalogAdminRoutes = null;
+  try {
+    const catalogModule = await import('./routes/catalog-admin.routes.js');
+    catalogAdminRoutes = catalogModule.catalogAdminRoutes;
+  } catch (errCatalog) {
+    // Rutas de administración de catálogo aún no inicializadas
+  }
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes);
 } catch (e) {
   app.use(errorHandler);
 }
 
 // Iniciar servidor si es el punto de entrada directo
-if (process.argv[1] === __filename) {
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   app.listen(CONSTANTS.PORT, () => {
-    console.log(`[TiendaOnline] Servidor de pago seguro activo en http://localhost:${CONSTANTS.PORT}`);
+    console.log(`[TiendaOnline] Servidor activo en http://localhost:${CONSTANTS.PORT}`);
+    console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
+    console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
+    console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);
   });
 }

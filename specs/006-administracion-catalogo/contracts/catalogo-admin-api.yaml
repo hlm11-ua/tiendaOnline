@@ -1,0 +1,654 @@
+openapi: 3.0.3
+info:
+  title: API de Administración de Catálogo y Alertas de Stock
+  description: Endpoints para la gestión administrativa de productos artesanales, categorías, variantes y monitorización de alertas de stock bajo.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/admin
+    description: Servidor de desarrollo local
+
+security:
+  - AdminAuth: []
+
+paths:
+  /categorias:
+    get:
+      summary: Listar categorías del catálogo
+      operationId: listCategorias
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [todas, activa, archivada]
+            default: activa
+          description: Filtrar por estado de la categoría
+      responses:
+        '200':
+          description: Lista de categorías obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categorias:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Categoria'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Crear una nueva categoría
+      operationId: createCategoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaCategoriaInput'
+      responses:
+        '201':
+          description: Categoría creada con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categoria:
+                    $ref: '#/components/schemas/Categoria'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /categorias/{id}:
+    put:
+      summary: Actualizar datos de una categoría existente
+      operationId: updateCategoria
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarCategoriaInput'
+      responses:
+        '200':
+          description: Categoría actualizada con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categoria:
+                    $ref: '#/components/schemas/Categoria'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /categorias/{id}/archivar:
+    patch:
+      summary: Archivar una categoría (bloqueado si tiene productos activos asociados)
+      operationId: archivarCategoria
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Categoría archivada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categoria:
+                    $ref: '#/components/schemas/Categoria'
+                  mensaje:
+                    type: string
+                    example: "Categoría archivada correctamente."
+        '409':
+          description: Conflicto de integridad referencial (tiene productos activos)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "CONFLICT_ACTIVE_PRODUCTS"
+                mensaje: "No se puede archivar la categoría porque contiene productos activos. Reasigne o descatalogue los productos primero."
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /productos:
+    get:
+      summary: Listar productos del catálogo para el panel de administración
+      operationId: listProductos
+      parameters:
+        - name: categoriaId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filtrar por identificador de categoría
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [todos, activo, archivado]
+            default: activo
+        - name: soloAlertas
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Filtrar solo productos con variantes en stock bajo o agotadas
+      responses:
+        '200':
+          description: Lista de productos obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductoDetalle'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    post:
+      summary: Dar de alta un nuevo producto con fotos y variantes
+      operationId: createProducto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevoProductoInput'
+      responses:
+        '201':
+          description: Producto creado y publicado con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  producto:
+                    $ref: '#/components/schemas/ProductoDetalle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /productos/{id}:
+    get:
+      summary: Obtener el detalle completo de un producto con sus variantes e inventario
+      operationId: getProductoById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ficha de producto recuperada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  producto:
+                    $ref: '#/components/schemas/ProductoDetalle'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    put:
+      summary: Actualizar ficha, fotos o variantes de un producto existente
+      operationId: updateProducto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarProductoInput'
+      responses:
+        '200':
+          description: Producto actualizado con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  producto:
+                    $ref: '#/components/schemas/ProductoDetalle'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    delete:
+      summary: Eliminar o archivar un producto (si tiene compras históricas, se archiva lógicamente)
+      operationId: deleteOrArchiveProducto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Producto archivado lógicamente por tener pedidos históricos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accion:
+                    type: string
+                    example: "archivado"
+                  mensaje:
+                    type: string
+                    example: "El producto tiene pedidos históricos asociados; ha sido archivado y desactivado del catálogo público."
+        '204':
+          description: Producto eliminado permanentemente de memoria (sin compras previas)
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /variantes/{id}/stock:
+    patch:
+      summary: Actualizar la cantidad de stock físico y/o umbral de una variante
+      operationId: updateVarianteStock
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stockTotal:
+                  type: integer
+                  minimum: 0
+                  example: 8
+                umbralAlerta:
+                  type: integer
+                  minimum: 0
+                  example: 2
+      responses:
+        '200':
+          description: Stock actualizado con recálculo inmediato de alertas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  variante:
+                    $ref: '#/components/schemas/VarianteDetalle'
+                  alerta:
+                    $ref: '#/components/schemas/AlertaStock'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /alertas-stock:
+    get:
+      summary: Listar todas las variantes que se encuentran en stock bajo o agotadas
+      operationId: listAlertasStock
+      responses:
+        '200':
+          description: Lista de alertas calculadas en tiempo real
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalAlertas:
+                    type: integer
+                    example: 2
+                  alertas:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AlertaStock'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: apiKey
+      in: header
+      name: x-user-role
+      description: Cabecera que acredita el rol de administrador (`admin`)
+
+  responses:
+    ForbiddenError:
+      description: Acceso denegado por falta de permisos administrativos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "FORBIDDEN"
+            mensaje: "Acceso restringido a usuarios con rol de administrador/empresa."
+
+    ValidationError:
+      description: Datos de entrada no válidos según las reglas de negocio
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "VALIDATION_ERROR"
+            mensaje: "El precio base debe ser mayor que cero y las imágenes no pueden superar 5 archivos de 5 MB."
+
+    NotFoundError:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            mensaje: "El elemento solicitado no existe en el catálogo."
+
+  schemas:
+    Categoria:
+      type: object
+      required: [id, nombre, slug, estado]
+      properties:
+        id:
+          type: string
+          example: "cat-ceramica"
+        nombre:
+          type: string
+          example: "Cerámica"
+        descripcion:
+          type: string
+          example: "Piezas de arcilla modeladas y esmaltadas en horno artesanal."
+        slug:
+          type: string
+          example: "ceramica"
+        estado:
+          type: string
+          enum: [activa, archivada]
+          example: "activa"
+        totalProductosActivos:
+          type: integer
+          example: 4
+
+    NuevaCategoriaInput:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 80
+          example: "Orfebrería y Cobre"
+        descripcion:
+          type: string
+          maxLength: 300
+          example: "Joyas y objetos forjados a mano en metales tradicionales."
+
+    ActualizarCategoriaInput:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 80
+        descripcion:
+          type: string
+          maxLength: 300
+
+    RecursoImagen:
+      type: object
+      required: [url, mimeType]
+      properties:
+        url:
+          type: string
+          example: "/public/uploads/jarron-ceramica-1.webp"
+        nombreArchivo:
+          type: string
+          example: "jarron-azul.webp"
+        mimeType:
+          type: string
+          enum: ["image/jpeg", "image/png", "image/webp"]
+        tamanoBytes:
+          type: integer
+          maximum: 5242880
+          example: 1048576
+        esPrincipal:
+          type: boolean
+          default: false
+
+    VarianteInput:
+      type: object
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          example: "Pequeño"
+        sku:
+          type: string
+          example: "JAR-AZU-PEQ"
+        stockTotal:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 3
+        umbralAlerta:
+          type: integer
+          minimum: 0
+          default: 3
+          example: 2
+
+    VarianteDetalle:
+      type: object
+      required: [id, productoId, nombre, stockTotal, umbralAlerta, estado]
+      properties:
+        id:
+          type: string
+          example: "var-001-peq"
+        productoId:
+          type: string
+          example: "art-001"
+        nombre:
+          type: string
+          example: "Pequeño"
+        sku:
+          type: string
+        stockTotal:
+          type: integer
+          example: 3
+        stockDisponible:
+          type: integer
+          example: 2
+        umbralAlerta:
+          type: integer
+          example: 2
+        estadoAlerta:
+          type: string
+          enum: [normal, stock_bajo, agotado]
+          example: "stock_bajo"
+        estado:
+          type: string
+          enum: [activa, archivada]
+
+    NuevoProductoInput:
+      type: object
+      required: [titulo, descripcion, categoriaId, artesano, precioBase]
+      properties:
+        titulo:
+          type: string
+          minLength: 3
+          maxLength: 150
+          example: "Jarrón de Cerámica Esmaltada Azul"
+        descripcion:
+          type: string
+          minLength: 10
+          example: "Jarrón artesanal torneado en gres de alta temperatura con esmalte azul cobalto."
+        categoriaId:
+          type: string
+          example: "cat-ceramica"
+        artesano:
+          type: string
+          example: "Taller Hermanos Alfareros"
+        precioBase:
+          type: number
+          minimum: 0.01
+          example: 45.00
+        imagenes:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RecursoImagen'
+        variantes:
+          type: array
+          description: Si se envía vacío o no se especifica, el sistema crea automáticamente la variante "Única"
+          items:
+            $ref: '#/components/schemas/VarianteInput'
+
+    ActualizarProductoInput:
+      type: object
+      properties:
+        titulo:
+          type: string
+        descripcion:
+          type: string
+        categoriaId:
+          type: string
+        artesano:
+          type: string
+        precioBase:
+          type: number
+        imagenes:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RecursoImagen'
+        variantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianteInput'
+
+    ProductoDetalle:
+      type: object
+      required: [id, titulo, descripcion, categoriaId, artesano, precioBase, moneda, estado, variantes]
+      properties:
+        id:
+          type: string
+          example: "art-001"
+        titulo:
+          type: string
+          example: "Jarrón de Cerámica Esmaltada Azul"
+        descripcion:
+          type: string
+        categoriaId:
+          type: string
+          example: "cat-ceramica"
+        categoriaNombre:
+          type: string
+          example: "Cerámica"
+        artesano:
+          type: string
+          example: "Taller Hermanos Alfareros"
+        precioBase:
+          type: number
+          example: 45.00
+        moneda:
+          type: string
+          example: "EUR"
+        imagenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecursoImagen'
+        estado:
+          type: string
+          enum: [activo, archivado]
+          example: "activo"
+        variantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianteDetalle'
+        alertaActiva:
+          type: boolean
+          example: true
+
+    AlertaStock:
+      type: object
+      required: [productoId, productoTitulo, varianteId, varianteNombre, stockDisponible, umbralAlerta, estadoAlerta]
+      properties:
+        productoId:
+          type: string
+          example: "art-001"
+        productoTitulo:
+          type: string
+          example: "Jarrón de Cerámica Esmaltada Azul"
+        varianteId:
+          type: string
+          example: "var-001-grande"
+        varianteNombre:
+          type: string
+          example: "Grande"
+        stockTotal:
+          type: integer
+          example: 1
+        stockDisponible:
+          type: integer
+          example: 1
+        umbralAlerta:
+          type: integer
+          example: 2
+        estadoAlerta:
+          type: string
+          enum: [stock_bajo, agotado]
+          example: "stock_bajo"
+        mensajeAlerta:
+          type: string
+          example: "Stock bajo (1 unidad restante)"
+
+    ErrorResponse:
+      type: object
+      required: [error, mensaje]
+      properties:
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        mensaje:
+          type: string
+          example: "Descripción comprensible del error en español."
