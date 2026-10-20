@@ -10,8 +10,8 @@ Desglose de tareas ordenadas por dependencias para la implementación del panel 
 
 **Propósito**: Inicialización de constantes del catálogo, umbrales de stock, límites de imágenes y cliente HTTP base.
 
-- [ ] T001 Actualizar constantes del sistema con umbrales de alerta por defecto (3 unidades), límites de imágenes (5 fotos, 5 MB, tipos MIME permitidos) y roles en `backend/src/config/constants.js`
-- [ ] T002 [P] Crear cliente HTTP base para interactuar con los endpoints de administración en `frontend/src/services/catalog-admin-api.service.js`
+- [X] T001 Actualizar constantes del sistema con umbrales de alerta por defecto (3 unidades), límites de imágenes (5 fotos, 5 MB, tipos MIME permitidos) y roles en `backend/src/config/constants.js`
+- [X] T002 [P] Crear cliente HTTP base para interactuar con los endpoints de administración en `frontend/src/services/catalog-admin-api.service.js`
 
 ---
 
@@ -21,10 +21,10 @@ Desglose de tareas ordenadas por dependencias para la implementación del panel 
 
 **⚠️ CRÍTICO**: Ninguna tarea de la historia de usuario puede comenzar hasta que esta fase esté completada.
 
-- [ ] T003 [P] Crear modelos y esquemas de validación de Categoria, Producto y Variante en `backend/src/models/category.model.js` y `backend/src/models/product.model.js`
-- [ ] T004 Extender el almacén `MemoryStore` con colecciones `categories`, `products` y `variants` e integración con el inventario transaccional existente en `backend/src/models/store.js`
-- [ ] T005 [P] Implementar middleware de autenticación y autorización para verificar el rol de administrador (`requireAdminRole`) en `backend/src/middleware/auth.js`
-- [ ] T006 Configurar montaje de rutas administrativas `/api/admin/*` y servicio de estáticos del panel en `backend/src/server.js`
+- [X] T003 [P] Crear modelos y esquemas de validación de Categoria, Producto y Variante en `backend/src/models/category.model.js` y `backend/src/models/product.model.js`
+- [X] T004 Extender el almacén `MemoryStore` con colecciones `categories`, `products` y `variants` e integración con el inventario transaccional existente en `backend/src/models/store.js`
+- [X] T005 [P] Implementar middleware de autenticación y autorización para verificar el rol de administrador (`requireAdminRole`) en `backend/src/middleware/auth.js`
+- [X] T006 Configurar montaje de rutas administrativas `/api/admin/*` y servicio de estáticos del panel en `backend/src/server.js`
 
 **Checkpoint**: Infraestructura, almacenamiento en memoria y autorización listos. Puede comenzar la implementación de la historia de usuario.
 
@@ -48,23 +48,23 @@ Desglose de tareas ordenadas por dependencias para la implementación del panel 
 
 > **NOTA: Escribir y verificar que fallen antes de completar la implementación correspondiente.**
 
-- [ ] T007 [P] [US1] Pruebas de contrato OpenAPI para los endpoints administrativos (`/categorias`, `/categorias/{id}/archivar`, `/productos`, `/productos/{id}`, `/variantes/{id}/stock`, `/alertas-stock`) en `tests/contract/catalogo-admin-api.test.js`
-- [ ] T008 [P] [US1] Pruebas de integración del ciclo de vida del catálogo (creación de categoría, alta de producto con fotos/variantes, cálculo dinámico de alertas de stock, bloqueo de archivado en uso y descuento por venta) en `tests/integration/catalog-flow.test.js`
+- [X] T007 [P] [US1] Pruebas de contrato OpenAPI para los endpoints administrativos (`/categorias`, `/categorias/{id}/archivar`, `/productos`, `/productos/{id}`, `/variantes/{id}/stock`, `/alertas-stock`) en `tests/contract/catalogo-admin-api.test.js`
+- [X] T008 [P] [US1] Pruebas de integración del ciclo de vida del catálogo (creación de categoría, alta de producto con fotos/variantes, cálculo dinámico de alertas de stock, bloqueo de archivado en uso y descuento por venta) en `tests/integration/catalog-flow.test.js`
 
 ### Lógica de Negocio y Backend
 
-- [ ] T009 [US1] Implementar CatalogAdminService (CRUD de categorías, bloqueo de archivado con productos activos, CRUD de productos, variante estándar "Única" automática, validación de fotos y cálculo de alertas de stock bajo) en `backend/src/services/catalog-admin.service.js`
-- [ ] T010 [US1] Implementar CatalogAdminController para validaciones de parámetros, control de errores HTTP y respuestas en `backend/src/controllers/catalog-admin.controller.js`
-- [ ] T011 [US1] Registrar y montar las rutas administrativas en `backend/src/routes/catalog-admin.routes.js`
+- [X] T009 [US1] Implementar CatalogAdminService (CRUD de categorías, bloqueo de archivado con productos activos, CRUD de productos, variante estándar "Única" automática, validación de fotos y cálculo de alertas de stock bajo) en `backend/src/services/catalog-admin.service.js`
+- [X] T010 [US1] Implementar CatalogAdminController para validaciones de parámetros, control de errores HTTP y respuestas en `backend/src/controllers/catalog-admin.controller.js`
+- [X] T011 [US1] Registrar y montar las rutas administrativas en `backend/src/routes/catalog-admin.routes.js`
 
 ### Componentes de Interfaz de Usuario (Frontend)
 
-- [ ] T012 [P] [US1] Implementar componente de gestión y archivado de categorías con control de errores de integridad en `frontend/src/components/admin/category-manager.js`
-- [ ] T013 [P] [US1] Implementar formulario de alta y edición de productos con carga y previsualización de hasta 5 imágenes y configuración de variantes en `frontend/src/components/admin/product-form.js`
-- [ ] T014 [P] [US1] Implementar tabla interactiva de productos con distintivos visuales de stock bajo y agotado en `frontend/src/components/admin/product-list-table.js`
-- [ ] T015 [P] [US1] Implementar widget de resumen y filtro rápido de stock bajo y agotados en `frontend/src/components/admin/stock-alerts-widget.js`
-- [ ] T016 [P] [US1] Crear hoja de estilos CSS responsiva para el panel administrativo, formularios y distintivos de alerta en `frontend/src/styles/admin-catalogo.css`
-- [ ] T017 [US1] Integrar la página HTML completa del panel de administración en `frontend/public/admin/catalogo.html`
+- [X] T012 [P] [US1] Implementar componente de gestión y archivado de categorías con control de errores de integridad en `frontend/src/components/admin/category-manager.js`
+- [X] T013 [P] [US1] Implementar formulario de alta y edición de productos con carga y previsualización de hasta 5 imágenes y configuración de variantes en `frontend/src/components/admin/product-form.js`
+- [X] T014 [P] [US1] Implementar tabla interactiva de productos con distintivos visuales de stock bajo y agotado en `frontend/src/components/admin/product-list-table.js`
+- [X] T015 [P] [US1] Implementar widget de resumen y filtro rápido de stock bajo y agotados en `frontend/src/components/admin/stock-alerts-widget.js`
+- [X] T016 [P] [US1] Crear hoja de estilos CSS responsiva para el panel administrativo, formularios y distintivos de alerta en `frontend/src/styles/admin-catalogo.css`
+- [X] T017 [US1] Integrar la página HTML completa del panel de administración en `frontend/public/admin/catalogo.html`
 
 **Checkpoint**: User Story 1 completada de principio a fin, satisfaciendo los 7 requisitos funcionales (FR-001 a FR-007) y los 3 criterios de éxito medibles (SC-001 a SC-003).
 
@@ -74,10 +74,10 @@ Desglose de tareas ordenadas por dependencias para la implementación del panel 
 
 **Propósito**: Verificaciones de calidad, estándares constitucionales y validación de aceptación.
 
-- [ ] T018 [P] Auditar y asegurar que el 100% de los textos, formularios, mensajes de error y badges estén en español de España (`es-ES`) y los precios en euros (`€`) conforme al Principio II
-- [ ] T019 [P] Auditar sanitización y validación estricta de subidas de imágenes (tipos MIME autorizados y límite de 5 MB) conforme a los Principios I y V
-- [ ] T020 [P] Implementar suite de validación automatizada de los 7 escenarios descritos en quickstart.md en `tests/integration/quickstart-catalogo.test.js`
-- [ ] T021 Ejecutar la batería completa de validación manual paso a paso descrita en `specs/006-administracion-catalogo/quickstart.md`
+- [X] T018 [P] Auditar y asegurar que el 100% de los textos, formularios, mensajes de error y badges estén en español de España (`es-ES`) y los precios en euros (`€`) conforme al Principio II
+- [X] T019 [P] Auditar sanitización y validación estricta de subidas de imágenes (tipos MIME autorizados y límite de 5 MB) conforme a los Principios I y V
+- [X] T020 [P] Implementar suite de validación automatizada de los 7 escenarios descritos en quickstart.md en `tests/integration/quickstart-catalogo.test.js`
+- [X] T021 Ejecutar la batería completa de validación manual paso a paso descrita en `specs/006-administracion-catalogo/quickstart.md`
 
 ---
 
