@@ -50,6 +50,40 @@ describe('Servicio Web de Checkout y Estáticos', () => {
 
       const res4 = await fetch(`http://localhost:${port}/src/components/checkout-form.js`);
       assert.strictEqual(res4.status, 200);
+
+      const resLog1 = await fetch(`http://localhost:${port}/src/components/logistics-orders-table.js`);
+      assert.strictEqual(resLog1.status, 200);
+
+      const resLog2 = await fetch(`http://localhost:${port}/src/components/dispatch-modal.js`);
+      assert.strictEqual(resLog2.status, 200);
+
+      const resLog3 = await fetch(`http://localhost:${port}/src/components/tracking-view.js`);
+      assert.strictEqual(resLog3.status, 200);
+
+      const resLog4 = await fetch(`http://localhost:${port}/src/components/shipping-notice-modal.js`);
+      assert.strictEqual(resLog4.status, 200);
+    } finally {
+      server.close();
+    }
+  });
+
+  it('debe servir logistica.html en /logistica y la hoja de estilos logistica.css', async () => {
+    const server = app.listen(0);
+    const port = server.address().port;
+
+    try {
+      const resPage = await fetch(`http://localhost:${port}/logistica`);
+      assert.strictEqual(resPage.status, 200);
+      const text = await resPage.text();
+      assert.ok(text.includes('Gestión Logística y Seguimiento de Envíos'));
+      assert.ok(text.includes('logistics-table-container'));
+      assert.ok(text.includes('tracking-view-container'));
+
+      const resCss = await fetch(`http://localhost:${port}/src/styles/logistica.css`);
+      assert.strictEqual(resCss.status, 200);
+      const cssText = await resCss.text();
+      assert.ok(cssText.includes('.timeline-step'));
+      assert.ok(cssText.includes('.logistics-panel'));
     } finally {
       server.close();
     }

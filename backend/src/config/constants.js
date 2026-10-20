@@ -18,7 +18,35 @@ export const CONSTANTS = {
 
   // Estados de Entidades (Data Model)
   ORDER_STATUS: {
-    PAID: 'pagado'
+    PENDING: 'pendiente',
+    PAID: 'pagado',
+    IN_PREPARATION: 'en_preparacion',
+    SHIPPED: 'salido_tienda',
+    DELIVERED: 'entregado'
+  },
+
+  // Transportistas habituales en España (FR-003)
+  CARRIERS: [
+    'Correos de España',
+    'SEUR',
+    'MRW',
+    'GLS',
+    'DHL Express',
+    'Otro'
+  ],
+
+  // Validación de número de seguimiento (FR-003, Edge Cases)
+  TRACKING: {
+    MIN_LENGTH: 6,
+    MAX_LENGTH: 32,
+    PATTERN: /^[A-Za-z0-9\-_]{6,32}$/
+  },
+
+  // Tipos de avisos automáticos al cliente (FR-004)
+  NOTICE_TYPES: {
+    DISPATCH: 'salida_almacen',
+    RECTIFICATION: 'rectificacion_tracking',
+    DELIVERY: 'confirmacion_entrega'
   },
 
   RESERVATION_STATUS: {
