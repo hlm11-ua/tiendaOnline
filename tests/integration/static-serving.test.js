@@ -125,5 +125,32 @@ describe('Servicio Web de Checkout y Estáticos', () => {
       server.close();
     }
   });
+
+  it('debe servir ventas.html en /admin/ventas y sus módulos y estilos', async () => {
+    const server = app.listen(0);
+    const port = server.address().port;
+
+    try {
+      const resVentas = await fetch(`http://localhost:${port}/admin/ventas`);
+      assert.strictEqual(resVentas.status, 200);
+      const ventasText = await resVentas.text();
+      assert.ok(ventasText.includes('Informes de Ventas'));
+      assert.ok(ventasText.includes('sales-dashboard-app'));
+
+      const resCss = await fetch(`http://localhost:${port}/src/styles/admin-ventas.css`);
+      assert.strictEqual(resCss.status, 200);
+      const css = await resCss.text();
+      assert.ok(css.includes('.dashboard-controls-card'));
+      assert.ok(css.includes('.ranking-table'));
+
+      const resComp = await fetch(`http://localhost:${port}/src/components/admin/sales-report-view.js`);
+      assert.strictEqual(resComp.status, 200);
+
+      const resService = await fetch(`http://localhost:${port}/src/services/sales-report-api.service.js`);
+      assert.strictEqual(resService.status, 200);
+    } finally {
+      server.close();
+    }
+  });
 });
 
