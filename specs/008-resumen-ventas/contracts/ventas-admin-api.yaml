@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: API de Resumen de Ventas y Exportación de Métricas
+  description: Endpoints administrativos para la consulta agregada de facturación, ranking de productos más vendidos y exportación transaccional en formato CSV.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/admin/ventas
+    description: Servidor de desarrollo local
+
+paths:
+  /resumen:
+    get:
+      summary: Obtener el resumen de ventas y ranking Top 5 de productos
+      description: Devuelve las métricas consolidadas de facturación, número de pedidos y el top 5 de productos más vendidos para el período indicado.
+      operationId: getSalesReportSummary
+      parameters:
+        - name: periodo
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [7_dias, 30_dias, 1_ano, personalizado]
+            default: 30_dias
+          description: Período predefinido o personalizado
+        - name: fechaInicio
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2026-10-01"
+          description: Fecha de inicio (obligatoria si periodo es 'personalizado')
+        - name: fechaFin
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2026-10-31"
+          description: Fecha de fin (obligatoria si periodo es 'personalizado')
+        - name: x-user-role
+          in: header
+          required: false
+          schema:
+            type: string
+            default: admin
+          description: Rol del usuario para control de acceso (FR-001)
+      responses:
+        '200':
+          description: Resumen de ventas y ranking calculados correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesReportResponse'
+        '400':
+          description: Parámetros de consulta inválidos (ej. fechas mal formadas o fechaInicio posterior a fechaFin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acceso no autorizado para usuarios no administradores (FR-001)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /exportar:
+    get:
+      summary: Exportar detalle transaccional de ventas en archivo CSV
+      description: Genera y descarga un archivo estructurado en formato CSV con las transacciones del período seleccionado (delimitado por ';', coma decimal y codificación UTF-8 con BOM).
+      operationId: exportSalesCsv
+      parameters:
+        - name: periodo
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [7_dias, 30_dias, 1_ano, personalizado]
+            default: 30_dias
+          description: Período predefinido o personalizado
+        - name: fechaInicio
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Fecha de inicio (obligatoria si periodo es 'personalizado')
+        - name: fechaFin
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Fecha de fin (obligatoria si periodo es 'personalizado')
+        - name: x-user-role
+          in: header
+          required: false
+          schema:
+            type: string
+            default: admin
+          description: Rol del usuario para control de acceso
+      responses:
+        '200':
+          description: Archivo CSV descargable generado con éxito
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: 'attachment; filename="resumen-ventas-30_dias.csv"'
+            Content-Type:
+              schema:
+                type: string
+                example: 'text/csv; charset=utf-8'
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Parámetros de rango de fechas no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acceso no autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    SalesReportResponse:
+      type: object
+      required:
+        - resumen
+        - rankingTop5
+      properties:
+        resumen:
+          $ref: '#/components/schemas/SalesReportSummary'
+        rankingTop5:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductRankingItem'
+
+    SalesReportSummary:
+      type: object
+      required:
+        - periodoEtiqueta
+        - fechaInicio
+        - fechaFin
+        - facturacionTotal
+        - facturacionFormateada
+        - recuentoPedidos
+        - fechaGeneracion
+      properties:
+        periodoEtiqueta:
+          type: string
+          example: "Último mes (30 días)"
+        fechaInicio:
+          type: string
+          format: date-time
+        fechaFin:
+          type: string
+          format: date-time
+        facturacionTotal:
+          type: number
+          format: float
+          example: 1250.50
+        facturacionFormateada:
+          type: string
+          example: "1.250,50 €"
+        recuentoPedidos:
+          type: integer
+          example: 14
+        fechaGeneracion:
+          type: string
+          format: date-time
+
+    ProductRankingItem:
+      type: object
+      required:
+        - posicion
+        - productoId
+        - titulo
+        - artesano
+        - unidadesVendidas
+        - facturacionTotal
+        - facturacionFormateada
+      properties:
+        posicion:
+          type: integer
+          example: 1
+        productoId:
+          type: string
+          example: "art-001"
+        titulo:
+          type: string
+          example: "Jarrón de Cerámica Esmaltada Azul"
+        artesano:
+          type: string
+          example: "Taller Hermanos Alfareros"
+        unidadesVendidas:
+          type: integer
+          example: 8
+        facturacionTotal:
+          type: number
+          format: float
+          example: 360.00
+        facturacionFormateada:
+          type: string
+          example: "360,00 €"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - mensaje
+      properties:
+        error:
+          type: string
+          example: "ACCESO_DENEGADO"
+        mensaje:
+          type: string
+          example: "Acceso denegado: se requieren permisos de administrador."
