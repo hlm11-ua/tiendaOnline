@@ -17,7 +17,9 @@ async function request(path, options = {}) {
         ...(options.headers || {})
       }
     });
-    const text = await res.text();
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const text = buffer.toString('utf-8');
     let body;
     try {
       body = JSON.parse(text);
@@ -27,7 +29,8 @@ async function request(path, options = {}) {
     return {
       status: res.status,
       headers: res.headers,
-      body
+      body,
+      rawBuffer: buffer
     };
   } finally {
     server.close();
@@ -156,9 +159,10 @@ describe('Contratos de API de Ventas y Exportación (/api/admin/ventas)', () => 
       assert.ok(disposition.includes('attachment'));
       assert.ok(disposition.includes('.csv'));
 
-      // Verificar cabecera CSV delimitada por ';' y contenido
+      // Verificar cabecera CSV delimitada por ';' y contenido con BOM UTF-8
+      const isBom = res.rawBuffer[0] === 0xEF && res.rawBuffer[1] === 0xBB && res.rawBuffer[2] === 0xBF;
+      assert.ok(isBom, 'Debe incluir BOM UTF-8');
       const text = res.body;
-      assert.ok(text.startsWith('\uFEFF'), 'Debe incluir BOM UTF-8');
       assert.ok(text.includes('Fecha;Nº Pedido;Producto;Artesano;Unidades;Importe (€)'));
       assert.ok(text.includes('Jarrón de Cerámica Esmaltada Azul'));
       assert.ok(text.includes('90,00 €'));

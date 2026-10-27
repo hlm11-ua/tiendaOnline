@@ -44,23 +44,23 @@ Desglose de tareas accionables ordenadas por dependencias para la implementació
 
 > **NOTA: Escribir estas pruebas PRIMERO y verificar que fallen antes de implementar el código de producción.**
 
-- [ ] T006 [P] [US1] Pruebas de contrato para `/api/admin/ventas/resumen` y `/api/admin/ventas/exportar` según el contrato OpenAPI en `tests/contract/ventas-admin-api.test.js`
-- [ ] T007 [P] [US1] Pruebas de integración para cálculo de agregaciones, Top 5 con desempate y generación de CSV con UTF-8 BOM en `tests/integration/sales-report-flow.test.js`
+- [X] T006 [P] [US1] Pruebas de contrato para `/api/admin/ventas/resumen` y `/api/admin/ventas/exportar` según el contrato OpenAPI en `tests/contract/ventas-admin-api.test.js`
+- [X] T007 [P] [US1] Pruebas de integración para cálculo de agregaciones, Top 5 con desempate y generación de CSV con UTF-8 BOM en `tests/integration/sales-report-flow.test.js`
 
 ### Modelos y Lógica de Negocio
 
-- [ ] T008 [US1] Implementar `SalesReportService` (cálculo de ingresos brutos, ranking Top 5 con desempate por facturación y serialización a CSV) en `backend/src/services/sales-report.service.js`
+- [X] T008 [US1] Implementar `SalesReportService` (cálculo de ingresos brutos, ranking Top 5 con desempate por facturación y serialización a CSV) en `backend/src/services/sales-report.service.js`
 
 ### Controladores y Rutas del Backend
 
-- [ ] T009 [US1] Implementar `SalesReportController` con validación de rangos de fechas, control de rol administrador y cabeceras de descarga CSV en `backend/src/controllers/sales-report.controller.js`
-- [ ] T010 [US1] Registrar y montar las rutas protegidas `/api/admin/ventas` en `backend/src/routes/sales-report.routes.js`
+- [X] T009 [US1] Implementar `SalesReportController` con validación de rangos de fechas, control de rol administrador y cabeceras de descarga CSV en `backend/src/controllers/sales-report.controller.js`
+- [X] T010 [US1] Registrar y montar las rutas protegidas `/api/admin/ventas` en `backend/src/routes/sales-report.routes.js`
 
 ### Componentes de Interfaz de Usuario (Frontend)
 
-- [ ] T011 [P] [US1] Implementar el componente visual `SalesReportView` (selectores de fecha, tarjetas KPI, tabla Top 5 y disparador de exportación CSV) en `frontend/src/components/admin/sales-report-view.js`
-- [ ] T012 [P] [US1] Crear la hoja de estilos responsiva del panel de ventas en `frontend/src/styles/admin-ventas.css`
-- [ ] T013 [US1] Crear la página HTML del cuadro de mando administrativo en `frontend/public/admin/ventas.html` y enlazarla desde la navegación del catálogo en `frontend/public/admin/catalogo.html`
+- [X] T011 [P] [US1] Implementar el componente visual `SalesReportView` (selectores de fecha, tarjetas KPI, tabla Top 5 y disparador de exportación CSV) en `frontend/src/components/admin/sales-report-view.js`
+- [X] T012 [P] [US1] Crear la hoja de estilos responsiva del panel de ventas en `frontend/src/styles/admin-ventas.css`
+- [X] T013 [US1] Crear la página HTML del cuadro de mando administrativo en `frontend/public/admin/ventas.html` y enlazarla desde la navegación del catálogo en `frontend/public/admin/catalogo.html`
 
 **Checkpoint**: User Story 1 completada y funcional de extremo a extremo, cumpliendo los criterios de aceptación y los 6 requisitos funcionales.
 
@@ -70,10 +70,10 @@ Desglose de tareas accionables ordenadas por dependencias para la implementació
 
 **Propósito**: Verificaciones de calidad, estándares constitucionales y validación de aceptación.
 
-- [ ] T014 [P] Auditar y verificar que el 100% de los textos, cabeceras del CSV, importes en euros (`€`) y mensajes de error cumplan la normativa española (`es-ES`) según el Principio II
-- [ ] T015 [P] Auditar que no se expongan datos personales sensibles ni información de tarjetas en las respuestas o en el archivo CSV según el Principio V
-- [ ] T016 [P] Implementar la suite de validación automatizada de los 6 escenarios descritos en quickstart.md en `tests/integration/quickstart-ventas.test.js`
-- [ ] T017 Ejecutar la batería completa de validación funcional y verificar los tiempos de rendimiento (< 1 s cálculo, < 2 s descarga) según SC-001 y SC-002 en `specs/008-resumen-ventas/quickstart.md`
+- [X] T014 [P] Auditar y verificar que el 100% de los textos, cabeceras del CSV, importes en euros (`€`) y mensajes de error cumplan la normativa española (`es-ES`) según el Principio II
+- [X] T015 [P] Auditar que no se expongan datos personales sensibles ni información de tarjetas en las respuestas o en el archivo CSV según el Principio V
+- [X] T016 [P] Implementar la suite de validación automatizada de los 6 escenarios descritos en quickstart.md en `tests/integration/quickstart-ventas.test.js`
+- [X] T017 Ejecutar la batería completa de validación funcional y verificar los tiempos de rendimiento (< 1 s cálculo, < 2 s descarga) según SC-001 y SC-002 en `specs/008-resumen-ventas/quickstart.md`
 
 ---
 
