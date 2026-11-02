@@ -18,7 +18,35 @@ export const CONSTANTS = {
 
   // Estados de Entidades (Data Model)
   ORDER_STATUS: {
-    PAID: 'pagado'
+    PENDING: 'pendiente',
+    PAID: 'pagado',
+    IN_PREPARATION: 'en_preparacion',
+    SHIPPED: 'salido_tienda',
+    DELIVERED: 'entregado'
+  },
+
+  // Transportistas habituales en España (FR-003)
+  CARRIERS: [
+    'Correos de España',
+    'SEUR',
+    'MRW',
+    'GLS',
+    'DHL Express',
+    'Otro'
+  ],
+
+  // Validación de número de seguimiento (FR-003, Edge Cases)
+  TRACKING: {
+    MIN_LENGTH: 6,
+    MAX_LENGTH: 32,
+    PATTERN: /^[A-Za-z0-9\-_]{6,32}$/
+  },
+
+  // Tipos de avisos automáticos al cliente (FR-004)
+  NOTICE_TYPES: {
+    DISPATCH: 'salida_almacen',
+    RECTIFICATION: 'rectificacion_tracking',
+    DELIVERY: 'confirmacion_entrega'
   },
 
   RESERVATION_STATUS: {
@@ -38,6 +66,40 @@ export const CONSTANTS = {
 
   // Firma fija de prueba para Webhook bancario en local (FR-007, SC-004)
   WEBHOOK_TEST_SIGNATURE: 'firma_segura_banco_prueba',
+
+  // Configuración de Catálogo, Alertas e Imágenes (Feature 006)
+  CATALOG: {
+    DEFAULT_ALERT_THRESHOLD: 3,
+    DEFAULT_VARIANT_NAME: 'Única',
+    CATEGORY_STATUS: {
+      ACTIVE: 'activa',
+      ARCHIVED: 'archivada'
+    },
+    PRODUCT_STATUS: {
+      ACTIVE: 'activo',
+      ARCHIVED: 'archivado'
+    },
+    VARIANT_STATUS: {
+      ACTIVE: 'activa',
+      ARCHIVED: 'archivada'
+    },
+    STOCK_ALERT_STATUS: {
+      NORMAL: 'normal',
+      LOW: 'stock_bajo',
+      OUT_OF_STOCK: 'agotado'
+    },
+    IMAGE_LIMITS: {
+      MAX_COUNT: 5,
+      MAX_SIZE_BYTES: 5 * 1024 * 1024, // 5 MB
+      ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp']
+    }
+  },
+
+  // Roles de usuario (FR-001)
+  ROLES: {
+    ADMIN: 'admin',
+    CUSTOMER: 'cliente'
+  },
 
   // Puerto por defecto
   PORT: process.env.PORT || 3000

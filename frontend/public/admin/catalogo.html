@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel de administración de productos artesanales, gestión de categorías y monitorización de alertas tempranas de stock.">
+  <title>TiendaOnline - Administración de Catálogo e Inventario</title>
+
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos de administración del catálogo -->
+  <link rel="stylesheet" href="/src/styles/admin-catalogo.css">
+</head>
+<body>
+
+  <!-- Encabezado Principal del Sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <div class="brand-section">
+        <span class="logo-icon" aria-hidden="true">🏺</span>
+        <a href="/" class="logo-text">TiendaOnline</a>
+        <span class="badge-admin">Administración</span>
+      </div>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="/" class="nav-link">🛒 Tienda / Checkout</a>
+        <a href="/logistica" class="nav-link">📦 Gestión Logística</a>
+        <a href="/admin/catalogo" class="nav-link active">🛠️ Catálogo e Inventario</a>
+        <div class="user-indicator">
+          <span>👤 Administrador</span>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="admin-main-container" id="main-content">
+    
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Gestión de Catálogo e Inventario Artesanal</h1>
+        <p class="page-subtitle">Alta y edición de piezas, carga de imágenes, definición de variantes y monitorización reactiva de existencias.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-outline-secondary" id="btn-toggle-seccion-categorias">
+          📂 Gestionar Categorías
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-alta-producto-top">
+          + Añadir Producto
+        </button>
+      </div>
+    </div>
+
+    <!-- Feedback global de notificaciones -->
+    <div id="global-feedback" class="form-feedback hidden" role="alert"></div>
+
+    <!-- Layout Grid: Sección Principal (Productos y Formulario) y Barra Lateral (Alertas y Categorías) -->
+    <div class="admin-layout-grid">
+      
+      <!-- Columna Principal -->
+      <section class="main-column" aria-label="Gestión de Productos">
+        <!-- Contenedor del Formulario de Producto (oculto por defecto hasta pulsar Crear o Editar) -->
+        <div id="product-form-container" class="hidden"></div>
+
+        <!-- Contenedor de la Tabla Interactiva de Productos -->
+        <div id="product-table-container"></div>
+      </section>
+
+      <!-- Columna Lateral -->
+      <aside class="sidebar-column" aria-label="Alertas y Categorías">
+        <!-- Widget de Alertas de Stock Bajo y Agotado (FR-006, SC-002) -->
+        <div id="stock-alerts-container"></div>
+
+        <!-- Panel de Gestión de Categorías (FR-002) -->
+        <div id="category-manager-container"></div>
+      </aside>
+
+    </div>
+
+  </main>
+
+  <!-- Pie de página -->
+  <footer class="site-footer" role="contentinfo">
+    <p>&copy; 2026 TiendaOnline Artesanía S.L. - Sistema de Catálogo e Inventario en Tiempo Real</p>
+  </footer>
+
+  <!-- Lógica y Coordinación de Componentes Frontend -->
+  <script type="module">
+    import { CatalogAdminApiService } from '/src/services/catalog-admin-api.service.js';
+    import { CategoryManager } from '/src/components/admin/category-manager.js';
+    import { ProductForm } from '/src/components/admin/product-form.js';
+    import { ProductListTable } from '/src/components/admin/product-list-table.js';
+    import { StockAlertsWidget } from '/src/components/admin/stock-alerts-widget.js';
+
+    // Estado global de la vista
+    let categorias = [];
+    let productos = [];
+    let alertas = [];
+
+    // Referencias a contenedores
+    const feedbackBox = document.getElementById('global-feedback');
+    const formContainer = document.getElementById('product-form-container');
+    const catContainer = document.getElementById('category-manager-container');
+    const btnToggleCat = document.getElementById('btn-toggle-seccion-categorias');
+    const btnAltaTop = document.getElementById('btn-alta-producto-top');
+
+    function mostrarFeedback(mensaje, tipo = 'success') {
+      if (!feedbackBox) return;
+      feedbackBox.className = `form-feedback ${tipo}`;
+      feedbackBox.textContent = mensaje;
+      feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => {
+        feedbackBox.className = 'form-feedback hidden';
+      }, 6000);
+    }
+
+    // Inicializar componentes
+    const categoryManager = new CategoryManager({
+      containerId: 'category-manager-container',
+      onCategoryCreated: async ({ nombre, descripcion }) => {
+        await CatalogAdminApiService.crearCategoria({ nombre, descripcion });
+        mostrarFeedback(`Categoría "${nombre}" creada correctamente.`);
+        await cargarDatos();
+      },
+      onCategoryArchived: async (id) => {
+        const cat = categorias.find(c => c.id === id);
+        const res = await CatalogAdminApiService.archivarCategoria(id);
+        mostrarFeedback(res.mensaje || `Categoría "${cat ? cat.nombre : id}" archivada correctamente.`);
+        await cargarDatos();
+      }
+    });
+
+    const productForm = new ProductForm({
+      containerId: 'product-form-container',
+      onSave: async (productoData) => {
+        try {
+          if (productForm.currentProductId) {
+            await CatalogAdminApiService.actualizarProducto(productForm.currentProductId, productoData);
+            mostrarFeedback(`Producto "${productoData.nombre}" actualizado con éxito.`);
+          } else {
+            await CatalogAdminApiService.crearProducto(productoData);
+            mostrarFeedback(`Producto "${productoData.nombre}" dado de alta con éxito.`);
+          }
+          formContainer.classList.add('hidden');
+          await cargarDatos();
+        } catch (err) {
+          mostrarFeedback(err.message || 'Error al guardar el producto.', 'error');
+          throw err;
+        }
+      },
+      onCancel: () => {
+        formContainer.classList.add('hidden');
+      }
+    });
+
+    const productListTable = new ProductListTable({
+      containerId: 'product-table-container',
+      onEditProduct: (product) => {
+        productForm.setCategories(categorias);
+        productForm.openForEdit(product);
+        formContainer.classList.remove('hidden');
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+      },
+      onDeleteProduct: async (productId) => {
+        try {
+          const res = await CatalogAdminApiService.eliminarOArchivarProducto(productId);
+          mostrarFeedback(res.mensaje || 'Producto procesado correctamente.');
+          await cargarDatos();
+        } catch (err) {
+          mostrarFeedback(err.message || 'Error al eliminar o archivar producto.', 'error');
+        }
+      },
+      onUpdateVariantStock: async ({ variantId, stockTotal, umbralAlerta }) => {
+        try {
+          const res = await CatalogAdminApiService.actualizarStockVariante(variantId, { stockTotal, umbralAlerta });
+          mostrarFeedback(`Stock actualizado a ${stockTotal} unidades.`);
+          await cargarDatos();
+        } catch (err) {
+          mostrarFeedback(err.message || 'Error al actualizar inventario.', 'error');
+        }
+      },
+      onNewProduct: () => {
+        productForm.setCategories(categorias);
+        productForm.openForCreate();
+        formContainer.classList.remove('hidden');
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+
+    const stockAlertsWidget = new StockAlertsWidget({
+      containerId: 'stock-alerts-container',
+      onFilterAlerts: (filterType) => {
+        if (!filterType) {
+          productListTable.setFilter({ soloAlertas: false });
+        } else {
+          productListTable.setFilter({ soloAlertas: true });
+        }
+      },
+      onSelectAlert: (productId) => {
+        const prod = productos.find(p => p.id === productId);
+        if (prod) {
+          productListTable.setFilter({ search: prod.nombre, soloAlertas: true });
+        }
+      },
+      onRefresh: async () => {
+        await cargarAlertas();
+        mostrarFeedback('Alertas de inventario actualizadas.');
+      }
+    });
+
+    // Carga de datos unificada
+    async function cargarAlertas() {
+      try {
+        const resAlertas = await CatalogAdminApiService.listarAlertasStock();
+        alertas = resAlertas.alertas || [];
+        stockAlertsWidget.render(alertas);
+      } catch (err) {
+        console.error('Error al cargar alertas de stock:', err);
+      }
+    }
+
+    async function cargarDatos() {
+      try {
+        const [resCat, resProd, resAlertas] = await Promise.all([
+          CatalogAdminApiService.listarCategorias('todas'),
+          CatalogAdminApiService.listarProductos(),
+          CatalogAdminApiService.listarAlertasStock()
+        ]);
+
+        categorias = resCat.categorias || [];
+        productos = resProd.productos || [];
+        alertas = resAlertas.alertas || [];
+
+        // Renderizado coordinado
+        categoryManager.render(categorias);
+        productForm.setCategories(categorias);
+        productListTable.setCategories(categorias);
+        productListTable.render(productos, categorias);
+        stockAlertsWidget.render(alertas);
+      } catch (err) {
+        console.error('Error al cargar catálogo:', err);
+        mostrarFeedback('Error de comunicación con el servidor al cargar los datos del catálogo.', 'error');
+      }
+    }
+
+    // Toggle de visibilidad para categorías
+    if (btnToggleCat && catContainer) {
+      btnToggleCat.addEventListener('click', () => {
+        catContainer.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    // Botón superior de alta rápida
+    if (btnAltaTop) {
+      btnAltaTop.addEventListener('click', () => {
+        productForm.setCategories(categorias);
+        productForm.openForCreate();
+        formContainer.classList.remove('hidden');
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    // Carga inicial al cargar el DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarDatos();
+    });
+  </script>
+
+</body>
+</html>

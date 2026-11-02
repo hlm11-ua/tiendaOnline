@@ -12,11 +12,12 @@ export class AppError extends Error {
 
 export function errorHandler(err, req, res, next) {
   // Registrar error técnico sin exponer datos confidenciales
-  const statusCode = err.statusCode || 500;
+  const statusCode = err.statusCode || err.status || 500;
   const codigo = err.codigo || (statusCode === 500 ? 'ERROR_SERVIDOR' : 'ERROR_SOLICITUD');
   const mensaje = err.message || 'Ha ocurrido un error interno al procesar la solicitud.';
 
   res.status(statusCode).json({
+    error: codigo,
     codigo,
     mensaje
   });

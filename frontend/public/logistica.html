@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel de procesamiento logístico del taller artesanal y consulta de seguimiento de envíos en tiempo real con avisos automáticos.">
+  <title>TiendaOnline - Gestión Logística y Seguimiento de Envíos</title>
+  
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Estilos de logística y pasarela -->
+  <link rel="stylesheet" href="/src/styles/logistica.css">
+</head>
+<body>
+
+  <!-- Cabecera principal del sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="/" class="brand-link" id="brand-link" aria-label="Ir a la tienda">
+        <span class="brand-logo-icon" aria-hidden="true">🏺</span>
+        <div>
+          <span class="brand-name">TiendaOnline</span>
+          <span class="brand-badge">Taller Artesanal &amp; Envíos</span>
+        </div>
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="/checkout" class="nav-link" id="nav-checkout">🛒 Checkout de Prueba</a>
+        <a href="/logistica" class="nav-link active" id="nav-logistica">📦 Panel Logístico</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="main-content" id="main-content">
+    
+    <!-- Selector de modo: Mesa de Taller vs Consulta Comprador -->
+    <nav class="view-mode-tabs" role="tablist" aria-label="Seleccionar modo de visualización">
+      <button type="button" role="tab" class="mode-tab-btn active" id="tab-modo-taller" aria-selected="true" aria-controls="logistics-table-container">
+        📦 Panel del Taller (Gestión Operativa de Envíos)
+      </button>
+      <button type="button" role="tab" class="mode-tab-btn" id="tab-modo-seguimiento" aria-selected="false" aria-controls="tracking-view-container">
+        🔎 Consulta de Seguimiento para Clientes
+      </button>
+    </nav>
+
+    <!-- Contenedor 1: Tabla y mesa de trabajo del taller -->
+    <div id="logistics-table-container" role="tabpanel" aria-labelledby="tab-modo-taller"></div>
+
+    <!-- Contenedor 2: Vista de seguimiento y confirmación del comprador -->
+    <div id="tracking-view-container" role="tabpanel" aria-labelledby="tab-modo-seguimiento" class="hidden"></div>
+
+  </main>
+
+  <!-- Contenedores modales flotantes -->
+  <div id="dispatch-modal-container" aria-live="polite"></div>
+  <div id="notice-modal-container" aria-live="polite"></div>
+
+  <!-- Lógica y montaje de componentes de logística -->
+  <script type="module">
+    import { LogisticsApiService } from '/src/services/logistics-api.service.js';
+    import { LogisticsOrdersTable } from '/src/components/logistics-orders-table.js';
+    import { DispatchModal } from '/src/components/dispatch-modal.js';
+    import { TrackingView } from '/src/components/tracking-view.js';
+    import { ShippingNoticeModal } from '/src/components/shipping-notice-modal.js';
+
+    let transportistas = [];
+    let pedidosActuales = [];
+    let filtroActivo = 'todos';
+
+    // 1. Instanciación de componentes
+    const dispatchModal = new DispatchModal({
+      containerId: 'dispatch-modal-container',
+      onConfirm: async ({ pedido, isRectification, transportista, numeroSeguimiento, notas }) => {
+        try {
+          if (isRectification) {
+            await LogisticsApiService.rectificarTracking(pedido.codigoReferencia, {
+              transportista,
+              numeroSeguimiento,
+              motivo: notas
+            });
+          } else {
+            await LogisticsApiService.despacharPedido(pedido.codigoReferencia, {
+              transportista,
+              numeroSeguimiento,
+              notas
+            });
+          }
+          dispatchModal.close();
+          await cargarPedidos(filtroActivo);
+        } catch (err) {
+          dispatchModal.showError(err.message || 'Error al registrar el envío.');
+        }
+      }
+    });
+
+    const noticeModal = new ShippingNoticeModal({
+      containerId: 'notice-modal-container'
+    });
+
+    const trackingView = new TrackingView({
+      containerId: 'tracking-view-container',
+      onSearch: async (ref) => {
+        try {
+          const pedido = await LogisticsApiService.obtenerPedido(ref);
+          trackingView.renderOrderDetails(pedido);
+        } catch (err) {
+          trackingView.showNotFound(ref);
+        }
+      },
+      onConfirmDelivery: async (ref) => {
+        try {
+          await LogisticsApiService.confirmarEntrega(ref, 'cliente');
+          const pedido = await LogisticsApiService.obtenerPedido(ref);
+          trackingView.renderOrderDetails(pedido);
+          await cargarPedidos(filtroActivo);
+        } catch (err) {
+          alert(err.message || 'Error al confirmar la recepción del pedido.');
+        }
+      }
+    });
+
+    const ordersTable = new LogisticsOrdersTable({
+      containerId: 'logistics-table-container',
+      onFilterChange: async (nuevoFiltro) => {
+        filtroActivo = nuevoFiltro;
+        await cargarPedidos(nuevoFiltro);
+      },
+      onPrepare: async (codigoReferencia) => {
+        try {
+          await LogisticsApiService.iniciarPreparacion(codigoReferencia);
+          await cargarPedidos(filtroActivo);
+        } catch (err) {
+          alert(err.message || 'No se pudo iniciar la preparación del pedido.');
+        }
+      },
+      onDispatch: (pedido) => {
+        dispatchModal.open({
+          pedido,
+          transportistas,
+          isRectification: false
+        });
+      },
+      onRectify: (pedido) => {
+        dispatchModal.open({
+          pedido,
+          transportistas,
+          isRectification: true
+        });
+      },
+      onDeliver: async (codigoReferencia) => {
+        if (confirm(`¿Confirmar entrega definitiva para el pedido ${codigoReferencia}?`)) {
+          try {
+            await LogisticsApiService.confirmarEntrega(codigoReferencia, 'admin');
+            await cargarPedidos(filtroActivo);
+          } catch (err) {
+            alert(err.message || 'Error al registrar la entrega del pedido.');
+          }
+        }
+      },
+      onViewNotices: async (codigoReferencia) => {
+        try {
+          const res = await LogisticsApiService.obtenerAvisos(codigoReferencia);
+          noticeModal.open({
+            codigoReferencia,
+            avisos: res.avisos || []
+          });
+        } catch (err) {
+          alert(err.message || 'No se pudieron consultar los avisos del pedido.');
+        }
+      }
+    });
+
+    // 2. Funciones de carga y sincronización
+    async function cargarTransportistas() {
+      try {
+        const res = await LogisticsApiService.getTransportistas();
+        transportistas = res.transportistas || [];
+      } catch (e) {
+        transportistas = ['Correos de España', 'SEUR', 'MRW', 'GLS', 'DHL Express', 'Otro'];
+      }
+    }
+
+    async function cargarPedidos(filtro = 'todos') {
+      try {
+        const res = await LogisticsApiService.listarPedidos(filtro);
+        pedidosActuales = res.pedidos || [];
+        ordersTable.render(pedidosActuales, filtro);
+      } catch (err) {
+        console.error('Error al cargar pedidos del taller:', err);
+      }
+    }
+
+    // 3. Cambio de pestañas (Taller vs Seguimiento)
+    const btnTaller = document.getElementById('tab-modo-taller');
+    const btnSeguimiento = document.getElementById('tab-modo-seguimiento');
+    const containerTaller = document.getElementById('logistics-table-container');
+    const containerSeguimiento = document.getElementById('tracking-view-container');
+
+    function activarModoTaller() {
+      btnTaller.classList.add('active');
+      btnTaller.setAttribute('aria-selected', 'true');
+      btnSeguimiento.classList.remove('active');
+      btnSeguimiento.setAttribute('aria-selected', 'false');
+      containerTaller.classList.remove('hidden');
+      containerSeguimiento.classList.add('hidden');
+    }
+
+    function activarModoSeguimiento(ref = '') {
+      btnSeguimiento.classList.add('active');
+      btnSeguimiento.setAttribute('aria-selected', 'true');
+      btnTaller.classList.remove('active');
+      btnTaller.setAttribute('aria-selected', 'false');
+      containerSeguimiento.classList.remove('hidden');
+      containerTaller.classList.add('hidden');
+      trackingView.renderInitial(ref);
+    }
+
+    btnTaller.addEventListener('click', activarModoTaller);
+    btnSeguimiento.addEventListener('click', () => activarModoSeguimiento());
+
+    // 4. Inicialización al cargar la página
+    async function init() {
+      await cargarTransportistas();
+      await cargarPedidos(filtroActivo);
+
+      // Comprobar parámetros de URL (ej: /logistica?ref=PED-20261014-XXXX o #seguimiento)
+      const urlParams = new URLSearchParams(window.location.search);
+      const refParam = urlParams.get('ref');
+      const hash = window.location.hash;
+
+      if (refParam || hash === '#seguimiento' || window.location.pathname.includes('seguimiento')) {
+        activarModoSeguimiento(refParam || '');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -50,8 +50,80 @@ describe('Servicio Web de Checkout y Estáticos', () => {
 
       const res4 = await fetch(`http://localhost:${port}/src/components/checkout-form.js`);
       assert.strictEqual(res4.status, 200);
+
+      const resLog1 = await fetch(`http://localhost:${port}/src/components/logistics-orders-table.js`);
+      assert.strictEqual(resLog1.status, 200);
+
+      const resLog2 = await fetch(`http://localhost:${port}/src/components/dispatch-modal.js`);
+      assert.strictEqual(resLog2.status, 200);
+
+      const resLog3 = await fetch(`http://localhost:${port}/src/components/tracking-view.js`);
+      assert.strictEqual(resLog3.status, 200);
+
+      const resLog4 = await fetch(`http://localhost:${port}/src/components/shipping-notice-modal.js`);
+      assert.strictEqual(resLog4.status, 200);
+    } finally {
+      server.close();
+    }
+  });
+
+  it('debe servir logistica.html en /logistica y la hoja de estilos logistica.css', async () => {
+    const server = app.listen(0);
+    const port = server.address().port;
+
+    try {
+      const resPage = await fetch(`http://localhost:${port}/logistica`);
+      assert.strictEqual(resPage.status, 200);
+      const text = await resPage.text();
+      assert.ok(text.includes('Gestión Logística y Seguimiento de Envíos'));
+      assert.ok(text.includes('logistics-table-container'));
+      assert.ok(text.includes('tracking-view-container'));
+
+      const resCss = await fetch(`http://localhost:${port}/src/styles/logistica.css`);
+      assert.strictEqual(resCss.status, 200);
+      const cssText = await resCss.text();
+      assert.ok(cssText.includes('.timeline-step'));
+      assert.ok(cssText.includes('.logistics-panel'));
+    } finally {
+      server.close();
+    }
+  });
+
+  it('debe servir catalogo.html en /admin y /admin/catalogo y sus módulos', async () => {
+    const server = app.listen(0);
+    const port = server.address().port;
+
+    try {
+      const resAdmin = await fetch(`http://localhost:${port}/admin`);
+      assert.strictEqual(resAdmin.status, 200);
+      const adminText = await resAdmin.text();
+      assert.ok(adminText.includes('Gestión de Catálogo e Inventario Artesanal'));
+      assert.ok(adminText.includes('product-table-container'));
+      assert.ok(adminText.includes('stock-alerts-container'));
+      assert.ok(adminText.includes('category-manager-container'));
+
+      const resAdminCat = await fetch(`http://localhost:${port}/admin/catalogo`);
+      assert.strictEqual(resAdminCat.status, 200);
+
+      const resCss = await fetch(`http://localhost:${port}/src/styles/admin-catalogo.css`);
+      assert.strictEqual(resCss.status, 200);
+      const css = await resCss.text();
+      assert.ok(css.includes('.badge-stock-bajo'));
+
+      const resComp1 = await fetch(`http://localhost:${port}/src/components/admin/category-manager.js`);
+      assert.strictEqual(resComp1.status, 200);
+
+      const resComp2 = await fetch(`http://localhost:${port}/src/components/admin/product-form.js`);
+      assert.strictEqual(resComp2.status, 200);
+
+      const resComp3 = await fetch(`http://localhost:${port}/src/components/admin/product-list-table.js`);
+      assert.strictEqual(resComp3.status, 200);
+
+      const resComp4 = await fetch(`http://localhost:${port}/src/components/admin/stock-alerts-widget.js`);
+      assert.strictEqual(resComp4.status, 200);
     } finally {
       server.close();
     }
   });
 });
+

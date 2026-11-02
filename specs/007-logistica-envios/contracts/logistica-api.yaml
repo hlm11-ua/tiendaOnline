@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: API de Gestión Logística y Notificación de Envío
+  description: Endpoints para el procesamiento de pedidos en taller, asignación de tracking, avisos automáticos y confirmación de entrega.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/logistica
+    description: Servidor de desarrollo local
+
+paths:
+  /transportistas:
+    get:
+      summary: Obtener lista de empresas de mensajería disponibles
+      operationId: getTransportistas
+      responses:
+        '200':
+          description: Lista de transportistas habituales en España
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transportistas:
+                    type: array
+                    items:
+                      type: string
+                    example: ["Correos de España", "SEUR", "MRW", "GLS", "DHL Express", "Otro"]
+
+  /pedidos:
+    get:
+      summary: Listar pedidos del taller logístico
+      operationId: listLogisticaPedidos
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [todos, pagado, en_preparacion, salido_tienda, entregado]
+          description: Filtrar por estado operativo
+      responses:
+        '200':
+          description: Lista de pedidos con sus datos de envío
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pedidos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PedidoLogistica'
+
+  /pedidos/{codigoReferencia}/preparar:
+    post:
+      summary: Iniciar preparación y empaquetado del pedido en taller
+      operationId: iniciarPreparacion
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "PED-20261014-9988"
+      responses:
+        '200':
+          description: Pedido transicionado a 'en preparación'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado:
+                    type: string
+                    example: "en_preparacion"
+                  pedido:
+                    $ref: '#/components/schemas/PedidoLogistica'
+        '400':
+          $ref: '#/components/responses/ErrorRespuesta'
+        '404':
+          $ref: '#/components/responses/ErrorRespuesta'
+
+  /pedidos/{codigoReferencia}/despachar:
+    post:
+      summary: Asignar número de seguimiento y marcar como salido de la tienda
+      operationId: despacharPedido
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "PED-20261014-9988"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transportista
+                - numeroSeguimiento
+              properties:
+                transportista:
+                  type: string
+                  example: "Correos de España"
+                numeroSeguimiento:
+                  type: string
+                  minLength: 6
+                  maxLength: 32
+                  pattern: '^[A-Za-z0-9\-_]{6,32}$'
+                  example: "TRACK-ES-9988"
+                notas:
+                  type: string
+                  example: "Empaquetado reforzado con burbuja"
+      responses:
+        '200':
+          description: Pedido despachado con éxito y aviso automático generado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado:
+                    type: string
+                    example: "salido_tienda"
+                  pedido:
+                    $ref: '#/components/schemas/PedidoLogistica'
+                  aviso:
+                    $ref: '#/components/schemas/AvisoEnvio'
+        '400':
+          $ref: '#/components/responses/ErrorRespuesta'
+
+  /pedidos/{codigoReferencia}/rectificar-tracking:
+    post:
+      summary: Rectificar código de seguimiento o transportista por errata
+      operationId: rectificarTracking
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "PED-20261014-9988"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - transportista
+                - numeroSeguimiento
+              properties:
+                transportista:
+                  type: string
+                  example: "SEUR"
+                numeroSeguimiento:
+                  type: string
+                  minLength: 6
+                  maxLength: 32
+                  example: "SEUR-123456"
+                motivo:
+                  type: string
+                  example: "Corrección de código por sustitución de etiqueta"
+      responses:
+        '200':
+          description: Código rectificado y aviso de actualización emitido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pedido:
+                    $ref: '#/components/schemas/PedidoLogistica'
+                  avisoRectificacion:
+                    $ref: '#/components/schemas/AvisoEnvio'
+        '400':
+          $ref: '#/components/responses/ErrorRespuesta'
+
+  /pedidos/{codigoReferencia}/entregar:
+    post:
+      summary: Confirmar entrega del pedido (por el administrador o cliente)
+      operationId: confirmarEntrega
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "PED-20261014-9988"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                origen:
+                  type: string
+                  enum: [admin, cliente]
+                  default: admin
+      responses:
+        '200':
+          description: Pedido marcado como entregado definitivamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado:
+                    type: string
+                    example: "entregado"
+                  pedido:
+                    $ref: '#/components/schemas/PedidoLogistica'
+
+  /pedidos/{codigoReferencia}/avisos:
+    get:
+      summary: Consultar historial de notificaciones y emails emitidos
+      operationId: getAvisosPedido
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "PED-20261014-9988"
+      responses:
+        '200':
+          description: Registro de avisos del pedido para comprobación observable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avisos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvisoEnvio'
+
+components:
+  schemas:
+    PedidoLogistica:
+      type: object
+      properties:
+        id:
+          type: string
+        codigoReferencia:
+          type: string
+        clienteNombre:
+          type: string
+        clienteEmail:
+          type: string
+        total:
+          type: number
+        moneda:
+          type: string
+          example: "EUR"
+        estado:
+          type: string
+          enum: [pendiente, pagado, en_preparacion, salido_tienda, entregado]
+        envio:
+          type: object
+          nullable: true
+          properties:
+            transportista:
+              type: string
+            numeroSeguimiento:
+              type: string
+            fechaSalida:
+              type: string
+            fechaEntrega:
+              type: string
+              nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    AvisoEnvio:
+      type: object
+      properties:
+        id:
+          type: string
+        codigoReferencia:
+          type: string
+        tipo:
+          type: string
+          enum: [salida_almacen, rectificacion_tracking, confirmacion_entrega]
+        canal:
+          type: string
+          example: "email_simulado"
+        destinatarioEmail:
+          type: string
+        asunto:
+          type: string
+        cuerpoTexto:
+          type: string
+        transportista:
+          type: string
+        numeroSeguimiento:
+          type: string
+        fechaEmision:
+          type: string
+
+  responses:
+    ErrorRespuesta:
+      description: Error de validación o lógica operativa
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              codigo:
+                type: string
+                example: "ESTADO_INVALIDO"
+              mensaje:
+                type: string
+                example: "No se puede despachar un pedido que no ha sido pagado."

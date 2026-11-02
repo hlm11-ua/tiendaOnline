@@ -25,7 +25,10 @@ export class Order {
     transaccionId,
     fechaCreacion,
     lineas = [],
-    reciboTarjeta = null
+    reciboTarjeta = null,
+    envio = null,
+    avisosEnvio = [],
+    updatedAt = null
   }) {
     this.id = id || crypto.randomUUID();
     this.codigoReferencia = codigoReferencia || Order.generateReferenceCode();
@@ -33,11 +36,14 @@ export class Order {
     this.clienteEmail = clienteEmail;
     this.cuentaId = cuentaId;
     this.total = Number(total);
-    this.estado = estado; // Siempre "pagado" en creación
+    this.estado = estado; // Inicia en "pagado"
     this.transaccionId = transaccionId;
     this.fechaCreacion = fechaCreacion || new Date().toISOString();
+    this.updatedAt = updatedAt || this.fechaCreacion;
     this.lineas = lineas.map(line => line instanceof OrderLine ? line : new OrderLine(line));
     this.reciboTarjeta = reciboTarjeta;
+    this.envio = envio;
+    this.avisosEnvio = Array.isArray(avisosEnvio) ? avisosEnvio : [];
   }
 
   static generateReferenceCode() {
