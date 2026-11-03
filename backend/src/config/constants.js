@@ -101,6 +101,30 @@ export const CONSTANTS = {
     CUSTOMER: 'cliente'
   },
 
+  // Configuración de Resumen de Ventas y Exportación (Feature 008)
+  SALES_REPORT: {
+    PERIODS: {
+      SEVEN_DAYS: '7_dias',
+      THIRTY_DAYS: '30_dias',
+      ONE_YEAR: '1_ano',
+      CUSTOM: 'personalizado'
+    },
+    PERIOD_LABELS: {
+      '7_dias': 'Últimos 7 días',
+      '30_dias': 'Último mes (30 días)',
+      '1_ano': 'Último año (365 días)',
+      'personalizado': 'Rango personalizado'
+    },
+    TOP_RANKING_LIMIT: 5,
+    CSV: {
+      DELIMITER: ';',
+      DECIMAL_SEPARATOR: ',',
+      HEADER: 'Fecha;Nº Pedido;Producto;Artesano;Unidades;Importe (€)',
+      BOM: '\uFEFF',
+      MIME_TYPE: 'text/csv; charset=utf-8'
+    }
+  },
+
   // Puerto por defecto
   PORT: process.env.PORT || 3000
 };

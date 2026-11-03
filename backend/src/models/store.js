@@ -679,6 +679,34 @@ class MemoryStore {
     if (!order) return [];
     return order.avisosEnvio || [];
   }
+
+  // === MÉTODOS DE RESUMEN Y REPORTES DE VENTA (008) ===
+
+  /**
+   * Obtiene los pedidos confirmados y cobrados dentro de un rango de fechas.
+   * Computa únicamente pedidos en estados ['pagado', 'en_preparacion', 'salido_tienda', 'entregado'].
+   * @param {Date|string} fechaInicio
+   * @param {Date|string} fechaFin
+   * @returns {Array}
+   */
+  getPaidOrdersInDateRange(fechaInicio, fechaFin) {
+    const start = new Date(fechaInicio);
+    const end = new Date(fechaFin);
+    const paidStatuses = [
+      CONSTANTS.ORDER_STATUS.PAID,
+      CONSTANTS.ORDER_STATUS.IN_PREPARATION,
+      CONSTANTS.ORDER_STATUS.SHIPPED,
+      CONSTANTS.ORDER_STATUS.DELIVERED
+    ];
+
+    return Array.from(this.orders.values()).filter(order => {
+      if (!paidStatuses.includes(order.estado)) {
+        return false;
+      }
+      const orderDate = new Date(order.fechaCreacion || 0);
+      return orderDate >= start && orderDate <= end;
+    });
+  }
 }
 
 export const store = new MemoryStore();

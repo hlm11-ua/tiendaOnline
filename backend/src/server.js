@@ -58,19 +58,28 @@ app.get('/admin/catalogo.html', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'admin', 'catalogo.html'));
 });
 
+// Rutas del panel de informes y estadísticas de ventas (Feature 008)
+app.get('/admin/ventas', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'admin', 'ventas.html'));
+});
+
+app.get('/admin/ventas.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'admin', 'ventas.html'));
+});
+
 // Endpoint de salud del sistema
 app.get('/api/health', (req, res) => {
   res.json({
     estado: 'ok',
-    servicio: 'TiendaOnline - Pasarela de Pago, Logística y Catálogo',
+    servicio: 'TiendaOnline - Pasarela de Pago, Logística, Catálogo y Ventas',
     version: '1.0.0',
     moneda: CONSTANTS.CURRENCY,
     idioma: CONSTANTS.LOCALE
   });
 });
 
-// Los routers de pagos, pedidos, logística y administración de catálogo se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter) {
+// Los routers de pagos, pedidos, logística, administración de catálogo y ventas se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter) {
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
   }
@@ -82,6 +91,9 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
   }
   if (catalogAdminRouter) {
     app.use('/api/admin', catalogAdminRouter);
+  }
+  if (salesReportRouter) {
+    app.use('/api/admin/ventas', salesReportRouter);
   }
   // Middleware de error al final de la cadena
   app.use(errorHandler);
@@ -105,7 +117,14 @@ try {
   } catch (errCatalog) {
     // Rutas de administración de catálogo aún no inicializadas
   }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes);
+  let salesReportRoutes = null;
+  try {
+    const salesModule = await import('./routes/sales-report.routes.js');
+    salesReportRoutes = salesModule.salesReportRoutes;
+  } catch (errSales) {
+    // Rutas de ventas aún no inicializadas
+  }
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, salesReportRoutes);
 } catch (e) {
   app.use(errorHandler);
 }
@@ -117,5 +136,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename
     console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
     console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);
+    console.log(`  - Informes Ventas: http://localhost:${CONSTANTS.PORT}/admin/ventas`);
   });
 }

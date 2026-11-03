@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cuadro de mando y resumen de ventas por períodos, ranking de productos más vendidos y exportación de transacciones a CSV.">
+  <title>TiendaOnline - Informes de Ventas y Métricas</title>
+
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos compartidos de administración y cuadro de mando de ventas -->
+  <link rel="stylesheet" href="/src/styles/admin-catalogo.css">
+  <link rel="stylesheet" href="/src/styles/admin-ventas.css">
+</head>
+<body>
+
+  <!-- Encabezado Principal del Sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <div class="brand-section">
+        <span class="logo-icon" aria-hidden="true">🏺</span>
+        <a href="/" class="logo-text">TiendaOnline</a>
+        <span class="badge-admin">Administración</span>
+      </div>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="/" class="nav-link">🛒 Tienda / Checkout</a>
+        <a href="/logistica" class="nav-link">📦 Gestión Logística</a>
+        <a href="/admin/catalogo" class="nav-link">🛠️ Catálogo e Inventario</a>
+        <a href="/admin/ventas" class="nav-link active">📊 Informes de Ventas</a>
+        <div class="user-indicator">
+          <span>👤 Administrador</span>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal -->
+  <main class="admin-main-container" id="main-content">
+    
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Informes de Ventas y Rendimiento Comercial</h1>
+        <p class="page-subtitle">Facturación agregada en euros (€), ranking Top 5 de artículos más vendidos y exportación transaccional estructurada en CSV.</p>
+      </div>
+    </div>
+
+    <!-- Contenedor del Cuadro de Mando de Ventas -->
+    <div id="sales-dashboard-app"></div>
+
+  </main>
+
+  <!-- Script modular para montar el componente de ventas -->
+  <script type="module">
+    import { SalesReportView } from '/src/components/admin/sales-report-view.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const salesView = new SalesReportView({ containerId: 'sales-dashboard-app' });
+      salesView.init();
+    });
+  </script>
+
+</body>
+</html>
