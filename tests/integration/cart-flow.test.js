@@ -126,7 +126,7 @@ describe('Pruebas de Integración: Flujo Completo del Carrito y Persistencia (ca
     });
     assert.equal(checkoutRes.status, 200);
     assert.ok(checkoutRes.body.sesionPagoId);
-    assert.equal(checkoutRes.body.importeTotal, 57.00);
+    assert.equal(checkoutRes.body.total, 57.00);
 
     // 3. Tras finalizar compra con éxito, se invoca vaciado de cesta
     const clearRes = await request('/api/carrito', {
