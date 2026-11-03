@@ -2,7 +2,7 @@
 
 **Feature**: `specs/002-carrito-persistente/spec.md`  
 **Responsable**: Desarrollador 2  
-**Fecha**: 2026-10-19  
+**Fecha**: 2026-10-19 (Actualizado: 2026-11-02)
 
 ---
 
@@ -42,16 +42,17 @@ Representa cada variante de producto artesanal incorporada al carrito de compra.
 ---
 
 ### 1.3. Stock de Variante (`VariantStock`)
-Entidad existente en el inventario del backend (`store.inventory`) consultada para las comprobaciones de stock.
+Entidad existente en el inventario del backend (`store.inventory`) y catálogo (`store.variants`, `store.products`) consultada para las comprobaciones de stock y disponibilidad en tiempo real.
 
 | Campo | Tipo | Requerido | Descripción |
 | :--- | :--- | :--- | :--- |
 | `varianteId` | `string` | Sí | Identificador único de la variante. |
-| `productoId` | `string` | Sí | Identificador del producto. |
-| `titulo` | `string` | Sí | Nombre de la variante o pieza. |
-| `precioUnitario`| `number` | Sí | Precio oficial vigente en catálogo. |
-| `stockTotal` | `number` | Sí | Existencias físicas reales disponibles para venta inmediata. |
-| `despublicado` | `boolean` | No | Indica si la pieza ha sido retirada o eliminada por el artesano. |
+| `productoId` | `string` | Sí | Identificador del producto matriz. |
+| `titulo` | `string` | Sí | Nombre oficial de la variante o pieza en catálogo. |
+| `precioUnitario`| `number` | Sí | Precio oficial vigente en catálogo (`Product.precioBase` compartido por todas las variantes). |
+| `stockTotal` | `number` | Sí | Existencias físicas totales registradas en inventario de taller. |
+| `stockDisponible` | `number` | Sí | Unidades libres para venta inmediata calculadas por `store.getAvailableStock(varianteId)` (`stockTotal - reservasActivasCheckout`). |
+| `estadoCatalogo` | `string` | Sí | Estado en catálogo (`'activa'` / `'archivada'`). Una variante es `no_disponible` si no existe en inventario o su producto/variante está archivado en `006`. |
 
 ---
 
@@ -68,6 +69,21 @@ Objeto informativo retornado al cliente para componer avisos visuales destacados
 | `cantidadNueva` | `number?` | Cantidad resultante tras el ajuste. |
 | `precioPrevio` | `number?` | Precio que figuraba en la cesta local antes de actualizarse. |
 | `precioNuevo` | `number?` | Precio vigente tras sincronizar con el catálogo. |
+
+---
+
+### 1.5. Línea Validada (`LineaValidada`)
+DTO retornado por el endpoint `/api/carrito/validar-stock` para sincronizar el estado reactivo del cliente con el inventario en tiempo real.
+
+| Campo | Tipo | Descripción |
+| :--- | :--- | :--- |
+| `varianteId` | `string` | Identificador de la variante. |
+| `titulo` | `string` | Título comercial actualizado. |
+| `cantidadDeseada` | `number` | Unidades deseadas originalmente por el comprador. |
+| `cantidadAjustada`| `number` | Unidades finales asignadas respetando el stock disponible. |
+| `stockDisponible` | `number` | Existencias reales libres en tiempo real (`store.getAvailableStock(varianteId)`). |
+| `precioVigente` | `number` | Precio unitario oficial vigente en catálogo en euros (€). |
+| `estado` | `string` | `'disponible' \| 'reajustado' \| 'agotado' \| 'no_disponible'` |
 
 ---
 
@@ -94,11 +110,11 @@ stateDiagram-v2
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Disponible : Añadir al carrito (cantidad <= stock)
-    Disponible --> Reajustado : Compras concurrentes reducen stock < cantidad deseada
+    [*] --> Disponible : Añadir al carrito (cantidad <= stockDisponible)
+    Disponible --> Reajustado : Compras concurrentes o reservas reducen stockDisponible < cantidad deseada
     Reajustado --> Disponible : Stock suficiente repuesto o usuario ajusta cantidad
-    Disponible --> Agotado : Stock baja a 0 por compras concurrentes
-    Disponible --> No_Disponible : Artesano elimina o despublica la pieza en catálogo
+    Disponible --> Agotado : Stock disponible baja a 0 por compras o reservas
+    Disponible --> No_Disponible : Artesano elimina o archiva la pieza en catálogo (006)
     
     Disponible --> [*] : Cantidad reducida a 0 / Pulsar botón eliminar
     Reajustado --> [*] : Cantidad reducida a 0 / Pulsar botón eliminar
@@ -110,8 +126,9 @@ stateDiagram-v2
 
 ## 3. Reglas de Validación y Consistencia del Negocio
 
-1. **Invariante de Inventario (FR-002)**: En ningún caso la suma de cantidades para una `varianteId` en un carrito puede ser mayor que su `stockTotal` actual en `store.inventory`.
+1. **Invariante de Inventario (FR-002)**: En ningún caso la suma de cantidades para una `varianteId` en un carrito puede ser mayor que su `stockDisponible` actual calculado por el servicio compartido de inventario (`store.getAvailableStock(varianteId)`, que descuenta de forma síncrona las reservas temporales activas de checkout de `003-pago-tarjeta`).
 2. **Exclusión de Importes en Líneas Inválidas (FR-008, Edge Cases)**: Las líneas en estado `'agotado'` o `'no_disponible'` tienen `subtotalLinea = 0.00` y no computan para el `subtotal` ni el `total` del carrito.
 3. **Bloqueo de Tramitación (FR-008)**: Si al menos una línea tiene estado `'agotado'` o `'no_disponible'`, el estado global del carrito pasa a `'bloqueado'` y el botón "Tramitar pedido" queda deshabilitado en la UI.
 4. **Validación de Cero Artículos (FR-001)**: Si `items.length === 0`, el estado es `'vacio'`, el subtotal y total son `0.00 €` y la tramitación queda deshabilitada.
 5. **Formateo de Moneda (Principio II)**: Toda salida numérica formateada en la interfaz debe coincidir con `Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })` (ej. `45,00 €`).
+6. **Sincronización de Precios Vigentes (FR-005)**: Al cargar el carrito o pulsar "Tramitar pedido", el precio unitario se contrasta con `store.getProductById(productoId).precioBase` (o el inventario sincronizado). Si difiere, se actualiza el precio, se recalcula el subtotal y se emite un `AdjustmentNotice` de tipo `'precio_actualizado'`.

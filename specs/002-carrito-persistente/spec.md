@@ -57,7 +57,7 @@ Como comprador, quiero añadir $n$ unidades de productos o variantes a mi cesta 
 ### Functional Requirements
 
 - **FR-001**: El sistema DEBE permitir añadir productos y variantes al carrito de compra indicando la cantidad deseada; ante una cesta vacía (0 artículos), DEBE presentar el mensaje informativo "Tu cesta está vacía", enlace al catálogo y el botón "Tramitar pedido" inhabilitado.
-- **FR-002**: El sistema DEBE validar de forma obligatoria que la cantidad en el carrito para cada variante no supere nunca las unidades reales en stock.
+- **FR-002**: El sistema DEBE validar de forma obligatoria que la cantidad en el carrito para cada variante no supere nunca las unidades reales disponibles en stock.
 - **FR-003**: El sistema DEBE persistir los datos del carrito de forma indefinida en el almacenamiento local del cliente (LocalStorage) para usuarios anónimos hasta que se formalice la compra, el usuario lo vacíe manualmente o limpie los datos del navegador, recuperándolos íntegramente al reiniciar el navegador.
 - **FR-004**: El sistema DEBE permitir modificar cantidades o eliminar productos del carrito en cualquier momento, admitiendo únicamente números enteros positivos entre 1 y las existencias reales en stock (establecer 0 elimina el artículo; cualquier entrada decimal, negativa o no numérica se descarta restaurando el valor anterior).
 - **FR-005**: El sistema DEBE calcular dinámicamente el subtotal por artículo y el total global del carrito en euros (€), mostrando un desglose informativo con la estimación previa de gastos de envío estándar fijada en 0,00 € (envío gratuito) para todos los pedidos en la versión v1; al abrir la vista de la cesta o pulsar "Tramitar pedido", DEBE sincronizar los precios unitarios con los precios vigentes en catálogo y advertir al comprador mediante aviso informativo si ha ocurrido alguna variación.
@@ -75,13 +75,13 @@ Como comprador, quiero añadir $n$ unidades de productos o variantes a mi cesta 
 
 - **Carrito**: Contenedor de compra asociado a un visitante o usuario (identificador, fecha de actualización).
 - **Línea de Carrito**: Elemento de la cesta (variante de producto, precio unitario en €, cantidad seleccionada).
-- **Stock de Variante**: Unidades físicas reales disponibles para venta inmediata.
+- **Stock de Variante**: Unidades físicas reales disponibles para venta inmediata verificadas en tiempo real.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: El 100% de los intentos de añadir más unidades de las disponibles en stock quedan bloqueados de forma inmediata.
+- **SC-001**: El 100% de los intentos de añadir más unidades de las disponibles en stock quedan bloqueados de forma inmediata (< 100 ms).
 - **SC-002**: La persistencia del carrito se mantiene en el 100% de los casos al reabrir el navegador en la misma máquina o sesión.
 - **SC-003**: El cálculo del importe total en euros se actualiza en menos de 200 ms tras modificar una cantidad.
 

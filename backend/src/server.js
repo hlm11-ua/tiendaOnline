@@ -28,6 +28,19 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
 
+// Rutas de cesta de compras y carrito persistente (Feature 002)
+app.get('/carrito', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
+});
+
+app.get('/carrito.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
+});
+
+app.get('/cart', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
+});
+
 // Rutas de gestión logística y seguimiento de envíos (Feature 007)
 app.get('/logistica', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
@@ -62,15 +75,15 @@ app.get('/admin/catalogo.html', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     estado: 'ok',
-    servicio: 'TiendaOnline - Pasarela de Pago, Logística y Catálogo',
+    servicio: 'TiendaOnline - Pasarela de Pago, Logística, Catálogo y Carrito',
     version: '1.0.0',
     moneda: CONSTANTS.CURRENCY,
     idioma: CONSTANTS.LOCALE
   });
 });
 
-// Los routers de pagos, pedidos, logística y administración de catálogo se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter) {
+// Los routers de pagos, pedidos, logística, administración de catálogo y carrito se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, cartRouter) {
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
   }
@@ -82,6 +95,9 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
   }
   if (catalogAdminRouter) {
     app.use('/api/admin', catalogAdminRouter);
+  }
+  if (cartRouter) {
+    app.use('/api/carrito', cartRouter);
   }
   // Middleware de error al final de la cadena
   app.use(errorHandler);
@@ -105,7 +121,14 @@ try {
   } catch (errCatalog) {
     // Rutas de administración de catálogo aún no inicializadas
   }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes);
+  let cartRoutes = null;
+  try {
+    const cartModule = await import('./routes/cart.routes.js');
+    cartRoutes = cartModule.cartRoutes;
+  } catch (errCart) {
+    // Rutas de carrito aún no inicializadas
+  }
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, cartRoutes);
 } catch (e) {
   app.use(errorHandler);
 }
@@ -114,6 +137,7 @@ try {
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   app.listen(CONSTANTS.PORT, () => {
     console.log(`[TiendaOnline] Servidor activo en http://localhost:${CONSTANTS.PORT}`);
+    console.log(`  - Carrito: http://localhost:${CONSTANTS.PORT}/carrito`);
     console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
     console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);

@@ -95,6 +95,30 @@ export const CONSTANTS = {
     }
   },
 
+  // Configuración de Carrito de Compras (Feature 002)
+  CART: {
+    STORAGE_KEY: 'tienda_online_cart_v1',
+    MAX_ITEMS: 50,
+    DEFAULT_SHIPPING_ESTIMATE_EUR: 0.00,
+    STATUS: {
+      EMPTY: 'vacio',
+      READY: 'listo',
+      BLOCKED: 'bloqueado'
+    },
+    ITEM_STATUS: {
+      AVAILABLE: 'disponible',
+      ADJUSTED: 'reajustado',
+      OUT_OF_STOCK: 'agotado',
+      UNAVAILABLE: 'no_disponible'
+    },
+    NOTICE_TYPES: {
+      STOCK_ADJUSTED: 'stock_reajustado',
+      STOCK_EXHAUSTED: 'stock_agotado',
+      PRICE_UPDATED: 'precio_actualizado',
+      PRODUCT_UNAVAILABLE: 'producto_no_disponible'
+    }
+  },
+
   // Roles de usuario (FR-001)
   ROLES: {
     ADMIN: 'admin',

@@ -2,7 +2,7 @@
 
 **Feature**: `specs/002-carrito-persistente/spec.md`  
 **Responsable**: Desarrollador 2  
-**Fecha**: 2026-10-19  
+**Fecha**: 2026-10-19 (Actualizado: 2026-11-02)
 
 Esta guía describe cómo ejecutar el entorno y verificar de principio a fin los 7 escenarios de aceptación y los criterios de éxito cuantitativos del carrito de compras persistente.
 
@@ -28,9 +28,11 @@ npm test
 ```
 
 ### Pruebas de Contrato y Reglas de Negocio a Validar
-- `tests/unit/cart-service.test.js`: Validación de cálculo de subtotales, rechazo de cantidades inválidas (< 0, decimales, no numéricas) y control estricto de límite de stock.
+- `tests/unit/cart-service.test.js`: Validación de cálculo de subtotales, rechazo de cantidades inválidas (< 0, decimales, no numéricas) y control estricto de límite de stock disponible.
 - `tests/unit/cart-merge.test.js`: Algoritmo de fusión de carritos (suma de artículos coincidentes y recorte al stock disponible con emisión de avisos).
-- `tests/integration/cart-api.test.js`: Verificación de endpoints REST según [cart-api.yaml](contracts/cart-api.yaml).
+- `tests/contract/cart-api.contract.test.js`: Pruebas de conformidad OpenAPI y validación de endpoints según [cart-api.yaml](contracts/cart-api.yaml).
+- `tests/integration/cart-flow.test.js`: Pruebas de integración del flujo de cesta y persistencia en LocalStorage.
+- `tests/integration/cart-sync.test.js`: Pruebas de sincronización y validación reactiva de stock disponible ante compras concurrentes.
 
 ---
 
@@ -42,14 +44,14 @@ Iniciar el servidor en modo desarrollo:
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:3000`.
+La aplicación estará disponible en `http://localhost:3000`. La vista del carrito se sirve en `http://localhost:3000/carrito`.
 
 ---
 
 ## 4. Escenarios de Validación Manual (Criterio no técnico)
 
 ### Escenario 1: Añadir Productos y Cálculo de Totales con Envío Gratuito
-1. Navega a `http://localhost:3000` (o la vista de catálogo/cesta).
+1. Navega a `http://localhost:3000/carrito` (o la vista de catálogo/cesta).
 2. Selecciona la pieza "Jarrón de Cerámica Esmaltada Azul" (precio 45,00 €, stock disponible: 5).
 3. Selecciona 3 unidades y pulsa "Añadir al carrito".
 4. **Resultado esperado**: La cesta se actualiza mostrando:
@@ -60,18 +62,18 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ---
 
-### Escenario 2: Bloqueo de Incremento por Encima del Stock Real
-1. Con un producto que tiene exactamente 2 unidades en inventario (ej. "Manta de Lana Merina").
-2. Intenta subir el selector de cantidad a 3 unidades o escribir manualmente "3".
+### Escenario 2: Bloqueo de Incremento por Encima del Stock Real Disponible
+1. Selecciona la pieza "Pieza Única de Orfebrería en Cobre" (que cuenta con exactamente 1 unidad en stock) o "Manta de Lana Merina" (con 3 unidades disponibles).
+2. Intenta subir el selector de cantidad por encima del stock (ej. solicitar 2 unidades para la Pieza Única, o 4 unidades para la Manta).
 3. **Resultado esperado**:
-   - El selector bloquea el valor en 2 unidades de forma inmediata (< 100 ms, SC-001).
-   - Se muestra una alerta contextual en línea: `"Cantidad máxima disponible alcanzada (2 unidades)"`.
+   - El selector bloquea el valor en el stock máximo disponible de forma inmediata (< 100 ms, SC-001).
+   - Se muestra una alerta contextual en línea: `"Cantidad máxima disponible alcanzada"`.
 
 ---
 
 ### Escenario 3: Persistencia Local del Visitante Anónimo
 1. Con artículos en la cesta, cierra por completo la pestaña y el navegador web.
-2. Vuelve a abrir el navegador en la misma máquina y accede a `http://localhost:3000`.
+2. Vuelve a abrir el navegador en la misma máquina y accede a `http://localhost:3000/carrito`.
 3. **Resultado esperado**:
    - Todos los artículos, variantes y cantidades se recuperan intactos desde `LocalStorage` (SC-002).
 
@@ -79,7 +81,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ### Escenario 4: Reajuste Automático ante Compras Concurrentes
 1. Mantén 3 unidades de un producto en la cesta.
-2. Simula una compra concurrente de 2 unidades desde otra ventana o mediante llamada API al inventario (dejando el stock en 1).
+2. Simula una compra concurrente de 2 unidades desde otra ventana o mediante llamada API al inventario (dejando el stock disponible en 1).
 3. Vuelve a la cesta o haz clic en cualquier control de cantidad.
 4. **Resultado esperado**:
    - La cantidad se reajusta automáticamente a 1 unidad.
@@ -100,7 +102,7 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ### Escenario 6: Sincronización Automática de Precios de Catálogo
 1. Ten un artículo guardado en la cesta con precio de 20,00 €.
-2. Modifica el precio de la pieza en catálogo a 25,00 €.
+2. Modifica el precio de la pieza en catálogo a 25,00 € (mediante el panel de administración de catálogo `006`).
 3. Carga la cesta o pulsa "Tramitar pedido".
 4. **Resultado esperado**:
    - El precio unitario se actualiza a 25,00 € y se recalculan subtotales.

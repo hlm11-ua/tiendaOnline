@@ -249,6 +249,9 @@ class MemoryStore {
 
     // Pedidos indexados por código de referencia para búsqueda rápida
     this.ordersByCode = new Map();
+
+    // Carritos de compra (002): usuarioId/sessionId -> Carrito
+    this.carts = new Map();
   }
 
   // === MÉTODOS DE INVENTARIO Y RESERVAS ===
@@ -678,6 +681,25 @@ class MemoryStore {
     const order = this.getOrderByCode(codigoReferencia);
     if (!order) return [];
     return order.avisosEnvio || [];
+  }
+
+  // === MÉTODOS DE CARRITO DE COMPRAS (002) ===
+
+  getCart(usuarioId) {
+    if (!usuarioId) return null;
+    return this.carts.get(usuarioId) || null;
+  }
+
+  saveCart(usuarioId, cart) {
+    if (!usuarioId) return null;
+    const cartData = typeof cart?.toJSON === 'function' ? cart.toJSON() : { ...cart };
+    this.carts.set(usuarioId, cartData);
+    return this.carts.get(usuarioId);
+  }
+
+  deleteCart(usuarioId) {
+    if (!usuarioId) return false;
+    return this.carts.delete(usuarioId);
   }
 }
 

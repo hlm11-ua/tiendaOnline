@@ -2,7 +2,7 @@
 
 **Feature**: `specs/002-carrito-persistente/spec.md`  
 **Responsable**: Desarrollador 2  
-**Fecha**: 2026-10-19  
+**Fecha**: 2026-10-19 (Actualizado: 2026-11-02)
 
 ---
 
@@ -29,26 +29,29 @@
 
 ---
 
-## 2. Estrategia de Verificación de Stock en Tiempo Real
+## 2. Estrategia de Verificación de Stock en Tiempo Real y Catálogo
 
 ### Contexto y Requisitos
 - **FR-002 / FR-006**: Validar stock obligatoriamente; reajustar automáticamente si el stock disminuyó por compras concurrentes en tres momentos críticos: al abrir la cesta, al modificar cualquier cantidad y al pulsar "Tramitar pedido".
-- **Out of Scope**: Quedan excluidas las reservas de stock con temporizador en el carrito (solo se reservan en el checkout final).
+- **FR-005**: Sincronizar precios con catálogo vigente (`006-administracion-catalogo`).
+- **FR-008**: Detectar piezas eliminadas o archivadas en catálogo.
+- **Out of Scope**: Quedan excluidas las reservas de stock con temporizador en el carrito (solo se reservan en el checkout final de `003-pago-tarjeta`).
 
 ### Decisión
 - Implementar un endpoint síncrono ligero: `POST /api/carrito/validar-stock`.
-- El frontend envía la lista de `{ varianteId, cantidad }`. El backend consulta el inventario en `store.inventory`, calcula la disponibilidad actual y devuelve:
-  - `valido`: booleano (`true` si todas las cantidades deseadas son <= stock real).
-  - `items`: array con `{ varianteId, stockDisponible, cantidadAjustada, estado: 'disponible' | 'reajustado' | 'agotado' | 'no_disponible' }`.
-- Si el backend detecta artículos agotados o con stock reducido, el frontend actualiza automáticamente el estado local, recalcula subtotales y muestra el aviso visual en línea.
+- El frontend envía la lista de `{ varianteId, cantidad }`. El backend consulta:
+  1. La disponibilidad real mediante `store.getAvailableStock(varianteId)`, la cual descuenta de forma síncrona las unidades bloqueadas en reservas temporales de checkout activas de `003-pago-tarjeta`.
+  2. El precio oficial vigente a través de `store.getProductById(productoId)?.precioBase` compartido por todas las variantes en `006`.
+  3. El estado en catálogo: si la variante o producto no existe en `store.inventory`/`store.variants` o su estado es `'archivado'`/`'archivada'`, se marca como `'no_disponible'`.
+- Devuelve:
+  - `valido`: booleano (`true` si todas las cantidades deseadas son <= stock disponible y no hay piezas no disponibles).
+  - `bloqueaTramitacion`: booleano (`true` si existe alguna línea `'agotado'` o `'no_disponible'`).
+  - `items`: array con `{ varianteId, stockDisponible, cantidadAjustada, precioVigente, estado: 'disponible' | 'reajustado' | 'agotado' | 'no_disponible' }`.
+  - `avisos`: array de `AvisoReajuste` informando de variaciones de stock, precio o disponibilidad.
 
 ### Razones
 - Respeto estricto del alcance: sin temporizadores en cesta, verificación bajo demanda en los 3 puntos clave exigidos por la spec.
-- No sobrecarga la red con sockets o polling innecesario.
-
-### Alternativas Rechazadas
-- *WebSockets / Server-Sent Events*: Descartado por complejidad y consumo innecesario de conexiones en una tienda de producción artesanal pequeña.
-- *Bloqueo de stock al añadir al carrito*: Prohibido explícitamente en la especificación y en las asunciones del proyecto.
+- Consistencia con el servicio de inventario y reservas de `003-pago-tarjeta` y la administración de catálogo de `006`.
 
 ---
 
@@ -63,14 +66,19 @@
 - Algoritmo en backend:
   1. Obtener carrito remoto del usuario (`remotoItems`).
   2. Para cada artículo del carrito local anónimo (`localItem`):
+     - Obtener `stockDisponible = store.getAvailableStock(localItem.varianteId)`.
+     - Si la pieza está archivada o no existe en inventario:
+       - Registrar línea con estado `'no_disponible'`, cantidad 0 y registrar advertencia `{ tipo: 'producto_no_disponible' }`.
+     - Si `stockDisponible <= 0`:
+       - Registrar línea con estado `'agotado'`, cantidad 0 y registrar advertencia `{ tipo: 'stock_agotado' }`.
      - Si existe en `remotoItems`:
        - `suma = remotoItem.cantidad + localItem.cantidad`.
-       - Si `suma <= stockReal`: `cantidadFinal = suma`.
-       - Si `suma > stockReal`: `cantidadFinal = stockReal`, registrar advertencia `{ varianteId, cantidadSolicitada: suma, cantidadAsignada: stockReal, motivo: 'stock_insuficiente' }`.
+       - Si `suma <= stockDisponible`: `cantidadFinal = suma`.
+       - Si `suma > stockDisponible`: `cantidadFinal = stockDisponible`, registrar advertencia `{ tipo: 'stock_reajustado', cantidadPrevia: suma, cantidadNueva: stockDisponible }`.
      - Si no existe en `remotoItems`:
-       - `cantidadFinal = min(localItem.cantidad, stockReal)`.
-       - Si `localItem.cantidad > stockReal`, registrar advertencia.
-  3. Guardar el nuevo carrito unificado en la cuenta del usuario.
+       - `cantidadFinal = min(localItem.cantidad, stockDisponible)`.
+       - Si `localItem.cantidad > stockDisponible`, registrar advertencia `{ tipo: 'stock_reajustado', cantidadPrevia: localItem.cantidad, cantidadNueva: stockDisponible }`.
+  3. Guardar el nuevo carrito unificado en la cuenta del usuario (`store.carts.set(usuarioId, carrito)`).
   4. Devolver el carrito completo y la lista de `avisosReajuste`.
   5. El cliente vacía el `LocalStorage` local y adopta el carrito fusionado devuelto.
 
@@ -97,7 +105,7 @@
 - **Backend**: En los endpoints de modificación de cantidad (`PUT /api/carrito/items/:varianteId`):
   - Validar con `Number.isInteger(cantidad) && cantidad >= 0`.
   - Si `cantidad === 0`, eliminar la línea.
-  - Si `cantidad > stock`, responder `400 Bad Request` o `409 Conflict` con detalle del stock disponible.
+  - Si `cantidad > stockDisponible`, responder `409 Conflict` con detalle del stock disponible.
 
 ---
 
@@ -107,3 +115,19 @@
 - Utilizar `Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })` para todas las representaciones de subtotales, totales y gastos de envío.
 - La estimación de gastos de envío estándar se fija en `0,00 €` (envío gratuito en v1, FR-005).
 - Todos los cálculos internos operan con números de coma flotante redondeados a 2 decimales (`Math.round(val * 100) / 100`).
+
+---
+
+## 6. Integración y Flujo hacia Checkout / Vaciado de Cesta (FR-003, 003-pago-tarjeta)
+
+### Contexto y Requisitos
+- FR-003 exige que el carrito persista hasta que el comprador "formalice la compra".
+- La pasarela de pago y checkout es gestionada por `003-pago-tarjeta` en `/checkout` (`checkout.html`).
+
+### Decisión
+1. **Traspaso a Checkout**:
+   - Al pulsar "Tramitar pedido" en `cart-view.js`, se valida el stock (`POST /api/carrito/validar-stock`). Si el resultado es válido, se redirige al comprador a `/checkout`.
+   - `checkout.html` inicializa la sesión de cobro llamando a `PaymentApiService.iniciarPago` con los artículos leídos de `LocalStorage` (`tienda_online_cart_v1`) o mediante la API de carrito si el usuario está autenticado.
+2. **Vaciado tras Confirmación de Compra**:
+   - Tras confirmarse el pago de forma autorizada (`finalizarConExito` en `checkout.html`), se invoca `cartStorage.clearCart()`, el cual elimina la clave `tienda_online_cart_v1` del `LocalStorage` y, si hay sesión autenticada, envía `DELETE /api/carrito` al backend.
+   - De este modo, al volver a la tienda o abrir la cesta tras una compra completada, el carrito se encuentra en su estado *Zero-state* ("Tu cesta está vacía").

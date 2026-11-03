@@ -1,6 +1,6 @@
 # Implementation Plan: 002 - Carrito de Compras Persistente con Control de Stock
 
-**Branch**: `002-carrito-persistente` | **Date**: 2026-10-19 | **Spec**: [spec.md](spec.md)
+**Branch**: `002-carrito-persistente` | **Date**: 2026-10-19 (Actualizado: 2026-11-02) | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `specs/002-carrito-persistente/spec.md` (revisada y clarificada con 5 sesiones integradas).
 
@@ -10,9 +10,10 @@
 
 Implementar un sistema de carrito de compras resiliente y transparente para la tienda de artesanías que garantice:
 1. **Persistencia dual**: Uso de `window.localStorage` en el navegador para visitantes anónimos y almacenamiento en memoria del servidor (`MemoryStore`) para usuarios autenticados.
-2. **Control estricto de inventario**: Validación síncrona en el backend al consultar y modificar el carrito, utilizando la disponibilidad de stock calculada por el servicio de inventario compartido. Al iniciar el checkout, la funcionalidad 003-pago-tarjeta revalidará la disponibilidad y gestionará las reservas temporales.
-3. **Fusión determinista con advertencias**: Al iniciar sesión, combinar los carritos sumando cantidades coincidentes hasta el límite de stock disponible y notificando al comprador en caso de recorte.
-4. **Respeto a la Constitución**: Moneda oficial euro (`€`) con formato `es-ES`, estimación de envío gratuito fija en `0,00 €` en v1, tratamiento de cesta vacía (*Zero-state*) y ausencia total de complejidad anticipada o reservas artificiales con temporizador en la cesta.
+2. **Control estricto de inventario**: Validación síncrona en el backend al consultar y modificar el carrito, utilizando `store.getAvailableStock(varianteId)` (disponibilidad en tiempo real que descuenta de forma síncrona las reservas activas de checkout de `003-pago-tarjeta`). La retirada o archivo de piezas en `006-administracion-catalogo` se detecta de inmediato marcándolas como `'no_disponible'`.
+3. **Fusión determinista con advertencias**: Al iniciar sesión, combinar los carritos sumando cantidades coincidentes hasta el límite de stock disponible y notificando al comprador en caso de recorte o piezas no disponibles.
+4. **Integración con Checkout y vaciado tras compra**: Al pulsar "Tramitar pedido", redirigir al checkout existente (`003-pago-tarjeta`), el cual consume la cesta activa y vacía el almacenamiento local y remoto una vez confirmado el cobro.
+5. **Respeto a la Constitución**: Moneda oficial euro (`€`) con formato `es-ES`, estimación de envío gratuito fija en `0,00 €` en v1, tratamiento de cesta vacía (*Zero-state*) y ausencia total de complejidad anticipada o reservas artificiales con temporizador en la cesta.
 
 ---
 
@@ -74,8 +75,7 @@ specs/002-carrito-persistente/
 ├── contracts/           # Fase 1: Contrato OpenAPI 3.0 para la API REST del carrito
 │   └── cart-api.yaml
 └── checklists/
-    ├── requirements.md  # Checklist de calidad de la especificación (16/16 superados)
-    └── quality.md       # Checklist extendido de revisión de requisitos
+    └── requirements.md  # Checklist de calidad de la especificación (16/16 superados)
 ```
 
 ### Source Code (repository root)
@@ -98,17 +98,17 @@ backend/
 │   │   └── order.routes.js         # [Existente] Rutas de pedidos
 │   ├── services/
 │   │   └── cart.service.js         # Lógica de cálculo, validación de stock y fusión
-│   └── server.js                   # Montaje de cart.routes en /api/carrito
-
+│   └── server.js                   # Montaje de cart.routes en /api/carrito y ruta estática /carrito
+│
 frontend/
 ├── public/
 │   ├── cart.html                   # Vista dedicada del carrito y cesta de compras
-│   └── checkout.html               # [Existente] Pasarela de pago integrada. Se reutiliza e integra con 003-pago-tarjeta, sin duplicar su implementación.
+│   └── checkout.html               # [Existente] Pasarela de pago integrada; consume cesta y vacía al pagar
 └── src/
     ├── components/
     │   └── cart-view.js            # Renderizado reactivo de la tabla de artículos y avisos
     ├── services/
-    │   ├── cart-storage.service.js # Capa de abstracción LocalStorage / API
+    │   ├── cart-storage.service.js # Capa de abstracción LocalStorage / API y vaciado de cesta
     │   └── cart-api.service.js     # Cliente HTTP fetch hacia /api/carrito
     └── styles/
         └── cart.css                # Estilos visuales acordes a la identidad de la tienda
@@ -125,7 +125,12 @@ tests/
 ```
 
 **Structure Decision**: Se mantiene la arquitectura modular de dos capas ya presente en el repositorio (`backend/` y `frontend/`), reutilizando la infraestructura existente de Express en `server.js` y el catálogo en `store.js`, integrando limpiamente el router `/api/carrito`.
-Los archivos compartidos de configuración, servidor, inventario y pedidos se reutilizarán sin duplicar su implementación. Las modificaciones deberán mantener la compatibilidad con 003-pago-tarjeta, que es responsable del flujo de checkout, las reservas temporales y el procesamiento del pago.
+
+Los archivos compartidos de configuración, servidor, inventario y pedidos se reutilizarán sin duplicar su implementación:
+- La validación de stock del carrito consulta `store.getAvailableStock(varianteId)`, respetando las reservas activas creadas por `003-pago-tarjeta`.
+- Al pulsar "Tramitar pedido", `cart-view.js` valida el inventario y navega a `/checkout`.
+- `checkout.html` lee la cesta almacenada por `cart-storage.service.js` e inicia la sesión de cobro; al completarse el pago con éxito, invoca el vaciado del carrito (`cartStorage.clearCart()`).
+- La administración del catálogo (`006-administracion-catalogo`) mantiene el precio oficial en `Product.precioBase` y el ciclo de vida de variantes (`activa`/`archivada`); el servicio del carrito sincroniza automáticamente los precios y detecta productos no disponibles.
 
 ---
 
