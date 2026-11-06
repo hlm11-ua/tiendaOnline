@@ -28,6 +28,19 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
 
+// Rutas de cesta de compras y carrito persistente (Feature 002)
+app.get('/carrito', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
+});
+
+app.get('/carrito.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
+});
+
+app.get('/cart', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
+});
+
 // Rutas de gestión logística y seguimiento de envíos (Feature 007)
 app.get('/logistica', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'logistica.html'));
@@ -92,6 +105,8 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
   if (catalogAdminRouter) {
     app.use('/api/admin', catalogAdminRouter);
   }
+  if (cartRouter) {
+    app.use('/api/carrito', cartRouter);
   if (salesReportRouter) {
     app.use('/api/admin/ventas', salesReportRouter);
   }
@@ -117,6 +132,14 @@ try {
   } catch (errCatalog) {
     // Rutas de administración de catálogo aún no inicializadas
   }
+  let cartRoutes = null;
+  try {
+    const cartModule = await import('./routes/cart.routes.js');
+    cartRoutes = cartModule.cartRoutes;
+  } catch (errCart) {
+    // Rutas de carrito aún no inicializadas
+  }
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, cartRoutes);
   let salesReportRoutes = null;
   try {
     const salesModule = await import('./routes/sales-report.routes.js');
@@ -133,6 +156,7 @@ try {
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   app.listen(CONSTANTS.PORT, () => {
     console.log(`[TiendaOnline] Servidor activo en http://localhost:${CONSTANTS.PORT}`);
+    console.log(`  - Carrito: http://localhost:${CONSTANTS.PORT}/carrito`);
     console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
     console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);

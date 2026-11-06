@@ -16,9 +16,21 @@ export function errorHandler(err, req, res, next) {
   const codigo = err.codigo || (statusCode === 500 ? 'ERROR_SERVIDOR' : 'ERROR_SOLICITUD');
   const mensaje = err.message || 'Ha ocurrido un error interno al procesar la solicitud.';
 
-  res.status(statusCode).json({
+  const responseBody = {
     error: codigo,
     codigo,
     mensaje
-  });
+  };
+
+  if (err.varianteId !== undefined) {
+    responseBody.varianteId = err.varianteId;
+  }
+  if (err.stockDisponible !== undefined) {
+    responseBody.stockDisponible = err.stockDisponible;
+  }
+  if (err.cantidadSolicitada !== undefined) {
+    responseBody.cantidadSolicitada = err.cantidadSolicitada;
+  }
+
+  res.status(statusCode).json(responseBody);
 }
