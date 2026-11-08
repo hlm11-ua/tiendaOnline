@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Productos Artesanales | TiendaOnline</title>
+  <meta name="description" content="Explora piezas artesanales únicas hechas a mano en España: cerámica, textil, madera y joyería con envío seguro en euros.">
+  <link rel="stylesheet" href="/src/styles/catalogo.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Cabecera Principal -->
+  <header class="catalogo-header">
+    <div class="header-container">
+      <a href="/catalogo.html" class="logo-link" aria-label="TiendaOnline Artesanías - Inicio">
+        <span>TiendaOnline</span>
+        <span class="logo-badge">Artesanías</span>
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="/catalogo.html" class="nav-link active">Catálogo</a>
+        <a href="/checkout.html" class="nav-link">Cesta / Pago</a>
+        <a href="/logistica.html" class="nav-link">Envíos</a>
+        <a href="/admin/catalogo.html" class="nav-link">Administración</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Barra de Navegación por Categorías (FR-001, Story 1) -->
+  <nav class="categories-nav-bar" aria-label="Categorías de productos artesanales">
+    <div id="categories-container" class="categories-container" role="tablist">
+      <!-- Se inyectan dinámicamente los chips de categoría -->
+    </div>
+  </nav>
+
+  <!-- Contenido Principal: Filtros + Grid de Productos -->
+  <main class="catalogo-main">
+    
+    <!-- Filtros Combinados (FR-002, Story 2) -->
+    <aside class="filters-aside" role="search" aria-label="Filtros del catálogo">
+      <div class="filters-header">
+        <h2 class="filters-title">
+          <span>Filtros</span>
+        </h2>
+        <button type="button" id="btn-reset-filters" class="btn-reset-filters" aria-label="Restablecer todos los filtros">
+          Restablecer
+        </button>
+      </div>
+
+      <form id="filters-form" onsubmit="return false;">
+        <!-- Rango de Precios en Euros (FR-002, FR-006) -->
+        <div class="filter-group">
+          <label class="filter-label" for="precio-min">Rango de precio (€)</label>
+          <div class="price-inputs">
+            <div class="input-with-symbol">
+              <input type="number" id="precio-min" name="minPrecio" min="0" step="1" placeholder="Mín." aria-label="Precio mínimo en euros">
+              <span class="currency-symbol">€</span>
+            </div>
+            <span class="price-separator">-</span>
+            <div class="input-with-symbol">
+              <input type="number" id="precio-max" name="maxPrecio" min="0" step="1" placeholder="Máx." aria-label="Precio máximo en euros">
+              <span class="currency-symbol">€</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Productor / Artesano (FR-002, FR-003) -->
+        <div class="filter-group">
+          <label class="filter-label" for="filtro-productor">Productor / Taller</label>
+          <select id="filtro-productor" name="productor" class="filter-select" aria-label="Seleccionar productor o marca">
+            <option value="">Todos los artesanos</option>
+            <!-- Opciones pobladas dinámicamente -->
+          </select>
+        </div>
+
+        <!-- Disponibilidad en Stock (FR-002, FR-004) -->
+        <div class="filter-group">
+          <label class="stock-toggle-container" for="filtro-stock">
+            <span class="toggle-label-text">Solo productos en stock</span>
+            <input type="checkbox" id="filtro-stock" name="enStock" class="switch-checkbox" aria-label="Mostrar únicamente productos disponibles en stock">
+          </label>
+        </div>
+      </form>
+    </aside>
+
+    <!-- Listado y Resultados -->
+    <section class="content-section" role="region" aria-label="Resultados del catálogo">
+      <div class="results-bar">
+        <span id="results-count" class="results-count">Cargando catálogo...</span>
+      </div>
+
+      <!-- Cuadrícula de Productos -->
+      <div id="products-grid" class="products-grid" aria-live="polite">
+        <!-- Tarjetas de producto inyectadas dinámicamente -->
+      </div>
+
+      <!-- Mensaje de Estado Vacío (FR-008, FR-009, Story 4) -->
+      <div id="estado-vacio" class="estado-vacio" style="display: none;" role="status">
+        <div class="estado-vacio-icon" aria-hidden="true">🔍</div>
+        <h3 class="estado-vacio-title">No se han encontrado productos con los filtros seleccionados</h3>
+        <p class="estado-vacio-desc">Prueba a modificar los rangos de precio, seleccionar otra categoría o restablecer los filtros para volver a ver todas las piezas.</p>
+        <button type="button" id="btn-cta-reset" class="btn-cta-reset">
+          Restablecer filtros
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Pie de Página -->
+  <footer class="catalogo-footer">
+    <p>TiendaOnline &copy; 2026. Comercio electrónico de piezas artesanales de España. Todos los importes en euros (€).</p>
+  </footer>
+
+  <!-- Controlador Frontend en ES Modules -->
+  <script type="module" src="/src/components/catalogo/main.js"></script>
+</body>
+</html>

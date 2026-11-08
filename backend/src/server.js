@@ -28,6 +28,13 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
 
+// Rutas del catálogo público de productos y filtros (Feature 001)
+app.get('/catalogo', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));
+});
+
+app.get('/catalogo.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));
 // Rutas de cesta de compras y carrito persistente (Feature 002)
 app.get('/carrito', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
@@ -91,8 +98,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Los routers de pagos, pedidos, logística, administración de catálogo y ventas se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter) {
+// Los routers de pagos, pedidos, logística, administración de catálogo, ventas y catálogo público se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter) {
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
   }
@@ -109,6 +116,9 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
     app.use('/api/carrito', cartRouter);
   if (salesReportRouter) {
     app.use('/api/admin/ventas', salesReportRouter);
+  }
+  if (catalogRouter) {
+    app.use('/api/catalogo', catalogRouter);
   }
   // Middleware de error al final de la cadena
   app.use(errorHandler);
@@ -147,7 +157,14 @@ try {
   } catch (errSales) {
     // Rutas de ventas aún no inicializadas
   }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, salesReportRoutes);
+  let catalogRoutes = null;
+  try {
+    const catalogModule = await import('./routes/catalog.routes.js');
+    catalogRoutes = catalogModule.catalogRoutes;
+  } catch (errPublicCatalog) {
+    // Rutas de catálogo público aún no inicializadas
+  }
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, salesReportRoutes, catalogRoutes);
 } catch (e) {
   app.use(errorHandler);
 }
@@ -156,6 +173,7 @@ try {
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   app.listen(CONSTANTS.PORT, () => {
     console.log(`[TiendaOnline] Servidor activo en http://localhost:${CONSTANTS.PORT}`);
+    console.log(`  - Catálogo: http://localhost:${CONSTANTS.PORT}/catalogo`);
     console.log(`  - Carrito: http://localhost:${CONSTANTS.PORT}/carrito`);
     console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);

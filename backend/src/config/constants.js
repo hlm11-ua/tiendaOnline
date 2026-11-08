@@ -149,6 +149,22 @@ export const CONSTANTS = {
     }
   },
 
+  // Configuración de Catálogo Público y Filtros (Feature 001)
+  PUBLIC_CATALOG: {
+    QUERY_PARAMS: {
+      CATEGORY: 'categoria',
+      MIN_PRICE: 'minPrecio',
+      MAX_PRICE: 'maxPrecio',
+      PRODUCER: 'productor',
+      IN_STOCK: 'enStock'
+    },
+    MESSAGES: {
+      EMPTY_RESULTS: 'No se han encontrado productos con los filtros seleccionados',
+      RESET_BUTTON: 'Restablecer filtros',
+      ALL_CATEGORIES: 'Todas las categorías'
+    }
+  },
+
   // Puerto por defecto
   PORT: process.env.PORT || 3000
 };

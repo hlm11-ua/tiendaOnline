@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+  title: API Pública de Catálogo de Productos y Filtros
+  description: Endpoints públicos para la consulta, filtrado combinado y sincronización de productos artesanales en la tienda online.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/catalogo
+    description: Servidor de desarrollo local
+
+paths:
+  /productos:
+    get:
+      summary: Consultar productos del catálogo con filtros combinados
+      description: Devuelve el listado de productos activos que cumplen simultáneamente con los criterios de categoría, rango de precio, productor y disponibilidad en stock.
+      operationId: listarProductosCatalogo
+      parameters:
+        - name: categoria
+          in: query
+          required: false
+          description: Slug o identificador de la categoría para acotar el listado
+          schema:
+            type: string
+            example: ceramica
+        - name: minPrecio
+          in: query
+          required: false
+          description: Precio mínimo en euros (€)
+          schema:
+            type: number
+            minimum: 0
+            example: 15.00
+        - name: maxPrecio
+          in: query
+          required: false
+          description: Precio máximo en euros (€)
+          schema:
+            type: number
+            minimum: 0
+            example: 60.00
+        - name: productor
+          in: query
+          required: false
+          description: Nombre o taller del productor/artesano
+          schema:
+            type: string
+            example: Taller Hermanos Alfareros
+        - name: enStock
+          in: query
+          required: false
+          description: Si es true, solo devuelve productos con existencias disponibles
+          schema:
+            type: boolean
+            example: true
+      responses:
+        '200':
+          description: Listado de productos filtrados obtenido con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: Número total de productos que coinciden con los filtros
+                    example: 3
+                  filtrosAplicados:
+                    $ref: '#/components/schemas/FiltrosAplicados'
+                  productos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductoResumen'
+
+  /filtros:
+    get:
+      summary: Obtener metadatos para los controles de filtrado
+      description: Devuelve las categorías activas con conteo de productos, lista de artesanos disponibles y el rango global de precios para poblar la interfaz de filtros.
+      operationId: obtenerMetadatosFiltros
+      responses:
+        '200':
+          description: Metadatos de filtros obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadatosFiltros'
+
+  /productos/{id}:
+    get:
+      summary: Obtener detalle de un producto específico
+      description: Recupera la información pública completa de un producto por su identificador.
+      operationId: obtenerProductoPorId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador único del producto
+          schema:
+            type: string
+            example: art-001
+      responses:
+        '200':
+          description: Ficha del producto encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductoDetalle'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRespuesta'
+
+components:
+  schemas:
+    FiltrosAplicados:
+      type: object
+      properties:
+        categoria:
+          type: string
+          nullable: true
+          example: ceramica
+        minPrecio:
+          type: number
+          nullable: true
+          example: 15.00
+        maxPrecio:
+          type: number
+          nullable: true
+          example: 60.00
+        productor:
+          type: string
+          nullable: true
+          example: Taller Hermanos Alfareros
+        enStock:
+          type: boolean
+          example: true
+
+    ProductoResumen:
+      type: object
+      required:
+        - id
+        - titulo
+        - categoriaId
+        - categoriaNombre
+        - categoriaSlug
+        - artesano
+        - precioBase
+        - precioFormateado
+        - moneda
+        - enStock
+        - stockDisponible
+      properties:
+        id:
+          type: string
+          example: art-001
+        titulo:
+          type: string
+          example: Jarrón de Cerámica Esmaltada Azul
+        descripcion:
+          type: string
+          example: Pieza de gres torneada a mano por alfareros tradicionales.
+        categoriaId:
+          type: string
+          example: cat-ceramica
+        categoriaNombre:
+          type: string
+          example: Cerámica
+        categoriaSlug:
+          type: string
+          example: ceramica
+        artesano:
+          type: string
+          example: Taller Hermanos Alfareros
+        precioBase:
+          type: number
+          example: 45.00
+        precioFormateado:
+          type: string
+          example: 45,00 €
+        moneda:
+          type: string
+          example: EUR
+        imagenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImagenProducto'
+        enStock:
+          type: boolean
+          example: true
+        stockDisponible:
+          type: integer
+          example: 5
+
+    ProductoDetalle:
+      allOf:
+        - $ref: '#/components/schemas/ProductoResumen'
+        - type: object
+          properties:
+            variantes:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: var-001-azul
+                  nombre:
+                    type: string
+                    example: Esmalte Azul
+                  stockDisponible:
+                    type: integer
+                    example: 5
+
+    ImagenProducto:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          example: /public/uploads/jarron-ceramica-1.webp
+        nombreArchivo:
+          type: string
+          example: jarron-ceramica-1.webp
+        esPrincipal:
+          type: boolean
+          example: true
+
+    MetadatosFiltros:
+      type: object
+      required:
+        - categorias
+        - productores
+        - rangoPrecio
+      properties:
+        categorias:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - nombre
+              - slug
+              - totalProductos
+            properties:
+              id:
+                type: string
+                example: cat-ceramica
+              nombre:
+                type: string
+                example: Cerámica
+              slug:
+                type: string
+                example: ceramica
+              totalProductos:
+                type: integer
+                example: 4
+        productores:
+          type: array
+          items:
+            type: string
+            example: Taller Hermanos Alfareros
+        rangoPrecio:
+          type: object
+          required:
+            - min
+            - max
+          properties:
+            min:
+              type: number
+              example: 10.00
+            max:
+              type: number
+              example: 220.00
+
+    ErrorRespuesta:
+      type: object
+      required:
+        - error
+        - codigo
+      properties:
+        error:
+          type: string
+          example: No se ha encontrado el producto solicitado.
+        codigo:
+          type: string
+          example: PRODUCTO_NO_ENCONTRADO

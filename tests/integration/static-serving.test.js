@@ -152,5 +152,49 @@ describe('Servicio Web de Checkout y Estáticos', () => {
       server.close();
     }
   });
+
+  it('debe servir catalogo.html en /catalogo y /catalogo.html con sus módulos y estilos', async () => {
+    const server = app.listen(0);
+    const port = server.address().port;
+
+    try {
+      const resCatalogo = await fetch(`http://localhost:${port}/catalogo`);
+      assert.strictEqual(resCatalogo.status, 200);
+      const catalogoText = await resCatalogo.text();
+      assert.ok(catalogoText.includes('Catálogo de Productos Artesanales'));
+      assert.ok(catalogoText.includes('categories-container'));
+      assert.ok(catalogoText.includes('products-grid'));
+      assert.ok(catalogoText.includes('filters-aside'));
+
+      const resCatalogoHtml = await fetch(`http://localhost:${port}/catalogo.html`);
+      assert.strictEqual(resCatalogoHtml.status, 200);
+
+      const resCss = await fetch(`http://localhost:${port}/src/styles/catalogo.css`);
+      assert.strictEqual(resCss.status, 200);
+      const css = await resCss.text();
+      assert.ok(css.includes('.product-card'));
+      assert.ok(css.includes('.category-chip'));
+
+      const resComp1 = await fetch(`http://localhost:${port}/src/components/catalogo/category-nav.js`);
+      assert.strictEqual(resComp1.status, 200);
+
+      const resComp2 = await fetch(`http://localhost:${port}/src/components/catalogo/product-grid.js`);
+      assert.strictEqual(resComp2.status, 200);
+
+      const resComp3 = await fetch(`http://localhost:${port}/src/components/catalogo/catalog-filters.js`);
+      assert.strictEqual(resComp3.status, 200);
+
+      const resComp4 = await fetch(`http://localhost:${port}/src/components/catalogo/url-sync.js`);
+      assert.strictEqual(resComp4.status, 200);
+
+      const resComp5 = await fetch(`http://localhost:${port}/src/components/catalogo/empty-state.js`);
+      assert.strictEqual(resComp5.status, 200);
+
+      const resService = await fetch(`http://localhost:${port}/src/services/catalog-api.service.js`);
+      assert.strictEqual(resService.status, 200);
+    } finally {
+      server.close();
+    }
+  });
 });
 
