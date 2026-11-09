@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Cuenta y Seguimiento de Pedidos | TiendaOnline</title>
+  <meta name="description" content="Accede a tu cuenta personal, consulta tu historial de compras y realiza el seguimiento en tiempo real de tus pedidos de artesanía.">
+  <link rel="stylesheet" href="/src/styles/cuenta.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Encabezado del sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="/catalogo.html" class="brand-wrapper" id="link-home">
+        <span aria-hidden="true">🛍️</span>
+        <span>TiendaOnline Artesanías</span>
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="/catalogo.html" class="nav-link">Catálogo</a>
+        <a href="/cart.html" class="nav-link">Carrito</a>
+        <a href="/checkout.html" class="nav-link">Pago</a>
+        <a href="/logistica.html" class="nav-link">Logística</a>
+        <a href="/cuenta.html" class="nav-link active">Mi Cuenta</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal Dinámico -->
+  <main class="main-container" id="main-content" role="main">
+    <div id="app-view">
+      <!-- Inyección dinámica de AuthForm u OrderHistory -->
+    </div>
+  </main>
+
+  <script type="module">
+    import { AccountApiService } from '/src/services/account-api.service.js';
+    import { AuthFormComponent } from '/src/components/cuenta/auth-form.js';
+    import { OrderHistoryComponent } from '/src/components/cuenta/order-history.js';
+
+    const accountService = new AccountApiService();
+    const appContainer = document.getElementById('app-view');
+
+    function renderApp() {
+      appContainer.innerHTML = '';
+
+      if (accountService.isAuthenticated()) {
+        const orderHistory = new OrderHistoryComponent({
+          container: appContainer,
+          accountService,
+          onLogout: () => {
+            renderApp();
+          }
+        });
+        orderHistory.loadOrders();
+      } else {
+        const authWrapper = document.createElement('div');
+        authWrapper.className = 'auth-wrapper';
+        appContainer.appendChild(authWrapper);
+
+        const authForm = new AuthFormComponent({
+          container: authWrapper,
+          accountService,
+          onAuthSuccess: () => {
+            renderApp();
+          }
+        });
+        authForm.render();
+      }
+    }
+
+    // Inicializar aplicación
+    document.addEventListener('DOMContentLoaded', () => {
+      renderApp();
+    });
+  </script>
+</body>
+</html>

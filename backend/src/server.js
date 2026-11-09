@@ -35,6 +35,8 @@ app.get('/catalogo', (req, res) => {
 
 app.get('/catalogo.html', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));
+});
+
 // Rutas de cesta de compras y carrito persistente (Feature 002)
 app.get('/carrito', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'cart.html'));
@@ -87,6 +89,15 @@ app.get('/admin/ventas.html', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'admin', 'ventas.html'));
 });
 
+// Rutas del área de cuentas y seguimiento de pedidos (Feature 004)
+app.get('/cuenta', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cuenta.html'));
+});
+
+app.get('/cuenta.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cuenta.html'));
+});
+
 // Endpoint de salud del sistema
 app.get('/api/health', (req, res) => {
   res.json({
@@ -98,10 +109,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Los routers de pagos, pedidos, logística, administración de catálogo, ventas y catálogo público se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter) {
+// Los routers de pagos, pedidos, logística, administración de catálogo, ventas, catálogo público y autenticación se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, authRouter) {
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
+  }
+  if (authRouter) {
+    app.use('/api/auth', authRouter);
   }
   if (orderRouter) {
     app.use('/api/pedidos', orderRouter);
@@ -114,6 +128,7 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
   }
   if (cartRouter) {
     app.use('/api/carrito', cartRouter);
+  }
   if (salesReportRouter) {
     app.use('/api/admin/ventas', salesReportRouter);
   }
@@ -128,6 +143,13 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
 try {
   const { paymentRoutes } = await import('./routes/payment.routes.js');
   const { orderRoutes } = await import('./routes/order.routes.js');
+  let authRoutes = null;
+  try {
+    const authModule = await import('./routes/auth.routes.js');
+    authRoutes = authModule.authRoutes;
+  } catch (errAuth) {
+    // Rutas de auth aún no inicializadas
+  }
   let logisticsRoutes = null;
   try {
     const logisticsModule = await import('./routes/logistics.routes.js');
@@ -149,7 +171,6 @@ try {
   } catch (errCart) {
     // Rutas de carrito aún no inicializadas
   }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, cartRoutes);
   let salesReportRoutes = null;
   try {
     const salesModule = await import('./routes/sales-report.routes.js');
@@ -164,7 +185,7 @@ try {
   } catch (errPublicCatalog) {
     // Rutas de catálogo público aún no inicializadas
   }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, salesReportRoutes, catalogRoutes);
+  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, salesReportRoutes, catalogRoutes, cartRoutes, authRoutes);
 } catch (e) {
   app.use(errorHandler);
 }
@@ -179,5 +200,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
     console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);
     console.log(`  - Informes Ventas: http://localhost:${CONSTANTS.PORT}/admin/ventas`);
+    console.log(`  - Cuentas de Usuario: http://localhost:${CONSTANTS.PORT}/cuenta`);
   });
 }

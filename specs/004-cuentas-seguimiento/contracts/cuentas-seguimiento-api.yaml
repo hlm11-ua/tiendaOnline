@@ -1,0 +1,414 @@
+openapi: 3.0.3
+info:
+  title: API de Cuentas de Usuario y Seguimiento de Fases de Pedido
+  description: Endpoints para registro, login persistente, consulta privada de "Mis compras", seguimiento de las 4 fases y actualización manual de fases por administrador.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Servidor local de desarrollo y pruebas
+
+paths:
+  /api/auth/registro:
+    post:
+      summary: Registro de nueva cuenta de cliente
+      description: Crea una nueva cuenta de comprador con nombre, email y contraseña (mínimo 8 caracteres) e inicia sesión automáticamente (FR-001).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nombre
+                - email
+                - password
+              properties:
+                nombre:
+                  type: string
+                  example: "María García"
+                email:
+                  type: string
+                  format: email
+                  example: "maria.garcia@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "claveSegura123"
+      responses:
+        '201':
+          description: Cuenta creada y sesión iniciada con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Datos inválidos o contraseña con menos de 8 caracteres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: El correo electrónico ya se encuentra registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/login:
+    post:
+      summary: Inicio de sesión de usuario
+      description: Autentica un usuario existente y devuelve el token de sesión persistente por 30 días (FR-002, SC-002).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "maria.garcia@example.com"
+                password:
+                  type: string
+                  example: "claveSegura123"
+      responses:
+        '200':
+          description: Autenticación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Credenciales incompletas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Correo electrónico o contraseña incorrectos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/logout:
+    post:
+      summary: Cierre explícito de sesión
+      description: Invalida el token de sesión actual en el servidor (FR-002).
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sesión cerrada con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                    example: "Sesión cerrada correctamente."
+
+  /api/auth/me:
+    get:
+      summary: Perfil y estado de la sesión activa
+      description: Comprueba si el token enviado sigue vigente y devuelve los datos del usuario autenticado.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sesión activa válida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioPerfil'
+        '401':
+          description: Sesión no autenticada o expirada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pedidos/mis-compras:
+    get:
+      summary: Listado cronológico de pedidos del cliente autenticado
+      description: Devuelve el historial de compras del usuario autenticado ordenado de más reciente a más antiguo (FR-003, FR-004).
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Listado de pedidos obtenido con éxito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 2
+                  pedidos:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PedidoResumen'
+        '401':
+          description: Requiere iniciar sesión para acceder a "Mis compras"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pedidos/mis-compras/{codigoReferencia}:
+    get:
+      summary: Detalle y seguimiento de un pedido del usuario
+      description: Consulta el detalle completo de un pedido, con desglose de artículos y código de seguimiento si ha salido o ha sido entregado (FR-006). Aísla estrictamente los pedidos de otros usuarios (Edge Case 2).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "PED-20261013-A1B2"
+      responses:
+        '200':
+          description: Detalle del pedido y seguimiento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDetalle'
+        '401':
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acceso no autorizado (el pedido pertenece a otro usuario)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pedidos/{codigoReferencia}/fase:
+    put:
+      summary: Modificación manual de la fase de un pedido (Administrador)
+      description: Permite a un empleado con rol de administrador modificar la fase de cualquier pedido entre las oficiales ("pendiente", "pagado", "salido_tienda", "entregado") y registrar el código de seguimiento (FR-006, FR-007).
+      security:
+        - AdminRole: []
+        - BearerAuth: []
+      parameters:
+        - name: codigoReferencia
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "PED-20261013-A1B2"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fase
+              properties:
+                fase:
+                  type: string
+                  enum:
+                    - "pendiente"
+                    - "pagado"
+                    - "en_preparacion"
+                    - "salido_tienda"
+                    - "salido de la tienda"
+                    - "entregado"
+                  example: "salido_tienda"
+                numeroSeguimiento:
+                  type: string
+                  minLength: 6
+                  maxLength: 32
+                  example: "CORREOS-ES-987654"
+                transportista:
+                  type: string
+                  example: "Correos de España"
+                notas:
+                  type: string
+                  example: "Despachado desde el almacén central"
+      responses:
+        '200':
+          description: Fase actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoDetalle'
+        '400':
+          description: Fase no válida o falta el código de seguimiento para fase "salido de la tienda"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acceso restringido exclusivamente a administradores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+    AdminRole:
+      type: apiKey
+      in: header
+      name: x-user-role
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        usuario:
+          type: object
+          properties:
+            id:
+              type: string
+            nombre:
+              type: string
+            email:
+              type: string
+            rol:
+              type: string
+              enum: [cliente, admin]
+        sesion:
+          type: object
+          properties:
+            token:
+              type: string
+            expiresAt:
+              type: string
+              format: date-time
+            diasValidez:
+              type: integer
+              example: 30
+
+    UsuarioPerfil:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        email:
+          type: string
+        rol:
+          type: string
+
+    PedidoResumen:
+      type: object
+      properties:
+        id:
+          type: string
+        codigoReferencia:
+          type: string
+        fechaCreacion:
+          type: string
+          format: date-time
+        total:
+          type: number
+          example: 45.00
+        moneda:
+          type: string
+          example: "EUR"
+        estado:
+          type: string
+          enum: ["pendiente", "pagado", "en_preparacion", "salido_tienda", "salido de la tienda", "entregado"]
+        numeroArticulos:
+          type: integer
+        numeroSeguimiento:
+          type: string
+          nullable: true
+
+    PedidoDetalle:
+      type: object
+      properties:
+        id:
+          type: string
+        codigoReferencia:
+          type: string
+        fechaCreacion:
+          type: string
+          format: date-time
+        total:
+          type: number
+          example: 45.00
+        estado:
+          type: string
+          enum: ["pendiente", "pagado", "en_preparacion", "salido_tienda", "salido de la tienda", "entregado"]
+        clienteNombre:
+          type: string
+        clienteEmail:
+          type: string
+        envio:
+          type: object
+          nullable: true
+          properties:
+            transportista:
+              type: string
+            numeroSeguimiento:
+              type: string
+            fechaSalida:
+              type: string
+        lineas:
+          type: array
+          items:
+            type: object
+            properties:
+              titulo:
+                type: string
+              cantidad:
+                type: integer
+              precioUnitario:
+                type: number
+              subtotal:
+                type: number
+        historialFases:
+          type: array
+          items:
+            type: object
+            properties:
+              fase:
+                type: string
+              fecha:
+                type: string
+              responsable:
+                type: string
+              notas:
+                type: string
+                nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        codigo:
+          type: string
+        mensaje:
+          type: string
