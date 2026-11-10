@@ -1,0 +1,293 @@
+openapi: 3.0.3
+info:
+  title: API de Reseñas y Valoraciones de Productos Artesanales
+  description: Endpoints REST para la consulta, verificación de elegibilidad de compra y publicación de valoraciones únicas por producto en TiendaOnline.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/resenas
+    description: Servidor local de desarrollo y pruebas
+
+paths:
+  /producto/{productoId}:
+    get:
+      summary: Obtener resumen y listado de reseñas de un producto
+      description: Devuelve la nota media calculada, el total de opiniones y la lista cronológica de reseñas verificadas.
+      operationId: getReviewsByProduct
+      parameters:
+        - name: productoId
+          in: path
+          required: true
+          description: Identificador único del producto artesanal
+          schema:
+            type: string
+            example: art-001
+      responses:
+        '200':
+          description: Resumen y listado de valoraciones obtenido con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenValoraciones'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /elegibilidad/{productoId}:
+    get:
+      summary: Comprobar elegibilidad del usuario para valorar un producto
+      description: Verifica si el usuario autenticado tiene compra verificada previa y si ya ha emitido una valoración anteriormente.
+      operationId: checkReviewEligibility
+      parameters:
+        - name: productoId
+          in: path
+          required: true
+          description: Identificador único del producto artesanal
+          schema:
+            type: string
+            example: art-001
+        - name: x-usuario-id
+          in: header
+          required: false
+          description: Identificador del usuario consultante
+          schema:
+            type: string
+            example: usr-101
+        - name: x-usuario-email
+          in: header
+          required: false
+          description: Email del comprador para contrastar pedidos
+          schema:
+            type: string
+            example: cliente@example.com
+      responses:
+        '200':
+          description: Estado de elegibilidad calculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComprobacionElegibilidad'
+
+  /:
+    post:
+      summary: Publicar una valoración y comentario verificado
+      description: Registra una nueva reseña (1 a 5 estrellas y texto de comentario) si el comprador está verificado y no ha valorado antes el producto.
+      operationId: createReview
+      parameters:
+        - name: x-usuario-id
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: x-usuario-email
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: x-usuario-nombre
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: Reseña publicada con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateReviewResponse'
+        '400':
+          description: Datos de entrada no válidos (puntuación fuera de 1-5 o comentario vacío)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Acceso denegado - El usuario no cuenta con una compra verificada del producto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflicto - El usuario ya ha valorado este producto previamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Resena:
+      type: object
+      required:
+        - id
+        - productoId
+        - usuarioId
+        - usuarioNombre
+        - puntuacion
+        - comentario
+        - fechaCreacion
+      properties:
+        id:
+          type: string
+          example: res-9f8e7d6c-5b4a
+        productoId:
+          type: string
+          example: art-001
+        usuarioId:
+          type: string
+          example: usr-101
+        usuarioNombre:
+          type: string
+          example: María González
+        usuarioEmail:
+          type: string
+          example: maria@example.com
+        puntuacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          minLength: 3
+          maxLength: 1000
+          example: Acabado artesanal impecable, exactamente igual a la foto.
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: '2026-11-10T16:00:00.000Z'
+
+    ResumenValoraciones:
+      type: object
+      required:
+        - productoId
+        - media
+        - total
+        - distribucion
+        - items
+      properties:
+        productoId:
+          type: string
+          example: art-001
+        media:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          example: 4.8
+        total:
+          type: integer
+          minimum: 0
+          example: 12
+        distribucion:
+          type: object
+          properties:
+            '1': { type: integer, example: 0 }
+            '2': { type: integer, example: 0 }
+            '3': { type: integer, example: 0 }
+            '4': { type: integer, example: 2 }
+            '5': { type: integer, example: 10 }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resena'
+
+    ComprobacionElegibilidad:
+      type: object
+      required:
+        - productoId
+        - puedeValorar
+        - motivo
+        - mensaje
+      properties:
+        productoId:
+          type: string
+          example: art-001
+        usuarioId:
+          type: string
+          nullable: true
+          example: usr-101
+        puedeValorar:
+          type: boolean
+          example: true
+        motivo:
+          type: string
+          enum: [COMPRA_VERIFICADA, SIN_COMPRA, NO_AUTENTICADO, YA_VALORADO]
+          example: COMPRA_VERIFICADA
+        mensaje:
+          type: string
+          example: Puedes valorar este producto porque tu compra ha sido confirmada y entregada.
+        resenaPrevia:
+          $ref: '#/components/schemas/Resena'
+          nullable: true
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - productoId
+        - puntuacion
+        - comentario
+      properties:
+        productoId:
+          type: string
+          example: art-001
+        puntuacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comentario:
+          type: string
+          minLength: 3
+          maxLength: 1000
+          example: Excelente calidad de cerámica tradicional.
+        usuarioId:
+          type: string
+          example: usr-101
+        usuarioNombre:
+          type: string
+          example: María González
+        usuarioEmail:
+          type: string
+          example: maria@example.com
+
+    CreateReviewResponse:
+      type: object
+      required:
+        - mensaje
+        - resena
+        - resumen
+      properties:
+        mensaje:
+          type: string
+          example: '¡Gracias por tu valoración! Tu reseña ha sido publicada con éxito.'
+        resena:
+          $ref: '#/components/schemas/Resena'
+        resumen:
+          $ref: '#/components/schemas/ResumenValoraciones'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - codigo
+        - mensaje
+      properties:
+        error:
+          type: string
+          example: COMPRA_REQUERIDA
+        codigo:
+          type: string
+          example: COMPRA_REQUERIDA
+        mensaje:
+          type: string
+          example: Solo los clientes que hayan comprado previamente este producto pueden valorarlo.
