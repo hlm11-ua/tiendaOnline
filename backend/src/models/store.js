@@ -252,6 +252,12 @@ class MemoryStore {
 
     // Carritos de compra (002): usuarioId/sessionId -> Carrito
     this.carts = new Map();
+
+    // Reseñas y valoraciones (Feature 005)
+    // Clave compuesta: `${usuarioId}:${productoId}` -> Review
+    this.reviews = new Map();
+    // Indexado por producto: productoId -> Array de reseñas
+    this.reviewsByProduct = new Map();
   }
 
   // === MÉTODOS DE INVENTARIO Y RESERVAS ===
@@ -700,6 +706,7 @@ class MemoryStore {
   deleteCart(usuarioId) {
     if (!usuarioId) return false;
     return this.carts.delete(usuarioId);
+  }
   // === MÉTODOS DE RESUMEN Y REPORTES DE VENTA (008) ===
 
   /**
@@ -726,6 +733,110 @@ class MemoryStore {
       const orderDate = new Date(order.fechaCreacion || 0);
       return orderDate >= start && orderDate <= end;
     });
+  }
+
+  // === MÉTODOS DE RESEÑAS Y VALORACIONES (005) ===
+
+  /**
+   * Guarda una reseña en el almacén indexada por la clave compuesta `${usuarioId}:${productoId}`
+   * y asociada a la lista de reseñas del producto.
+   * @param {Object} review
+   * @returns {Object}
+   */
+  saveReview(review) {
+    const key = `${review.usuarioId}:${review.productoId}`;
+    const reviewData = typeof review?.toJSON === 'function' ? review.toJSON() : { ...review };
+    this.reviews.set(key, reviewData);
+
+    if (!this.reviewsByProduct.has(review.productoId)) {
+      this.reviewsByProduct.set(review.productoId, []);
+    }
+    const productReviews = this.reviewsByProduct.get(review.productoId);
+    const existingIndex = productReviews.findIndex(r => r.id === reviewData.id || r.usuarioId === reviewData.usuarioId);
+    if (existingIndex >= 0) {
+      productReviews[existingIndex] = reviewData;
+    } else {
+      productReviews.push(reviewData);
+    }
+
+    return reviewData;
+  }
+
+  /**
+   * Obtiene la reseña previa de un usuario para un producto específico
+   * @param {string} usuarioId
+   * @param {string} productoId
+   * @returns {Object|null}
+   */
+  getReviewByUserAndProduct(usuarioId, productoId) {
+    if (!usuarioId || !productoId) return null;
+    const key = `${usuarioId}:${productoId}`;
+    return this.reviews.get(key) || null;
+  }
+
+  /**
+   * Obtiene todas las reseñas verificadas de un producto
+   * @param {string} productoId
+   * @returns {Array}
+   */
+  getReviewsByProductId(productoId) {
+    if (!productoId) return [];
+    const list = this.reviewsByProduct.get(productoId) || [];
+    return [...list];
+  }
+
+  /**
+   * Comprueba si el usuario cuenta con un pedido cerrado/válido que contenga el producto especificado
+   * @param {string} usuarioId
+   * @param {string} usuarioEmail
+   * @param {string} productoId
+   * @returns {boolean}
+   */
+  hasUserPurchasedProduct(usuarioId, usuarioEmail, productoId) {
+    if (!productoId) return false;
+    if (!usuarioId && !usuarioEmail) return false;
+
+    const uId = usuarioId ? String(usuarioId).trim() : null;
+    const uEmail = usuarioEmail ? String(usuarioEmail).trim().toLowerCase() : null;
+
+    const validStatuses = [
+      CONSTANTS.ORDER_STATUS.PAID,
+      CONSTANTS.ORDER_STATUS.IN_PREPARATION,
+      CONSTANTS.ORDER_STATUS.SHIPPED,
+      CONSTANTS.ORDER_STATUS.DELIVERED,
+      'completado'
+    ];
+
+    const variants = this.getVariantsByProductId ? this.getVariantsByProductId(productoId) : [];
+    const variantIds = new Set(variants.map(v => v.id));
+
+    for (const order of this.orders.values()) {
+      // Validar si el pedido pertenece al usuario
+      const matchesUser =
+        (uId && (order.cuentaId === uId || order.usuarioId === uId)) ||
+        (uEmail && order.clienteEmail && order.clienteEmail.toLowerCase() === uEmail);
+
+      if (!matchesUser) continue;
+
+      // Validar estado del pedido
+      if (!validStatuses.includes(order.estado)) continue;
+
+      // Validar si el producto (o una de sus variantes) está en las líneas del pedido
+      if (Array.isArray(order.lineas)) {
+        for (const linea of order.lineas) {
+          if (linea.productoId === productoId || variantIds.has(linea.varianteId)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  clearReviews() {
+    this.reviews.clear();
+    this.reviewsByProduct.clear();
   }
 }
 

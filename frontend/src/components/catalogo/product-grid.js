@@ -2,13 +2,14 @@
  * Componente para renderizar la cuadrícula de productos del catálogo (FR-001, FR-006, FR-007)
  */
 export class ProductGrid {
-  constructor(gridContainer, resultsCountElement) {
+  constructor(gridContainer, resultsCountElement, onOpenReviews = null) {
     this.gridContainer = typeof gridContainer === 'string'
       ? document.querySelector(gridContainer)
       : gridContainer;
     this.resultsCountElement = typeof resultsCountElement === 'string'
       ? document.querySelector(resultsCountElement)
       : resultsCountElement;
+    this.onOpenReviews = onOpenReviews;
   }
 
   /**
@@ -85,6 +86,13 @@ export class ProductGrid {
           <span>Por:</span>
           <strong>${prod.artesano || 'Artesano anónimo'}</strong>
         </p>
+        <div class="product-rating-badge" data-product-id="${prod.id}">
+          <span class="product-rating-stars">${prod.ratingTotal > 0 ? '★ ' + prod.ratingMedia.toFixed(1).replace('.', ',') : '★ 0,0'}</span>
+          <span class="product-rating-count">(${prod.ratingTotal || 0})</span>
+          <button type="button" class="btn-open-reviews" data-product-id="${prod.id}" data-product-title="${encodeURIComponent(prod.titulo)}" aria-label="Ver opiniones y valorar ${prod.titulo}">
+            Opiniones
+          </button>
+        </div>
         <div class="product-footer">
           <span class="product-price">${prod.precioFormateado || `${prod.precioBase.toFixed(2)} €`}</span>
           <a href="/checkout.html?productoId=${encodeURIComponent(prod.id)}" class="btn-buy-link" aria-label="Comprar ${prod.titulo}">
@@ -93,6 +101,14 @@ export class ProductGrid {
         </div>
       </div>
     `;
+
+    const btnReviews = card.querySelector('.btn-open-reviews');
+    if (btnReviews && typeof this.onOpenReviews === 'function') {
+      btnReviews.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.onOpenReviews(prod.id, prod.titulo);
+      });
+    }
 
     return card;
   }

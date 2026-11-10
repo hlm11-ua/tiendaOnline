@@ -167,6 +167,11 @@ export class CatalogService {
       const cat = mapaCategoriasPorId.get(prod.categoriaId);
       const variants = store.getVariantsByProductId(prod.id);
       const stockDisponible = variants.reduce((acc, v) => acc + (store.getAvailableStock(v.id) || 0), 0);
+      const reviews = typeof store.getReviewsByProductId === 'function' ? store.getReviewsByProductId(prod.id) : [];
+      const ratingTotal = reviews.length;
+      const ratingMedia = ratingTotal > 0
+        ? Math.round((reviews.reduce((acc, r) => acc + r.puntuacion, 0) / ratingTotal) * 10) / 10
+        : 0;
 
       return {
         id: prod.id,
@@ -181,7 +186,9 @@ export class CatalogService {
         moneda: prod.moneda || CONSTANTS.CURRENCY,
         imagenes: prod.imagenes || [],
         enStock: stockDisponible > 0,
-        stockDisponible
+        stockDisponible,
+        ratingMedia,
+        ratingTotal
       };
     });
 
@@ -216,6 +223,11 @@ export class CatalogService {
     const cat = store.getCategoryById(prod.categoriaId);
     const variants = store.getVariantsByProductId(prod.id);
     const stockDisponible = variants.reduce((acc, v) => acc + (store.getAvailableStock(v.id) || 0), 0);
+    const reviews = typeof store.getReviewsByProductId === 'function' ? store.getReviewsByProductId(prod.id) : [];
+    const ratingTotal = reviews.length;
+    const ratingMedia = ratingTotal > 0
+      ? Math.round((reviews.reduce((acc, r) => acc + r.puntuacion, 0) / ratingTotal) * 10) / 10
+      : 0;
 
     return {
       id: prod.id,
@@ -231,6 +243,8 @@ export class CatalogService {
       imagenes: prod.imagenes || [],
       enStock: stockDisponible > 0,
       stockDisponible,
+      ratingMedia,
+      ratingTotal,
       variantes: variants.map(v => ({
         id: v.id,
         nombre: v.nombre,
