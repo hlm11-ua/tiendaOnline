@@ -10,8 +10,8 @@ Desglose de tareas ordenadas por dependencias para la implementación del carrit
 
 **Propósito**: Configuración de dependencias y parámetros compartidos del carrito.
 
-- [ ] T001 [P] Añadir constantes del carrito (clave `tienda_online_cart_v1`, estados de cesta y línea, tipos de avisos de reajuste) en `backend/src/config/constants.js`
-- [ ] T002 [P] Extender `MemoryStore` con mapa `this.carts` y métodos CRUD de carrito (`getCart`, `saveCart`, `deleteCart`) en `backend/src/models/store.js`
+- [X] T001 [P] Añadir constantes del carrito (clave `tienda_online_cart_v1`, estados de cesta y línea, tipos de avisos de reajuste) en `backend/src/config/constants.js`
+- [X] T002 [P] Extender `MemoryStore` con mapa `this.carts` y métodos CRUD de carrito (`getCart`, `saveCart`, `deleteCart`) en `backend/src/models/store.js`
 
 ---
 
@@ -21,8 +21,8 @@ Desglose de tareas ordenadas por dependencias para la implementación del carrit
 
 **⚠️ CRITICAL**: Ninguna tarea de la historia de usuario puede iniciarse hasta completar esta fase.
 
-- [ ] T003 [P] Implementar modelo de dominio `Cart` y `CartItem` con cálculo de subtotales y validaciones en `backend/src/models/cart.model.js`
-- [ ] T004 Configurar rutas Express del carrito y registrar la ruta estática `/carrito` en `backend/src/server.js`
+- [X] T003 [P] Implementar modelo de dominio `Cart` y `CartItem` con cálculo de subtotales y validaciones en `backend/src/models/cart.model.js`
+- [X] T004 Configurar rutas Express del carrito y registrar la ruta estática `/carrito` en `backend/src/server.js`
 
 **Checkpoint**: Base de almacenamiento y modelos lista. Puede comenzar la implementación de User Story 1.
 
@@ -45,34 +45,34 @@ Desglose de tareas ordenadas por dependencias para la implementación del carrit
 
 > **NOTA: Escribir y verificar que fallen antes de completar la implementación correspondiente.**
 
-- [ ] T005 [P] [US1] Pruebas de contrato para endpoints OpenAPI (`/api/carrito`, `/api/carrito/items`, `/api/carrito/validar-stock`, `/api/carrito/fusionar`) en `tests/contract/cart-api.contract.test.js`
-- [ ] T006 [P] [US1] Pruebas unitarias de cálculo de subtotales, rechazo de entradas inválidas y validación de stock disponible en `tests/unit/cart-service.test.js`
-- [ ] T007 [P] [US1] Pruebas unitarias del algoritmo de fusión de carritos y generación de avisos de reajuste en `tests/unit/cart-merge.test.js`
-- [ ] T008 [P] [US1] Pruebas de integración para sincronización y validación reactiva de stock disponible ante compras concurrentes en `tests/integration/cart-sync.test.js`
-- [ ] T009 [P] [US1] Pruebas de integración del flujo de cesta y persistencia en LocalStorage en `tests/integration/cart-flow.test.js`
+- [X] T005 [P] [US1] Pruebas de contrato para endpoints OpenAPI (`/api/carrito`, `/api/carrito/items`, `/api/carrito/validar-stock`, `/api/carrito/fusionar`) en `tests/contract/cart-api.contract.test.js`
+- [X] T006 [P] [US1] Pruebas unitarias de cálculo de subtotales, rechazo de entradas inválidas y validación de stock disponible en `tests/unit/cart-service.test.js`
+- [X] T007 [P] [US1] Pruebas unitarias del algoritmo de fusión de carritos y generación de avisos de reajuste en `tests/unit/cart-merge.test.js`
+- [X] T008 [P] [US1] Pruebas de integración para sincronización y validación reactiva de stock disponible ante compras concurrentes en `tests/integration/cart-sync.test.js`
+- [X] T009 [P] [US1] Pruebas de integración del flujo de cesta y persistencia en LocalStorage en `tests/integration/cart-flow.test.js`
 
 ### Servicios y Lógica de Negocio (Backend)
 
-- [ ] T010 [US1] Implementar `CartService` (métodos de adición, actualización de cantidad con validación entera, cálculo en euros y consulta a `store.getAvailableStock`) en `backend/src/services/cart.service.js`
-- [ ] T011 [US1] Implementar método de verificación de stock y sincronización de precios de catálogo (`validarStock`) en `backend/src/services/cart.service.js`
-- [ ] T012 [US1] Implementar método de fusión determinista de carritos (`fusionarCarritos`) con emisión de `AdjustmentNotice` en `backend/src/services/cart.service.js`
+- [X] T010 [US1] Implementar `CartService` (métodos de adición, actualización de cantidad con validación entera, cálculo en euros y consulta a `store.getAvailableStock`) en `backend/src/services/cart.service.js`
+- [X] T011 [US1] Implementar método de verificación de stock y sincronización de precios de catálogo (`validarStock`) en `backend/src/services/cart.service.js`
+- [X] T012 [US1] Implementar método de fusión determinista de carritos (`fusionarCarritos`) con emisión de `AdjustmentNotice` en `backend/src/services/cart.service.js`
 
 ### Controladores y Rutas (Backend)
 
-- [ ] T013 [US1] Implementar `CartController` gestionando endpoints REST conforme al contrato OpenAPI y middleware de errores en `backend/src/controllers/cart.controller.js`
-- [ ] T014 [US1] Definir router Express y asociar controladores de cesta en `backend/src/routes/cart.routes.js`
+- [X] T013 [US1] Implementar `CartController` gestionando endpoints REST conforme al contrato OpenAPI y middleware de errores en `backend/src/controllers/cart.controller.js`
+- [X] T014 [US1] Definir router Express y asociar controladores de cesta en `backend/src/routes/cart.routes.js`
 
 ### Capa de Servicios y Almacenamiento (Frontend)
 
-- [ ] T015 [P] [US1] Implementar cliente HTTP fetch hacia los endpoints `/api/carrito` en `frontend/src/services/cart-api.service.js`
-- [ ] T016 [P] [US1] Implementar servicio de persistencia dual `CartStorageService` con clave `tienda_online_cart_v1`, sincronización con API y método `clearCart` en `frontend/src/services/cart-storage.service.js`
+- [X] T015 [P] [US1] Implementar cliente HTTP fetch hacia los endpoints `/api/carrito` en `frontend/src/services/cart-api.service.js`
+- [X] T016 [P] [US1] Implementar servicio de persistencia dual `CartStorageService` con clave `tienda_online_cart_v1`, sincronización con API y método `clearCart` en `frontend/src/services/cart-storage.service.js`
 
 ### Interfaz de Usuario y Vistas (Frontend)
 
-- [ ] T017 [P] [US1] Implementar componente de vista reactiva `CartView` con renderizado de tabla, formateo `es-ES`, selector de cantidad con saneamiento de entradas no enteras y panel de avisos en `frontend/src/components/cart-view.js`
-- [ ] T018 [P] [US1] Crear hoja de estilos CSS responsiva para la tabla de artículos, avisos de reajuste y estado de cesta vacía en `frontend/src/styles/cart.css`
-- [ ] T019 [US1] Crear página HTML completa de la cesta de compras y orquestación de componentes en `frontend/public/cart.html`
-- [ ] T020 [US1] Integrar traspaso a checkout y vaciado automático de cesta (`clearCart`) tras confirmación de cobro en `frontend/public/checkout.html`
+- [X] T017 [P] [US1] Implementar componente de vista reactiva `CartView` con renderizado de tabla, formateo `es-ES`, selector de cantidad con saneamiento de entradas no enteras y panel de avisos en `frontend/src/components/cart-view.js`
+- [X] T018 [P] [US1] Crear hoja de estilos CSS responsiva para la tabla de artículos, avisos de reajuste y estado de cesta vacía en `frontend/src/styles/cart.css`
+- [X] T019 [US1] Crear página HTML completa de la cesta de compras y orquestación de componentes en `frontend/public/cart.html`
+- [X] T020 [US1] Integrar traspaso a checkout y vaciado automático de cesta (`clearCart`) tras confirmación de cobro en `frontend/public/checkout.html`
 
 **Checkpoint**: User Story 1 completada de extremo a extremo, cumpliendo los 8 requisitos funcionales y 3 criterios de éxito medibles.
 
@@ -82,10 +82,10 @@ Desglose de tareas ordenadas por dependencias para la implementación del carrit
 
 **Propósito**: Verificaciones de calidad, estándares constitucionales y validación de aceptación.
 
-- [ ] T021 [P] Auditar y asegurar que el 100% de los textos, etiquetas, mensajes de error y avisos estén en español de España (`es-ES`) y todos los precios formateados en euros (`XX,XX €`) conforme al Principio II
-- [ ] T022 [P] Validar que no se solicitan datos personales en la cesta anónima ni existen credenciales o secretos en configuración (Principio V)
-- [ ] T023 Ejecutar la suite completa de pruebas automatizadas con `npm test` verificando que todos los tests pasen
-- [ ] T024 Ejecutar la guía de validación manual paso a paso de los 7 escenarios de aceptación descritos en `specs/002-carrito-persistente/quickstart.md`
+- [X] T021 [P] Auditar y asegurar que el 100% de los textos, etiquetas, mensajes de error y avisos estén en español de España (`es-ES`) y todos los precios formateados en euros (`XX,XX €`) conforme al Principio II
+- [X] T022 [P] Validar que no se solicitan datos personales en la cesta anónima ni existen credenciales o secretos en configuración (Principio V)
+- [X] T023 Ejecutar la suite completa de pruebas automatizadas con `npm test` verificando que todos los tests pasen
+- [X] T024 Ejecutar la guía de validación manual paso a paso de los 7 escenarios de aceptación descritos en `specs/002-carrito-persistente/quickstart.md`
 
 ---
 

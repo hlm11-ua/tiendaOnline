@@ -900,6 +900,67 @@ body {
 }
 
 /* ==========================================================================
+   Estado de cesta vacía en el checkout (FR-001) y enlace de revisión (FR-008)
+   ========================================================================== */
+.checkout-empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.checkout-empty-state .empty-icon {
+  font-size: 2.75rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.checkout-empty-state .empty-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+.checkout-empty-state .empty-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.checkout-empty-state .empty-btn {
+  display: inline-block;
+  background: var(--accent-gradient);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1.4rem;
+  margin-bottom: 0.75rem;
+  transition: filter 0.2s ease;
+}
+
+.checkout-empty-state .empty-btn:hover {
+  filter: brightness(1.15);
+}
+
+.checkout-empty-state .empty-link {
+  display: block;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.checkout-empty-state .empty-link:hover {
+  color: var(--text-main);
+  text-decoration: underline;
+}
+
+.error-cart-link {
+  color: #fca5a5;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
    Estilos de Impresión
    ========================================================================== */
 @media print {

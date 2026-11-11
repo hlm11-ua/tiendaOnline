@@ -28,6 +28,10 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
 
+app.get('/checkout.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
+});
+
 // Rutas del catálogo público de productos y filtros (Feature 001)
 app.get('/catalogo', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));

@@ -95,7 +95,7 @@ export class ProductGrid {
         </div>
         <div class="product-footer">
           <span class="product-price">${prod.precioFormateado || `${prod.precioBase.toFixed(2)} €`}</span>
-          <a href="/checkout.html?productoId=${encodeURIComponent(prod.id)}" class="btn-buy-link" aria-label="Comprar ${prod.titulo}">
+          <a href="/checkout?productoId=${encodeURIComponent(prod.id)}" class="btn-buy-link" aria-label="Comprar ${prod.titulo}">
             Comprar
           </a>
         </div>

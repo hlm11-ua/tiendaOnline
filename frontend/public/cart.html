@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cesta de Compras | TiendaOnline</title>
+  <meta name="description" content="Revisa tu cesta de compras de piezas artesanales: ajusta cantidades, verifica existencias en tiempo real y tramita tu pedido con envío gratuito.">
+
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Estilos de la cesta de compras -->
+  <link rel="stylesheet" href="/src/styles/cart.css">
+</head>
+<body>
+  <!-- Encabezado del sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="/catalogo" class="brand-wrapper" id="link-home">
+        <span class="brand-icon" aria-hidden="true">🛍️</span>
+        <span class="brand-title">TiendaOnline</span>
+      </a>
+      <div class="header-badge" id="badge-cesta">
+        <span aria-hidden="true">🧺</span>
+        <span>Cesta de Compras Persistente</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal de la Cesta -->
+  <main class="main-content" role="main">
+    <a href="/catalogo" class="cart-volver-enlace" id="link-volver-catalogo">← Volver al catálogo</a>
+    <h1 class="cart-page-title">Tu Cesta de Compras</h1>
+    <p class="cart-page-subtitle">Las existencias se verifican en tiempo real antes de tramitar tu pedido.</p>
+
+    <div class="cart-page-grid">
+      <!-- Columna principal: tabla de artículos -->
+      <section class="cart-card" aria-labelledby="cart-titulo-articulos">
+        <h2 id="cart-titulo-articulos" class="sr-only">Artículos de la cesta</h2>
+
+        <!-- Panel de avisos de reajuste (stock, precios y disponibilidad) -->
+        <div class="cart-avisos-panel hidden" id="cart-avisos-panel" role="alert"></div>
+
+        <!-- Caja de errores operativos -->
+        <div class="cart-error-box hidden" id="cart-error-box"></div>
+
+        <!-- Tabla de artículos (se renderiza dinámicamente) -->
+        <div id="cart-table-container"></div>
+
+        <!-- Panel de incorporación rápida de piezas al carrito -->
+        <div class="cart-add-panel" id="cart-add-panel">
+          <h3>Añadir piezas al carrito</h3>
+          <div class="cart-add-row">
+            <label class="sr-only" for="cart-add-producto">Pieza artesanal</label>
+            <select class="cart-add-select" id="cart-add-producto"></select>
+            <label class="sr-only" for="cart-add-cantidad">Cantidad deseada</label>
+            <input type="text" inputmode="numeric" class="cart-add-cantidad font-mono" id="cart-add-cantidad" value="1" placeholder="Cantidad">
+            <button type="button" class="btn-primario" id="btn-anadir-carrito" style="width:auto;">Añadir al carrito</button>
+          </div>
+          <div class="cart-add-stock" id="cart-add-stock-info"></div>
+        </div>
+      </section>
+
+      <!-- Columna lateral: resumen de la compra -->
+      <aside class="summary-card" id="cart-resumen" aria-labelledby="cart-titulo-resumen">
+        <h2 id="cart-titulo-resumen" class="card-title">Resumen de la Compra</h2>
+        <p class="card-subtitle" id="cart-resumen-subtitulo">Importes en euros con envío gratuito estimado</p>
+
+        <div class="summary-totals">
+          <div class="total-line">
+            <span>Subtotal de artículos:</span>
+            <span class="font-mono" id="cart-subtotal">0,00 €</span>
+          </div>
+          <div class="total-line">
+            <span>Gastos de envío estimados:</span>
+            <span class="font-mono text-success" id="cart-gastos-envio">0,00 €</span>
+          </div>
+          <div class="total-line total-final">
+            <span>Total:</span>
+            <span class="font-mono" id="cart-total">0,00 €</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-primario" id="btn-tramitar-pedido" disabled>🔒 Tramitar pedido</button>
+        <button type="button" class="btn-secundario" id="btn-vaciar-carrito" disabled>Vaciar carrito</button>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Orquestación frontend mediante módulos ES6 -->
+  <script type="module">
+    import { CartView } from '/src/components/cart-view.js';
+    import { CartStorageService } from '/src/services/cart-storage.service.js';
+    import { CONSTANTS } from '/src/services/constants.service.js';
+
+    // Identificación de sesión: se admite x-usuario-id vía parámetro de URL para pruebas;
+    // sin usuario se opera en modo anónimo con persistencia en LocalStorage.
+    const params = new URLSearchParams(window.location.search);
+    const usuarioId = params.get('usuarioId');
+    if (usuarioId) {
+      CartStorageService.setUsuarioId(usuarioId);
+    }
+
+    const cartView = new CartView({
+      containerId: 'cart-table-container',
+      usuarioId: usuarioId || null,
+      onNavigateCheckout: () => {
+        window.location.href = '/checkout';
+      }
+    });
+
+    // Selector de piezas de demostración sincronizado con el inventario del taller
+    function renderSelectorPiezas() {
+      const select = document.getElementById('cart-add-producto');
+      const inputCantidad = document.getElementById('cart-add-cantidad');
+      const stockInfo = document.getElementById('cart-add-stock-info');
+
+      select.innerHTML = CONSTANTS.DEMO_CATALOG.map(pieza =>
+        `<option value="${pieza.varianteId}" data-precio="${pieza.precioUnitario}" data-titulo="${pieza.titulo}">
+          ${pieza.titulo} — ${new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(pieza.precioUnitario)}
+        </option>`
+      ).join('');
+
+      function actualizarStockInfo() {
+        const pieza = CONSTANTS.DEMO_CATALOG.find(p => p.varianteId === select.value);
+        if (pieza) {
+          stockInfo.textContent = `Existencias limitadas: las unidades se verifican en tiempo real al añadir.`;
+        }
+      }
+
+      select.addEventListener('change', actualizarStockInfo);
+      actualizarStockInfo();
+
+      // Añadir al carrito con validación entera del selector de cantidad
+      document.getElementById('btn-anadir-carrito').addEventListener('click', async () => {
+        const valorBruto = inputCantidad.value;
+        const valorLimpio = valorBruto.trim();
+        const pieza = CONSTANTS.DEMO_CATALOG.find(p => p.varianteId === select.value);
+        if (!pieza) return;
+
+        // Solo números enteros positivos; entradas no válidas se descartan
+        if (!/^\d+$/.test(valorLimpio) || parseInt(valorLimpio, 10) < 1) {
+          inputCantidad.value = '1';
+          return;
+        }
+
+        const cantidad = parseInt(valorLimpio, 10);
+        inputCantidad.value = '1';
+        await cartView.addItem({
+          varianteId: pieza.varianteId,
+          cantidad,
+          titulo: pieza.titulo,
+          precioUnitario: pieza.precioUnitario
+        });
+      });
+    }
+
+    renderSelectorPiezas();
+    await cartView.init();
+  </script>
+</body>
+</html>
