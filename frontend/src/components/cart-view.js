@@ -135,6 +135,7 @@ export class CartView {
 
       item.stockDisponible = v.stockDisponible;
       item.precioUnitario = v.precioVigente;
+      item.titulo = v.titulo || item.titulo;
       item.estado = v.estado;
       item.cantidad = v.cantidadAjustada;
       item.recalcular?.();
@@ -186,32 +187,82 @@ export class CartView {
    * Añade una cantidad deseada de una variante con validación de stock en tiempo real
    */
   async addItem({ varianteId, cantidad, titulo, precioUnitario }) {
-    try {
-      const carritoActualizado = await CartApiService.addItem(
-        { varianteId, cantidad },
-        this.usuarioId
-      );
-      this.carrito = carritoActualizado;
-    } catch (err) {
-      if (err.status === 409) {
-        this.marcarAviso({
-          varianteId,
-          titulo: titulo || varianteId,
-          tipo: CONSTANTS.CART.NOTICE_TYPES.STOCK_ADJUSTED,
-          mensaje: `Solo quedan ${err.stockDisponible} unidad(es) de '${titulo || varianteId}'. No se puede añadir más cantidad.`
-        });
-        // Añadir hasta el límite de stock disponible
-        if (err.stockDisponible > 0) {
-          await this.actualizarCantidadInterna(varianteId, err.stockDisponible);
-          this.refrescarDesdeStorageConStock(varianteId, titulo, precioUnitario, err.stockDisponible);
+    const cantidadNum = Number(cantidad) || 1;
+
+    if (this.usuarioId) {
+      try {
+        const carritoActualizado = await CartApiService.addItem(
+          { varianteId, cantidad: cantidadNum },
+          this.usuarioId
+        );
+        this.carrito = carritoActualizado;
+      } catch (err) {
+        if (err.status === 409) {
+          this.marcarAviso({
+            varianteId,
+            titulo: titulo || varianteId,
+            tipo: CONSTANTS.CART.NOTICE_TYPES.STOCK_ADJUSTED,
+            mensaje: err.stockDisponible > 0
+              ? `Solo quedan ${err.stockDisponible} unidad(es) de '${titulo || varianteId}'. No se puede añadir más cantidad.`
+              : `El artículo '${titulo || varianteId}' está agotado.`
+          });
+          // Añadir hasta el límite de stock disponible
+          if (err.stockDisponible > 0) {
+            await this.actualizarCantidadInterna(varianteId, err.stockDisponible);
+            this.refrescarDesdeStorageConStock(varianteId, titulo, precioUnitario, err.stockDisponible);
+          }
+        } else {
+          this.mostrarError(err.message);
+          return;
         }
-      } else {
-        this.mostrarError(err.message);
-        return;
       }
+      await this.validarStock();
+      return;
     }
 
+    // Modo anónimo: la cesta vive en LocalStorage, por lo que se fusiona
+    // localmente y se valida en bloque (el servidor no conserva carritos anónimos)
+    const itemsActuales = (this.carrito.items || []).filter(it => it.varianteId);
+    const existente = itemsActuales.find(it => it.varianteId === varianteId);
+    const esNuevaLinea = !existente;
+
+    if (existente) {
+      existente.cantidad = Number(existente.cantidad) + cantidadNum;
+    } else {
+      itemsActuales.push({
+        varianteId,
+        productoId: '',
+        titulo: titulo || varianteId,
+        precioUnitario: precioUnitario || 0,
+        cantidad: cantidadNum,
+        stockDisponible: 0,
+        estado: CONSTANTS.CART.ITEM_STATUS.AVAILABLE
+      });
+    }
+
+    this.carrito.items = itemsActuales;
+    this.recalcularTotales();
     await this.validarStock();
+
+    // Si la pieza recién solicitada carece de existencias, no se incorpora a la cesta
+    if (esNuevaLinea) {
+      const linea = (this.carrito.items || []).find(it => it.varianteId === varianteId);
+      if (linea && (linea.estado === CONSTANTS.CART.ITEM_STATUS.OUT_OF_STOCK || linea.estado === CONSTANTS.CART.ITEM_STATUS.UNAVAILABLE)) {
+        this.carrito.items = this.carrito.items.filter(it => it.varianteId !== varianteId);
+        this.marcarAviso({
+          varianteId,
+          titulo: linea.titulo,
+          tipo: linea.estado === CONSTANTS.CART.ITEM_STATUS.UNAVAILABLE
+            ? CONSTANTS.CART.NOTICE_TYPES.PRODUCT_UNAVAILABLE
+            : CONSTANTS.CART.NOTICE_TYPES.STOCK_EXHAUSTED,
+          mensaje: linea.estado === CONSTANTS.CART.ITEM_STATUS.UNAVAILABLE
+            ? `El artículo '${linea.titulo}' ya no está disponible en el catálogo.`
+            : `El artículo '${linea.titulo}' está agotado y no se ha podido añadir a la cesta.`
+        });
+        this.recalcularTotales();
+      }
+    }
+    await this.persistirCarrito();
   }
 
   /**

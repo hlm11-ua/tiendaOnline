@@ -93,6 +93,7 @@
   <script type="module">
     import { CartView } from '/src/components/cart-view.js';
     import { CartStorageService } from '/src/services/cart-storage.service.js';
+    import { catalogApiService } from '/src/services/catalog-api.service.js';
     import { CONSTANTS } from '/src/services/constants.service.js';
 
     // Identificación de sesión: se admite x-usuario-id vía parámetro de URL para pruebas;
@@ -159,6 +160,36 @@
 
     renderSelectorPiezas();
     await cartView.init();
+
+    // "Comprar" desde el catálogo: la pieza entra en la cesta automáticamente
+    // y la página muestra de inmediato el artículo, su subtotal y el total.
+    const productoAAnadir = params.get('anadirProducto');
+    if (productoAAnadir) {
+      history.replaceState(null, '', usuarioId ? `/carrito?usuarioId=${encodeURIComponent(usuarioId)}` : '/carrito');
+      try {
+        const producto = await catalogApiService.getProductoPorId(productoAAnadir);
+        const variantes = producto.variantes || [];
+        const variante = variantes.find(v => v.stockDisponible > 0) || variantes[0];
+        if (variante) {
+          await cartView.addItem({
+            varianteId: variante.id,
+            cantidad: 1,
+            titulo: producto.titulo,
+            precioUnitario: producto.precioBase
+          });
+        } else {
+          cartView.marcarAviso({
+            varianteId: producto.id,
+            titulo: producto.titulo,
+            tipo: CONSTANTS.CART.NOTICE_TYPES.STOCK_EXHAUSTED,
+            mensaje: `El artículo '${producto.titulo}' está agotado y no se ha podido añadir a la cesta.`
+          });
+          cartView.renderAvisos();
+        }
+      } catch {
+        cartView.mostrarError('No se ha podido añadir la pieza solicitada. Compruébalo en el catálogo.');
+      }
+    }
   </script>
 </body>
 </html>
