@@ -108,13 +108,14 @@
       }
     });
 
-    // Sugerencias: una selección aleatoria del catálogo ("Te puede interesar")
+    // Sugerencias: una selección aleatoria del catálogo ("Te puede interesar"),
+    // mostrando únicamente artículos con existencias disponibles (no agotados)
     async function renderSugerencias() {
       const grid = document.getElementById('sugerencias-grid');
       if (!grid) return;
 
       try {
-        const { productos } = await catalogApiService.getProductos();
+        const { productos } = await catalogApiService.getProductos({ enStock: true });
         const seleccion = [...(productos || [])].sort(() => Math.random() - 0.5).slice(0, 10);
 
         if (seleccion.length === 0) {

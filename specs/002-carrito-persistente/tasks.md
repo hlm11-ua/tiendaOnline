@@ -74,7 +74,7 @@ Desglose de tareas ordenadas por dependencias para la implementación del carrit
 - [X] T019 [US1] Crear página HTML completa de la cesta de compras y orquestación de componentes en `frontend/public/cart.html`
 - [X] T020 [US1] Integrar traspaso a checkout y vaciado automático de cesta (`clearCart`) tras confirmación de cobro en `frontend/public/checkout.html`
 
-**Checkpoint**: User Story 1 completada de extremo a extremo, cumpliendo los 8 requisitos funcionales y 3 criterios de éxito medibles.
+**Checkpoint**: User Story 1 completada de extremo a extremo, cumpliendo los 9 requisitos funcionales y 3 criterios de éxito medibles.
 
 ---
 
@@ -85,7 +85,8 @@ Desglose de tareas ordenadas por dependencias para la implementación del carrit
 - [X] T021 [P] Auditar y asegurar que el 100% de los textos, etiquetas, mensajes de error y avisos estén en español de España (`es-ES`) y todos los precios formateados en euros (`XX,XX €`) conforme al Principio II
 - [X] T022 [P] Validar que no se solicitan datos personales en la cesta anónima ni existen credenciales o secretos en configuración (Principio V)
 - [X] T023 Ejecutar la suite completa de pruebas automatizadas con `npm test` verificando que todos los tests pasen
-- [X] T024 Ejecutar la guía de validación manual paso a paso de los 7 escenarios de aceptación descritos en `specs/002-carrito-persistente/quickstart.md`
+- [X] T024 Ejecutar la guía de validación manual paso a paso de los escenarios de aceptación descritos en `specs/002-carrito-persistente/quickstart.md`
+- [X] T025 [US1] Implementar la sección "Te puede interesar" en `frontend/public/cart.html` mostrando únicamente artículos del catálogo con existencias disponibles (filtro `enStock` sobre `/api/catalogo/productos`) y ocultando la sección si no hay artículos disponibles (FR-009)
 
 ---
 
