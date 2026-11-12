@@ -135,6 +135,18 @@ body {
   align-items: start;
 }
 
+.checkout-volver-enlace {
+  display: inline-block;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.checkout-volver-enlace:hover {
+  color: var(--text-main);
+}
+
 @media (max-width: 900px) {
   .checkout-grid-layout {
     grid-template-columns: 1fr;

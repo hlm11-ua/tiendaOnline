@@ -48,19 +48,6 @@
 
         <!-- Tabla de artículos (se renderiza dinámicamente) -->
         <div id="cart-table-container"></div>
-
-        <!-- Panel de incorporación rápida de piezas al carrito -->
-        <div class="cart-add-panel" id="cart-add-panel">
-          <h3>Añadir piezas al carrito</h3>
-          <div class="cart-add-row">
-            <label class="sr-only" for="cart-add-producto">Pieza artesanal</label>
-            <select class="cart-add-select" id="cart-add-producto"></select>
-            <label class="sr-only" for="cart-add-cantidad">Cantidad deseada</label>
-            <input type="text" inputmode="numeric" class="cart-add-cantidad font-mono" id="cart-add-cantidad" value="1" placeholder="Cantidad">
-            <button type="button" class="btn-primario" id="btn-anadir-carrito" style="width:auto;">Añadir al carrito</button>
-          </div>
-          <div class="cart-add-stock" id="cart-add-stock-info"></div>
-        </div>
       </section>
 
       <!-- Columna lateral: resumen de la compra -->
@@ -87,6 +74,15 @@
         <button type="button" class="btn-secundario" id="btn-vaciar-carrito" disabled>Vaciar carrito</button>
       </aside>
     </div>
+
+    <!-- Sección de sugerencias: artículos aleatorios del catálogo -->
+    <section class="sugerencias-seccion" id="sugerencias-seccion" aria-labelledby="sugerencias-titulo">
+      <div class="sugerencias-cabecera">
+        <h2 id="sugerencias-titulo" class="sugerencias-titulo">Te puede interesar</h2>
+        <a href="/catalogo" class="sugerencias-ver-mas" id="link-ver-mas-catalogo">Ver más →</a>
+      </div>
+      <div class="sugerencias-grid" id="sugerencias-grid"></div>
+    </section>
   </main>
 
   <!-- Orquestación frontend mediante módulos ES6 -->
@@ -112,54 +108,47 @@
       }
     });
 
-    // Selector de piezas de demostración sincronizado con el inventario del taller
-    function renderSelectorPiezas() {
-      const select = document.getElementById('cart-add-producto');
-      const inputCantidad = document.getElementById('cart-add-cantidad');
-      const stockInfo = document.getElementById('cart-add-stock-info');
+    // Sugerencias: una selección aleatoria del catálogo ("Te puede interesar")
+    async function renderSugerencias() {
+      const grid = document.getElementById('sugerencias-grid');
+      if (!grid) return;
 
-      select.innerHTML = CONSTANTS.DEMO_CATALOG.map(pieza =>
-        `<option value="${pieza.varianteId}" data-precio="${pieza.precioUnitario}" data-titulo="${pieza.titulo}">
-          ${pieza.titulo} — ${new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(pieza.precioUnitario)}
-        </option>`
-      ).join('');
+      try {
+        const { productos } = await catalogApiService.getProductos();
+        const seleccion = [...(productos || [])].sort(() => Math.random() - 0.5).slice(0, 10);
 
-      function actualizarStockInfo() {
-        const pieza = CONSTANTS.DEMO_CATALOG.find(p => p.varianteId === select.value);
-        if (pieza) {
-          stockInfo.textContent = `Existencias limitadas: las unidades se verifican en tiempo real al añadir.`;
-        }
-      }
-
-      select.addEventListener('change', actualizarStockInfo);
-      actualizarStockInfo();
-
-      // Añadir al carrito con validación entera del selector de cantidad
-      document.getElementById('btn-anadir-carrito').addEventListener('click', async () => {
-        const valorBruto = inputCantidad.value;
-        const valorLimpio = valorBruto.trim();
-        const pieza = CONSTANTS.DEMO_CATALOG.find(p => p.varianteId === select.value);
-        if (!pieza) return;
-
-        // Solo números enteros positivos; entradas no válidas se descartan
-        if (!/^\d+$/.test(valorLimpio) || parseInt(valorLimpio, 10) < 1) {
-          inputCantidad.value = '1';
+        if (seleccion.length === 0) {
+          document.getElementById('sugerencias-seccion').classList.add('hidden');
           return;
         }
 
-        const cantidad = parseInt(valorLimpio, 10);
-        inputCantidad.value = '1';
-        await cartView.addItem({
-          varianteId: pieza.varianteId,
-          cantidad,
-          titulo: pieza.titulo,
-          precioUnitario: pieza.precioUnitario
-        });
-      });
+        grid.innerHTML = seleccion.map(prod => {
+          const imagenPrincipal = Array.isArray(prod.imagenes) && prod.imagenes.length > 0
+            ? (prod.imagenes.find(img => img.esPrincipal) || prod.imagenes[0]).url
+            : '/public/uploads/placeholder.webp';
+          const precio = prod.precioFormateado || `${prod.precioBase.toFixed(2)} €`;
+          return `
+            <article class="sugerencia-card">
+              <div class="sugerencia-imagen-container">
+                <img src="${imagenPrincipal}" alt="${prod.titulo}" class="sugerencia-imagen" loading="lazy"
+                  onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'200\\' viewBox=\\'0 0 300 200\\'><rect fill=\\'%231e293b\\' width=\\'300\\' height=\\'200\\'/><text fill=\\'%2394a3b8\\' font-family=\\'sans-serif\\' font-size=\\'14\\' text-anchor=\\'middle\\' x=\\'150\\' y=\\'105\\'>Artesan\\u00EDa</text></svg>';">
+              </div>
+              <div class="sugerencia-body">
+                <h3 class="sugerencia-titulo">${prod.titulo}</h3>
+                <div class="sugerencia-footer">
+                  <span class="sugerencia-precio font-mono">${precio}</span>
+                  <a href="/carrito?anadirProducto=${encodeURIComponent(prod.id)}" class="sugerencia-comprar" aria-label="Añadir ${prod.titulo} a la cesta">Comprar</a>
+                </div>
+              </div>
+            </article>`;
+        }).join('');
+      } catch {
+        document.getElementById('sugerencias-seccion').classList.add('hidden');
+      }
     }
 
-    renderSelectorPiezas();
     await cartView.init();
+    renderSugerencias();
 
     // "Comprar" desde el catálogo: la pieza entra en la cesta automáticamente
     // y la página muestra de inmediato el artículo, su subtotal y el total.
@@ -168,8 +157,9 @@
       history.replaceState(null, '', usuarioId ? `/carrito?usuarioId=${encodeURIComponent(usuarioId)}` : '/carrito');
       try {
         const producto = await catalogApiService.getProductoPorId(productoAAnadir);
-        const variantes = producto.variantes || [];
-        const variante = variantes.find(v => v.stockDisponible > 0) || variantes[0];
+        // Solo se añade la pieza si existe alguna variante con existencias;
+        // si todas están agotadas se muestra el aviso directamente en la cesta
+        const variante = (producto.variantes || []).find(v => v.stockDisponible > 0);
         if (variante) {
           await cartView.addItem({
             varianteId: variante.id,

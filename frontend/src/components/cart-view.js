@@ -260,6 +260,9 @@ export class CartView {
             : `El artículo '${linea.titulo}' está agotado y no se ha podido añadir a la cesta.`
         });
         this.recalcularTotales();
+        // Re-render inmediato: el aviso se muestra al instante y la fila
+        // no llega a quedar visible con cantidad 0 pendiente de eliminar
+        this.render();
       }
     }
     await this.persistirCarrito();
