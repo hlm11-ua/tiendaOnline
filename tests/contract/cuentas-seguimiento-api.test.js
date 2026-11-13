@@ -122,6 +122,35 @@ describe('Contratos de API Cuentas y Seguimiento (Feature 004)', () => {
       assert.strictEqual(res.body.usuario.email, 'elena@artesania.es');
     });
 
+    it('POST /api/auth/registro debe ignorar intentos de escalada de rol desde el cuerpo (F3)', async () => {
+      const res = await request('/api/auth/registro', {
+        method: 'POST',
+        body: JSON.stringify({
+          nombre: 'Falso Admin',
+          email: 'falso@artesania.es',
+          password: 'password123',
+          rol: 'admin'
+        })
+      });
+
+      assert.strictEqual(res.status, 201);
+      assert.strictEqual(res.body.usuario.rol, 'cliente');
+    });
+
+    it('La cuenta de administrador sembrada admin@gmail.com debe poder iniciar sesión (200)', async () => {
+      const res = await request('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: 'admin@gmail.com',
+          password: 'admin1234'
+        })
+      });
+
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.usuario.rol, 'admin');
+      assert.ok(res.body.sesion.token);
+    });
+
     it('POST /api/auth/login debe rechazar credenciales erróneas (401)', async () => {
       const res = await request('/api/auth/login', {
         method: 'POST',
@@ -155,7 +184,10 @@ describe('Contratos de API Cuentas y Seguimiento (Feature 004)', () => {
       });
 
       assert.strictEqual(res.status, 200);
-      assert.strictEqual(res.body.usuario.email, 'elena@artesania.es');
+      // El contrato OpenAPI define el perfil directamente en el cuerpo (UsuarioPerfil)
+      assert.strictEqual(res.body.email, 'elena@artesania.es');
+      assert.strictEqual(res.body.nombre, 'Elena Artesana');
+      assert.strictEqual(res.body.passwordHash, undefined);
     });
 
     it('POST /api/auth/logout debe invalidar la sesión (200)', async () => {

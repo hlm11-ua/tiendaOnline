@@ -146,3 +146,59 @@ describe('Pruebas de Integración: Sincronización y Validación de Stock en Tie
     assert.ok(aviso, 'Debe emitir aviso de producto no disponible');
   });
 });
+
+describe('Aislamiento de carritos por cuenta de usuario autenticada (Feature 002 + 004)', () => {
+  beforeEach(() => {
+    store.reset();
+  });
+
+  async function registrarCuenta(nombre, email) {
+    const res = await request('/api/auth/registro', {
+      method: 'POST',
+      body: JSON.stringify({ nombre, email, password: 'contrasenaSegura1' })
+    });
+    assert.equal(res.status, 201);
+    return res.body.sesion.token;
+  }
+
+  it('cada cuenta con sesión iniciada debe tener su propio carrito independiente', async () => {
+    const tokenA = await registrarCuenta('Cliente Uno', 'cliente.uno@test.es');
+    const tokenB = await registrarCuenta('Cliente Dos', 'cliente.dos@test.es');
+
+    // El cliente A añade una pieza a su cesta con su sesión (sin cabecera de prueba)
+    const addRes = await request('/api/carrito/items', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${tokenA}` },
+      body: JSON.stringify({ varianteId: 'var-001-azul', cantidad: 2 })
+    });
+    assert.equal(addRes.status, 200);
+    assert.equal(addRes.body.usuarioId, store.getAccountByEmail('cliente.uno@test.es').id);
+    assert.equal(addRes.body.items.length, 1);
+
+    // El carrito del cliente A contiene su artículo
+    const cartA = await request('/api/carrito', {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    assert.equal(cartA.status, 200);
+    assert.equal(cartA.body.items.length, 1);
+    assert.equal(cartA.body.items[0].varianteId, 'var-001-azul');
+
+    // El carrito del cliente B está vacío: no comparte cesta con A
+    const cartB = await request('/api/carrito', {
+      headers: { 'Authorization': `Bearer ${tokenB}` }
+    });
+    assert.equal(cartB.status, 200);
+    assert.equal(cartB.body.items.length, 0);
+
+    // Tras cerrar sesión (logout de A), el token ya no resuelve carrito alguno
+    await request('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    const cartALogout = await request('/api/carrito', {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+    assert.equal(cartALogout.status, 200);
+    assert.equal(cartALogout.body.items.length, 0);
+  });
+});
