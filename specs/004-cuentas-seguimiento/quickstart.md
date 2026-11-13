@@ -17,6 +17,21 @@
   ```
 - Navegador web moderno o herramienta de peticiones HTTP (curl / Postman).
 
+### Cuenta de administrador precargada
+
+El sistema siembra automáticamente al arrancar una cuenta de administrador de demostración para poder
+gestionar las fases de los pedidos (FR-006, FR-007) sin depender de un alta pública de administradores
+(fuera de alcance, Principio III):
+
+- **Correo electrónico**: `admin@gmail.com`
+- **Contraseña**: `admin1234` (almacenada hasheada con scrypt + salt, nunca en texto plano)
+
+Los valores por defecto pueden sobrescribirse mediante las variables de entorno `ADMIN_EMAIL` y
+`ADMIN_PASSWORD` antes de arrancar el servidor. Puede iniciar sesión con estas credenciales desde
+`http://localhost:3000/cuenta` (pestaña "Iniciar sesión"); con la sesión activa, las peticiones de
+cambio de fase a `PUT /api/pedidos/:codigoReferencia/fase` se autorizan con el token `Bearer`
+(autorización dual compatible con la cabecera `x-user-role: admin` usada en los tests).
+
 ---
 
 ## Escenarios de Validación End-to-End

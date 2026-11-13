@@ -87,21 +87,27 @@
     import { CheckoutForm } from '/src/components/checkout-form.js';
     import { CartStorageService } from '/src/services/cart-storage.service.js';
     import { CartApiService } from '/src/services/cart-api.service.js';
+    import { AccountApiService } from '/src/services/account-api.service.js';
 
     let activeItems = [];
     let currentSession = null;
+
+    // Clave de sessionStorage con la última sesión de reserva abierta por este
+    // navegador: permite liberar el stock retenido si el comprador abandona la
+    // pasarela sin completar el pago
+    const CHECKOUT_SESION_KEY = 'tienda_online_checkout_sesion';
 
     const formatoEUR = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
     const formatEUR = (importe) => formatoEUR.format(Number(importe) || 0);
 
     // Feature 002: el checkout consume la cesta persistente real del comprador
-    // (LocalStorage para anónimos o carrito remoto vía parámetro usuarioId)
+    // (LocalStorage para anónimos o carrito remoto vinculado a la cuenta con
+    // sesión iniciada en Feature 004; el parámetro usuarioId queda para pruebas)
     async function cargarCestaPersistente() {
       const params = new URLSearchParams(window.location.search);
-      const usuarioId = params.get('usuarioId');
-      if (usuarioId) {
-        CartStorageService.setUsuarioId(usuarioId);
-      }
+      const accountService = new AccountApiService();
+      const usuarioId = params.get('usuarioId') || accountService.getUser()?.id || null;
+      CartStorageService.setUsuarioId(usuarioId);
 
       let lineas;
       try {
@@ -225,6 +231,7 @@
             sesionPagoId: currentSession.sesionPagoId,
             clienteNombre: datos.clienteNombre,
             clienteEmail: datos.clienteEmail,
+            cuentaId: datos.cuentaId || null,
             tokenTarjeta: datos.tokenTarjeta
           });
 
@@ -252,6 +259,7 @@
 
       // Feature 002: vaciado automático de la cesta tras confirmación de cobro
       try {
+        sessionStorage.removeItem(CHECKOUT_SESION_KEY);
         await CartStorageService.clearCart();
         if (CartStorageService.usuarioId) {
           await CartApiService.vaciarCarrito(CartStorageService.usuarioId);
@@ -311,6 +319,7 @@
         const payload = items.map(it => ({ varianteId: it.varianteId, cantidad: it.cantidad }));
         const sesion = await PaymentApiService.iniciarPago(payload);
         currentSession = sesion;
+        sessionStorage.setItem(CHECKOUT_SESION_KEY, sesion.sesionPagoId);
 
         // Iniciar temporizador regresivo de 10 minutos
         timer.start(sesion.expiresAt);
@@ -348,6 +357,18 @@
 
     // 5. Arranque: consumir la cesta persistente real del comprador
     (async () => {
+      // Si el navegador tenía una reserva anterior sin pagar, se libera antes de
+      // abrir una nueva sesión para no acumular stock retenido entre visitas
+      try {
+        const sesionPrevia = sessionStorage.getItem(CHECKOUT_SESION_KEY);
+        if (sesionPrevia) {
+          await PaymentApiService.liberarSesion(sesionPrevia);
+        }
+      } catch {
+        // Sin efecto en el flujo de compra: la reserva expirará sola si persiste
+      }
+      sessionStorage.removeItem(CHECKOUT_SESION_KEY);
+
       // Renderizar el formulario desde el principio para disponer del cuadro de avisos
       checkoutForm.setSessionData({ sesionPagoId: null, items: [], total: 0 });
 

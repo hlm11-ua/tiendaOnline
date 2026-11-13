@@ -1,5 +1,8 @@
 import { PhaseStepper } from './phase-stepper.js';
 
+// Intervalo de auto-actualización del panel (seguimiento en tiempo real, FR-005 / SC-003)
+const AUTO_REFRESCO_MS = 5000;
+
 export class OrderHistoryComponent {
   constructor({ container, accountService, onLogout }) {
     this.container = container;
@@ -7,6 +10,8 @@ export class OrderHistoryComponent {
     this.onLogout = onLogout;
     this.pedidos = [];
     this.selectedPedido = null;
+    this.lastSignature = null;
+    this.autoRefreshTimer = null;
   }
 
   formatMoney(amount) {
@@ -68,13 +73,66 @@ export class OrderHistoryComponent {
     }
   }
 
-  async loadOrders() {
+  async loadOrders(silent = false) {
     try {
       const data = await this.accountService.getMisCompras();
       this.pedidos = data.pedidos || [];
-      this.render();
+
+      // Firma de cambios: referencia, fase, tracking e importe de cada pedido
+      const firma = JSON.stringify(this.pedidos.map(p => [
+        p.codigoReferencia,
+        p.fase || p.estado,
+        p.envio?.numeroSeguimiento || null,
+        p.total
+      ]));
+      const cambiado = firma !== this.lastSignature;
+      this.lastSignature = firma;
+
+      if (silent && !cambiado && !this.selectedPedido) {
+        return; // Sin cambios: se evita repintar la pantalla innecesariamente
+      }
+
+      if (this.selectedPedido) {
+        // Hay un seguimiento abierto: se refresca su detalle sin cerrarlo
+        await this.refrescarPedidoAbierto();
+      } else {
+        this.render();
+      }
+
+      if (!silent) {
+        this.startAutoRefresh();
+      }
     } catch (err) {
-      this.renderError(err.message || 'No se pudieron cargar tus pedidos.');
+      // Si la sesión ya no es válida (401), no tiene sentido reintentar: volver al formulario de acceso
+      if (err.status === 401) {
+        this.stopAutoRefresh();
+        this.accountService.clearSession();
+        if (this.onLogout) {
+          this.onLogout('La sesión ha expirado o no es válida. Por favor, inicie sesión nuevamente.');
+        }
+        return;
+      }
+      if (!silent) {
+        this.renderError(err.message || 'No se pudieron cargar tus pedidos.');
+      }
+    }
+  }
+
+  /**
+   * Auto-actualización: consulta periódica de "Mis compras" para reflejar
+   * cada cambio de fase o de código de seguimiento sin recargar la página
+   */
+  startAutoRefresh() {
+    if (this.autoRefreshTimer) return;
+    this.autoRefreshTimer = setInterval(() => {
+      this.loadOrders(true);
+    }, AUTO_REFRESCO_MS);
+  }
+
+  stopAutoRefresh() {
+    if (this.autoRefreshTimer) {
+      clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
     }
   }
 
@@ -95,7 +153,7 @@ export class OrderHistoryComponent {
     const headerHtml = `
       <div class="account-header">
         <div class="user-info">
-          <h2>Hola, ${user?.nombre || 'Cliente'}</h2>
+          <h2>Bienvenido/a, ${user?.nombre || 'Cliente'}</h2>
           <span class="user-email">${user?.email || ''}</span>
           ${user?.rol === 'admin' ? '<span class="badge badge-admin">Administrador</span>' : ''}
         </div>
@@ -183,6 +241,7 @@ export class OrderHistoryComponent {
     const logoutBtn = this.container.querySelector('#btn-logout');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
+        this.stopAutoRefresh();
         await this.accountService.logout();
         if (this.onLogout) this.onLogout();
       });
@@ -197,11 +256,51 @@ export class OrderHistoryComponent {
     });
   }
 
-  openOrderModal(codigoReferencia) {
-    const pedido = this.pedidos.find(p => p.codigoReferencia === codigoReferencia);
-    if (!pedido) return;
-
+  async openOrderModal(codigoReferencia) {
     const modalContainer = this.container.querySelector('#modal-container');
+    if (!modalContainer) return;
+
+    this.selectedPedido = codigoReferencia;
+    modalContainer.innerHTML = '<div class="modal-loading">Cargando seguimiento del pedido…</div>';
+
+    try {
+      // Consultar el detalle fresco al servidor para reflejar cambios de fase en tiempo real
+      const pedido = await this.accountService.getDetallePedido(codigoReferencia);
+      this.renderModal(pedido);
+    } catch (err) {
+      this.selectedPedido = null;
+      if (err.status === 401) {
+        this.stopAutoRefresh();
+        this.accountService.clearSession();
+        if (this.onLogout) {
+          this.onLogout('La sesión ha expirado o no es válida. Por favor, inicie sesión nuevamente.');
+        }
+        return;
+      }
+      modalContainer.innerHTML = `<div class="modal-loading modal-loading-error">${err.message || 'No se pudo cargar el seguimiento del pedido.'}</div>`;
+    }
+  }
+
+  /**
+   * Refresca el seguimiento abierto con el detalle actual del servidor,
+   * sin mostrar el indicador de carga (uso interno del auto-refresco)
+   */
+  async refrescarPedidoAbierto() {
+    const modalContainer = this.container.querySelector('#modal-container');
+    if (!modalContainer || !this.selectedPedido) return;
+
+    try {
+      const pedido = await this.accountService.getDetallePedido(this.selectedPedido);
+      this.renderModal(pedido);
+    } catch {
+      // El auto-refresco no interrumpe la vista ante fallos puntuales de red
+    }
+  }
+
+  renderModal(pedido) {
+    const modalContainer = this.container.querySelector('#modal-container');
+    if (!modalContainer) return;
+
     const stepperHtml = PhaseStepper.render(pedido);
 
     const itemsHtml = Array.isArray(pedido.lineas) && pedido.lineas.length > 0
@@ -245,6 +344,7 @@ export class OrderHistoryComponent {
     `;
 
     const closeModal = () => {
+      this.selectedPedido = null;
       modalContainer.innerHTML = '';
     };
 

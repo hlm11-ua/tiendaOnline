@@ -146,10 +146,10 @@ export class AccountApiService {
     });
 
     const data = await this.handleResponse(res);
-    if (data.usuario) {
-      this.setUser(data.usuario);
-    }
-    return data.usuario;
+    // El contrato define el perfil de usuario directamente en el cuerpo
+    const usuario = data.usuario || data;
+    this.setUser(usuario);
+    return usuario;
   }
 
   /**

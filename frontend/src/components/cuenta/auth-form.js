@@ -1,11 +1,14 @@
 /**
  * Componente interactivo para Iniciar Sesión y Crear Cuenta (Feature 004)
  */
+import { CartStorageService } from '../../services/cart-storage.service.js';
+
 export class AuthFormComponent {
-  constructor({ container, accountService, onAuthSuccess }) {
+  constructor({ container, accountService, onAuthSuccess, initialAlert = null }) {
     this.container = container;
     this.accountService = accountService;
     this.onAuthSuccess = onAuthSuccess;
+    this.initialAlert = initialAlert;
     this.activeTab = 'login'; // 'login' | 'register'
   }
 
@@ -63,6 +66,10 @@ export class AuthFormComponent {
     `;
 
     this.bindEvents();
+
+    if (this.initialAlert) {
+      this.showAlert(this.initialAlert, 'info');
+    }
   }
 
   bindEvents() {
@@ -130,6 +137,7 @@ export class AuthFormComponent {
 
     try {
       const data = await this.accountService.login({ email, password });
+      await this.fusionarCarritoAnonimo(data.usuario);
       if (this.onAuthSuccess) {
         this.onAuthSuccess(data.usuario);
       }
@@ -161,11 +169,26 @@ export class AuthFormComponent {
 
     try {
       const data = await this.accountService.registro({ nombre, email, password });
+      await this.fusionarCarritoAnonimo(data.usuario);
       if (this.onAuthSuccess) {
         this.onAuthSuccess(data.usuario);
       }
     } catch (err) {
       this.showAlert(err.message || 'Error al crear la cuenta. Comprueba los datos.');
+    }
+  }
+
+  /**
+   * FR-007 (Feature 002): al iniciar sesión o crear cuenta, la cesta anónima
+   * del navegador se fusiona con el carrito de la cuenta del comprador
+   */
+  async fusionarCarritoAnonimo(usuario) {
+    try {
+      if (!usuario?.id) return;
+      CartStorageService.setUsuarioId(usuario.id);
+      await CartStorageService.fusionarConCuenta(usuario.id);
+    } catch {
+      // El inicio de sesión no se interrumpe aunque la fusión falle
     }
   }
 }

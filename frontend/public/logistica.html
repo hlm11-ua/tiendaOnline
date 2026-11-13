@@ -28,8 +28,11 @@
       </a>
 
       <nav class="header-nav" aria-label="Navegación principal">
-        <a href="/checkout" class="nav-link" id="nav-checkout">🛒 Checkout de Prueba</a>
-        <a href="/logistica" class="nav-link active" id="nav-logistica">📦 Panel Logístico</a>
+        <a href="/catalogo" class="nav-link">Catálogo</a>
+        <a href="/carrito" class="nav-link">Cesta</a>
+        <a href="/logistica" class="nav-link active">Envíos</a>
+        <a href="/cuenta" class="nav-link">Mi Cuenta</a>
+        <a href="/admin/catalogo" class="nav-link" id="nav-admin" hidden>Administración</a>
       </nav>
     </div>
   </header>
@@ -37,9 +40,9 @@
   <!-- Contenido principal -->
   <main class="main-content" id="main-content">
     
-    <!-- Selector de modo: Mesa de Taller vs Consulta Comprador -->
+    <!-- Selector de modo: Mesa de Taller (solo administrador) vs Consulta Comprador -->
     <nav class="view-mode-tabs" role="tablist" aria-label="Seleccionar modo de visualización">
-      <button type="button" role="tab" class="mode-tab-btn active" id="tab-modo-taller" aria-selected="true" aria-controls="logistics-table-container">
+      <button type="button" role="tab" class="mode-tab-btn active" id="tab-modo-taller" aria-selected="true" aria-controls="logistics-table-container" hidden>
         📦 Panel del Taller (Gestión Operativa de Envíos)
       </button>
       <button type="button" role="tab" class="mode-tab-btn" id="tab-modo-seguimiento" aria-selected="false" aria-controls="tracking-view-container">
@@ -47,8 +50,8 @@
       </button>
     </nav>
 
-    <!-- Contenedor 1: Tabla y mesa de trabajo del taller -->
-    <div id="logistics-table-container" role="tabpanel" aria-labelledby="tab-modo-taller"></div>
+    <!-- Contenedor 1: Tabla y mesa de trabajo del taller (solo administrador) -->
+    <div id="logistics-table-container" role="tabpanel" aria-labelledby="tab-modo-taller" class="hidden"></div>
 
     <!-- Contenedor 2: Vista de seguimiento y confirmación del comprador -->
     <div id="tracking-view-container" role="tabpanel" aria-labelledby="tab-modo-seguimiento" class="hidden"></div>
@@ -62,6 +65,7 @@
   <!-- Lógica y montaje de componentes de logística -->
   <script type="module">
     import { LogisticsApiService } from '/src/services/logistics-api.service.js';
+    import { AccountApiService } from '/src/services/account-api.service.js';
     import { LogisticsOrdersTable } from '/src/components/logistics-orders-table.js';
     import { DispatchModal } from '/src/components/dispatch-modal.js';
     import { TrackingView } from '/src/components/tracking-view.js';
@@ -70,6 +74,21 @@
     let transportistas = [];
     let pedidosActuales = [];
     let filtroActivo = 'todos';
+
+    // Rol del visitante (Feature 004): el "Panel del Taller" y el enlace de
+    // "Administración" quedan reservados al rol administrador (FR-007)
+    const accountService = new AccountApiService();
+    let esAdmin = false;
+
+    async function determinarRol() {
+      if (!accountService.isAuthenticated()) return false;
+      try {
+        const usuario = await accountService.getMe();
+        return usuario?.rol === 'admin';
+      } catch {
+        return false;
+      }
+    }
 
     // 1. Instanciación de componentes
     const dispatchModal = new DispatchModal({
@@ -224,16 +243,33 @@
 
     // 4. Inicialización al cargar la página
     async function init() {
-      await cargarTransportistas();
-      await cargarPedidos(filtroActivo);
+      esAdmin = await determinarRol();
 
-      // Comprobar parámetros de URL (ej: /logistica?ref=PED-20261014-XXXX o #seguimiento)
-      const urlParams = new URLSearchParams(window.location.search);
-      const refParam = urlParams.get('ref');
-      const hash = window.location.hash;
+      // Enlace "Administración" visible únicamente para administradores
+      const navAdmin = document.getElementById('nav-admin');
+      if (navAdmin) {
+        navAdmin.hidden = !esAdmin;
+      }
 
-      if (refParam || hash === '#seguimiento' || window.location.pathname.includes('seguimiento')) {
-        activarModoSeguimiento(refParam || '');
+      // El Panel del Taller solo está disponible para el personal administrador;
+      // los clientes acceden directamente a la consulta de seguimiento
+      if (!esAdmin) {
+        activarModoSeguimiento();
+      } else {
+        btnTaller.hidden = false;
+        await cargarTransportistas();
+        await cargarPedidos(filtroActivo);
+
+        // Comprobar parámetros de URL (ej: /logistica?ref=PED-20261014-XXXX o #seguimiento)
+        const urlParams = new URLSearchParams(window.location.search);
+        const refParam = urlParams.get('ref');
+        const hash = window.location.hash;
+
+        if (refParam || hash === '#seguimiento' || window.location.pathname.includes('seguimiento')) {
+          activarModoSeguimiento(refParam || '');
+        } else {
+          activarModoTaller();
+        }
       }
     }
 

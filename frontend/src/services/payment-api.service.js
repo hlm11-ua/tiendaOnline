@@ -48,6 +48,16 @@ export class PaymentApiService {
     });
   }
 
+  /**
+   * Libera la reserva de stock de una sesión de checkout abandonada sin pagar,
+   * devolviendo las existencias al catálogo (solo afecta a reservas activas)
+   */
+  static async liberarSesion(sesionPagoId) {
+    return this.request(`/api/pagos/${encodeURIComponent(sesionPagoId)}/liberar`, {
+      method: 'POST'
+    });
+  }
+
   static async obtenerPedido(codigoReferencia) {
     return this.request(`/api/pedidos/${codigoReferencia}`);
   }

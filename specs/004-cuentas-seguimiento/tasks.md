@@ -65,7 +65,7 @@
 - [X] T017 [P] [US1] Implementar el componente de formularios de acceso y registro en `frontend/src/components/cuenta/auth-form.js` con cambio interactivo entre pestañas "Iniciar sesión" y "Crear cuenta", validación en cliente de longitud mínima de contraseña (8 caracteres), feedback visual de errores en español (`es-ES`) y redirección al panel privado tras autenticación.
 - [X] T018 [P] [US1] Implementar el componente visual de seguimiento de fases `PhaseStepper` en `frontend/src/components/cuenta/phase-stepper.js` renderizando un indicador visual de 4 pasos ("Pendiente", "Pagado", "Salido de la tienda", "Entregado") marcando la fase activa (asimilando `'en_preparacion'` dentro del paso Pagado/Preparación) y mostrando el código de seguimiento registrado cuando corresponda.
 - [X] T019 [US1] Implementar el componente de panel privado en `frontend/src/components/cuenta/order-history.js` que obtiene los pedidos del usuario autenticado, renderiza la tabla cronológica con fecha, referencia, total en euros (`€`), estado, estado vacío si no existen compras, y modal o vista de detalle integrando `PhaseStepper`.
-- [ ] T020 [US1] Crear la página principal de cuentas en `frontend/public/cuenta.html` y los estilos responsivos en `frontend/src/styles/cuenta.css` articulando la cabecera de usuario con botón "Cerrar sesión", el contenedor de login/registro (`auth-form`) y el panel "Mis compras" (`order-history`).
+- [X] T020 [US1] Crear la página principal de cuentas en `frontend/public/cuenta.html` y los estilos responsivos en `frontend/src/styles/cuenta.css` articulando la cabecera de usuario con botón "Cerrar sesión", el contenedor de login/registro (`auth-form`) y el panel "Mis compras" (`order-history`).
 
 **Checkpoint**: User Story 1 implementada y verificable de forma autónoma.
 
@@ -75,9 +75,9 @@
 
 **Purpose**: Verificación de calidad, cumplimiento constitucional y validación rápida.
 
-- [ ] T021 [P] Ejecutar la suite completa de pruebas unitarias, contratos e integración de la feature mediante `node --test tests/contract/cuentas-seguimiento-api.test.js tests/integration/cuentas-seguimiento-flow.test.js` y verificar que todos los casos pasen en verde.
+- [X] T021 [P] Ejecutar la suite completa de pruebas unitarias, contratos e integración de la feature mediante `node --test tests/contract/cuentas-seguimiento-api.test.js tests/integration/cuentas-seguimiento-flow.test.js` y verificar que todos los casos pasen en verde.
 - [ ] T022 [P] Ejecutar y validar manualmente los 5 escenarios descritos en `specs/004-cuentas-seguimiento/quickstart.md` en el navegador web local.
-- [ ] T023 Verificar el cumplimiento estricto de la Constitución del proyecto: confirmar cero dependencias npm externas añadidas (Principio I), todos los textos y mensajes en español `es-ES` y precios en euros `€` (Principio II), ausencia de alcance fantasma respetando las clarificaciones de la spec (Principio III), verificación visual en navegador por persona no técnica (Principio IV) y contraseñas protegidas mediante hash sin datos de usuario superfluos (Principio V).
+- [X] T023 Verificar el cumplimiento estricto de la Constitución del proyecto: confirmar cero dependencias npm externas añadidas (Principio I), todos los textos y mensajes en español `es-ES` y precios en euros `€` (Principio II), ausencia de alcance fantasma respetando las clarificaciones de la spec (Principio III), verificación visual en navegador por persona no técnica (Principio IV) y contraseñas protegidas mediante hash sin datos de usuario superfluos (Principio V).
 
 ---
 

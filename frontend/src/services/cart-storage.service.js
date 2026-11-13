@@ -147,4 +147,35 @@ export class CartStorageService {
       }
     }
   }
+
+  /**
+   * FR-007 (Feature 002): fusiona la cesta anónima de LocalStorage con el
+   * carrito de la cuenta al iniciar sesión, sumando cantidades coincidentes
+   * hasta el límite de existencias y notificando los reajustes.
+   * Devuelve { carrito, avisosReajuste } o null si no había nada que fusionar.
+   */
+  static async fusionarConCuenta(usuarioId) {
+    if (!usuarioId) return null;
+
+    const local = this.readLocal();
+    const itemsLocales = (local?.items || [])
+      .filter(it => it.varianteId && Number(it.cantidad) > 0)
+      .map(it => ({
+        varianteId: it.varianteId,
+        cantidad: it.cantidad,
+        precioUnitario: it.precioUnitario
+      }));
+
+    if (itemsLocales.length === 0) return null;
+
+    try {
+      const resultado = await CartApiService.fusionarCarritos({ usuarioId, itemsLocales });
+      // La cesta anónima ya vive en la cuenta: se limpia la persistencia local
+      this.removeLocal();
+      return resultado;
+    } catch {
+      // Sin fusión posible: se conserva la cesta local y continúa el flujo normal
+      return null;
+    }
+  }
 }

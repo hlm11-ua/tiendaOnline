@@ -35,6 +35,7 @@ Como comprador, quiero crear una cuenta personal e iniciar sesión para conserva
 2. **Given** un usuario registrado con sesión cerrada, **When** introduce sus credenciales correctas, **Then** inicia sesión y su sesión permanece activa entre navegaciones y reinicios del navegador.
 3. **Given** un usuario autenticado en la sección "Mis compras", **When** consulta sus pedidos, **Then** visualiza un listado cronológico con identificador, fecha, importe total en euros y el estado exacto en una de las cuatro fases oficiales.
 4. **Given** un pedido en fase "salido de la tienda", **When** el cliente entra en el detalle, **Then** visualiza el código de seguimiento asignado por la tienda.
+5. **Given** un comprador que formalizó pedidos como invitado con su correo electrónico, **When** se registra o inicia sesión con ese mismo correo, **Then** esos pedidos previos aparecen en su sección "Mis compras" junto a los pedidos de la cuenta.
 
 ### Edge Cases
 
@@ -42,6 +43,7 @@ Como comprador, quiero crear una cuenta personal e iniciar sesión para conserva
 - **Contraseña con menos de 8 caracteres**: El sistema rechaza el registro con un mensaje claro indicando que la contraseña debe tener al menos 8 caracteres.
 - **Acceso a compras de otro cliente**: El sistema aísla estrictamente los datos de pedidos por usuario, impidiendo que cualquier cliente acceda a los pedidos de otro modificando identificadores en la URL.
 - **Transición de fases en tiempo real**: Al actualizarse una fase en el almacén, el usuario ve el cambio en su panel al refrescar o consultar el pedido.
+- **Pedido sin cuentaId asociado a la cuenta**: Un pedido formalizado antes de disponer de cuenta (como invitado) se muestra en "Mis compras" si su correo de cliente coincide con el de la cuenta autenticada; si el correo no coincide, el pedido permanece invisible para esa cuenta.
 
 ## Requirements *(mandatory)*
 
@@ -54,6 +56,7 @@ Como comprador, quiero crear una cuenta personal e iniciar sesión para conserva
 - **FR-005**: El sistema DEBE soportar y representar visualmente las 4 fases obligatorias de cada pedido: "pendiente", "pagado", "salido de la tienda" y "entregado".
 - **FR-006**: Si el pedido pasa a fase "salido de la tienda" o "entregado", el administrador DEBE introducir manualmente el código de seguimiento del envío, y el sistema DEBE mostrarlo al cliente en la sección de "Mis compras" y en el detalle del pedido.
 - **FR-007**: El sistema DEBE permitir exclusivamente a usuarios con rol de Administrador modificar manualmente la fase de cualquier pedido desde un panel privado.
+- **FR-008**: Al consultar "Mis compras", el sistema DEBE asociar los pedidos a la cuenta autenticada por su identificador (`cuentaId`) y, como red de seguridad, DEBE incluir también los pedidos huérfanos cuyo correo electrónico del cliente coincida (sin distinguir mayúsculas/minúsculas) con el de la cuenta autenticada.
 
 ### Key Entities
 

@@ -8,6 +8,7 @@ export class LogisticsApiService {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'x-user-role': 'admin',
         ...(options.headers || {})
       }
     });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es-ES">
+<html lang="es-ES" class="admin-gate-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +26,7 @@
       </div>
 
       <nav class="header-nav" aria-label="Navegación principal">
-        <a href="/" class="nav-link">🛒 Tienda / Checkout</a>
+        <a href="/" class="nav-link">🛒 Tienda</a>
         <a href="/logistica" class="nav-link">📦 Gestión Logística</a>
         <a href="/admin/catalogo" class="nav-link active">🛠️ Catálogo e Inventario</a>
         <a href="/admin/ventas" class="nav-link">📊 Informes de Ventas</a>
@@ -95,6 +95,11 @@
     import { ProductForm } from '/src/components/admin/product-form.js';
     import { ProductListTable } from '/src/components/admin/product-list-table.js';
     import { StockAlertsWidget } from '/src/components/admin/stock-alerts-widget.js';
+    import {
+      verificarRolAdministrador,
+      mostrarAccesoDenegado,
+      permitirContenido
+    } from '/src/components/admin/admin-access-guard.js';
 
     // Estado global de la vista
     let categorias = [];
@@ -264,8 +269,14 @@
       });
     }
 
-    // Carga inicial al cargar el DOM
-    document.addEventListener('DOMContentLoaded', () => {
+    // Carga inicial al cargar el DOM, tras verificar el rol administrador
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Guardia de acceso: solo el personal administrador visualiza el panel
+      if (!(await verificarRolAdministrador())) {
+        mostrarAccesoDenegado();
+        return;
+      }
+      permitirContenido();
       cargarDatos();
     });
   </script>

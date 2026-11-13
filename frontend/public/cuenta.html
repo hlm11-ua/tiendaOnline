@@ -1,37 +1,44 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-ES">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Cuenta y Seguimiento de Pedidos | TiendaOnline</title>
-  <meta name="description" content="Accede a tu cuenta personal, consulta tu historial de compras y realiza el seguimiento en tiempo real de tus pedidos de artesanía.">
-  <link rel="stylesheet" href="/src/styles/cuenta.css">
+  <meta name="description" content="Accede a tu cuenta personal, consulta tu historial de compras y realiza el seguimiento de tus pedidos de artesanía en las 4 fases oficiales.">
+  <title>TiendaOnline - Mi Cuenta y Seguimiento de Pedidos</title>
+
+  <!-- Tipografía moderna Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos de cuentas y seguimiento -->
+  <link rel="stylesheet" href="/src/styles/cuenta.css">
 </head>
 <body>
 
-  <!-- Encabezado del sitio -->
+  <!-- Cabecera principal del sitio (idéntica al resto de vistas) -->
   <header class="site-header" role="banner">
     <div class="header-container">
-      <a href="/catalogo.html" class="brand-wrapper" id="link-home">
-        <span aria-hidden="true">🛍️</span>
-        <span>TiendaOnline Artesanías</span>
+      <a href="/" class="brand-link" id="brand-link" aria-label="Ir a la tienda">
+        <span class="brand-logo-icon" aria-hidden="true">🏺</span>
+        <div>
+          <span class="brand-name">TiendaOnline</span>
+          <span class="brand-badge">Mi Cuenta &amp; Seguimiento</span>
+        </div>
       </a>
 
       <nav class="header-nav" aria-label="Navegación principal">
-        <a href="/catalogo.html" class="nav-link">Catálogo</a>
-        <a href="/cart.html" class="nav-link">Carrito</a>
-        <a href="/checkout.html" class="nav-link">Pago</a>
-        <a href="/logistica.html" class="nav-link">Logística</a>
-        <a href="/cuenta.html" class="nav-link active">Mi Cuenta</a>
+        <a href="/catalogo" class="nav-link">Catálogo</a>
+        <a href="/carrito" class="nav-link">Cesta</a>
+        <a href="/logistica" class="nav-link">Envíos</a>
+        <a href="/cuenta" class="nav-link active">Mi Cuenta</a>
+        <a href="/admin/catalogo" class="nav-link" id="nav-admin" hidden>Administración</a>
       </nav>
     </div>
   </header>
 
-  <!-- Contenedor Principal Dinámico -->
-  <main class="main-container" id="main-content" role="main">
+  <!-- Contenido principal dinámico -->
+  <main class="main-content" id="main-content">
     <div id="app-view">
       <!-- Inyección dinámica de AuthForm u OrderHistory -->
     </div>
@@ -44,33 +51,61 @@
 
     const accountService = new AccountApiService();
     const appContainer = document.getElementById('app-view');
+    const navAdminLink = document.getElementById('nav-admin');
 
-    function renderApp() {
+    function setAdminNav(visible) {
+      if (navAdminLink) {
+        navAdminLink.hidden = !visible;
+      }
+    }
+
+    function renderAuth(notice = null) {
+      setAdminNav(false);
+      appContainer.innerHTML = '';
+      const authWrapper = document.createElement('div');
+      authWrapper.className = 'auth-wrapper';
+      appContainer.appendChild(authWrapper);
+
+      const authForm = new AuthFormComponent({
+        container: authWrapper,
+        accountService,
+        initialAlert: notice,
+        onAuthSuccess: () => {
+          renderApp();
+        }
+      });
+      authForm.render();
+    }
+
+    async function renderApp(notice = null) {
       appContainer.innerHTML = '';
 
       if (accountService.isAuthenticated()) {
-        const orderHistory = new OrderHistoryComponent({
-          container: appContainer,
-          accountService,
-          onLogout: () => {
-            renderApp();
-          }
-        });
-        orderHistory.loadOrders();
-      } else {
-        const authWrapper = document.createElement('div');
-        authWrapper.className = 'auth-wrapper';
-        appContainer.appendChild(authWrapper);
+        // Validar realmente el token contra el servidor antes de mostrar el panel privado
+        try {
+          const usuario = await accountService.getMe();
+          // Enlace "Administración" visible únicamente para el rol administrador
+          setAdminNav(usuario?.rol === 'admin');
 
-        const authForm = new AuthFormComponent({
-          container: authWrapper,
-          accountService,
-          onAuthSuccess: () => {
-            renderApp();
-          }
-        });
-        authForm.render();
+          const orderHistory = new OrderHistoryComponent({
+            container: appContainer,
+            accountService,
+            onLogout: (msg) => {
+              renderApp(msg);
+            }
+          });
+          orderHistory.loadOrders();
+          return;
+        } catch (err) {
+          accountService.clearSession();
+          setAdminNav(false);
+          notice = err.status === 401
+            ? 'La sesión ha expirado o no es válida. Por favor, inicie sesión nuevamente.'
+            : (err.message || notice);
+        }
       }
+
+      renderAuth(notice);
     }
 
     // Inicializar aplicación

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es-ES">
+<html lang="es-ES" class="admin-gate-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,7 +27,7 @@
       </div>
 
       <nav class="header-nav" aria-label="Navegación principal">
-        <a href="/" class="nav-link">🛒 Tienda / Checkout</a>
+        <a href="/" class="nav-link">🛒 Tienda</a>
         <a href="/logistica" class="nav-link">📦 Gestión Logística</a>
         <a href="/admin/catalogo" class="nav-link">🛠️ Catálogo e Inventario</a>
         <a href="/admin/ventas" class="nav-link active">📊 Informes de Ventas</a>
@@ -56,8 +56,20 @@
   <!-- Script modular para montar el componente de ventas -->
   <script type="module">
     import { SalesReportView } from '/src/components/admin/sales-report-view.js';
+    import {
+      verificarRolAdministrador,
+      mostrarAccesoDenegado,
+      permitirContenido
+    } from '/src/components/admin/admin-access-guard.js';
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Guardia de acceso: solo el personal administrador visualiza el panel
+      if (!(await verificarRolAdministrador())) {
+        mostrarAccesoDenegado();
+        return;
+      }
+      permitirContenido();
+
       const salesView = new SalesReportView({ containerId: 'sales-dashboard-app' });
       salesView.init();
     });
