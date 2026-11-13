@@ -6,7 +6,9 @@ import { AppError } from '../middleware/error-handler.js';
 
 export class AuthService {
   /**
-   * Registra una nueva cuenta de usuario y emite una sesión de 30 días
+   * Registra una nueva cuenta de usuario y emite una sesión de 30 días.
+   * El parámetro `rol` es solo para uso interno (siembra de cuentas): el controlador
+   * público nunca lo propaga desde el cuerpo de la petición.
    */
   static register({ nombre, email, password, rol = 'cliente' }) {
     if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') {

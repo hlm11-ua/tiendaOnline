@@ -72,11 +72,18 @@ export class AccountOrderService {
     // Si la fase es 'salido_tienda', se requiere número de seguimiento
     if (normalizedFase === (CONSTANTS.ORDER_STATUS?.SHIPPED || 'salido_tienda')) {
       const tracking = numeroSeguimiento || order.envio?.numeroSeguimiento;
-      if (!tracking || typeof tracking !== 'string' || tracking.trim().length < 6 || tracking.trim().length > 32) {
-        throw new AppError('El código de seguimiento es obligatorio para pedidos despachados (6 a 32 caracteres).', 400, 'TRACKING_REQUERIDO');
+      if (!tracking) {
+        throw new AppError('El código de seguimiento es obligatorio para pedidos despachados.', 400, 'TRACKING_REQUERIDO');
       }
 
       const carrierName = (transportista || order.envio?.transportista || 'Correos de España').trim();
+
+      // Reutiliza las validaciones oficiales de expedición (6 a 32 caracteres alfanuméricos, FR-006)
+      try {
+        DatosExpedicion.validar({ transportista: carrierName, numeroSeguimiento: tracking });
+      } catch (errValidacion) {
+        throw new AppError(errValidacion.message, 400, errValidacion.codigo || 'TRACKING_INVALIDO');
+      }
 
       const datosEnvio = new DatosExpedicion({
         transportista: carrierName,
@@ -88,6 +95,13 @@ export class AccountOrderService {
     } else if (numeroSeguimiento) {
       // Si se proporcionó tracking para otra fase (ej. entregado)
       const carrierName = (transportista || order.envio?.transportista || 'Correos de España').trim();
+
+      try {
+        DatosExpedicion.validar({ transportista: carrierName, numeroSeguimiento });
+      } catch (errValidacion) {
+        throw new AppError(errValidacion.message, 400, errValidacion.codigo || 'TRACKING_INVALIDO');
+      }
+
       const datosEnvio = new DatosExpedicion({
         transportista: carrierName,
         numeroSeguimiento: String(numeroSeguimiento).trim(),
@@ -114,13 +128,17 @@ export class AccountOrderService {
   }
 
   /**
-   * Helper de formateo de respuesta para el contrato del cliente
+   * Helper de formateo de respuesta para el contrato del cliente (PedidoResumen / PedidoDetalle)
    */
   static formatOrderResponse(order) {
     const raw = typeof order.toJSON === 'function' ? order.toJSON() : { ...order };
+    const lineas = Array.isArray(raw.lineas) ? raw.lineas : [];
+
     return {
       ...raw,
       fase: raw.estado,
+      moneda: CONSTANTS.CURRENCY,
+      numeroArticulos: lineas.reduce((acc, l) => acc + (Number(l.cantidad) || 0), 0),
       numeroSeguimiento: raw.envio?.numeroSeguimiento || null,
       transportista: raw.envio?.transportista || null
     };

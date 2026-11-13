@@ -4,7 +4,7 @@ import { AppError } from '../middleware/error-handler.js';
 export class CartController {
   static getCart(req, res, next) {
     try {
-      const usuarioId = req.headers['x-usuario-id'] || null;
+      const usuarioId = req.usuarioId;
       const cart = CartService.getOrCreateCart(usuarioId);
       res.json(cart.toJSON());
     } catch (err) {
@@ -14,7 +14,7 @@ export class CartController {
 
   static addItem(req, res, next) {
     try {
-      const usuarioId = req.headers['x-usuario-id'] || null;
+      const usuarioId = req.usuarioId;
       const { varianteId, cantidad, precioUnitario } = req.body || {};
 
       if (!varianteId || typeof varianteId !== 'string') {
@@ -31,7 +31,7 @@ export class CartController {
 
   static updateQuantity(req, res, next) {
     try {
-      const usuarioId = req.headers['x-usuario-id'] || null;
+      const usuarioId = req.usuarioId;
       const { varianteId } = req.params;
       const { cantidad } = req.body || {};
 
@@ -53,7 +53,7 @@ export class CartController {
 
   static removeItem(req, res, next) {
     try {
-      const usuarioId = req.headers['x-usuario-id'] || null;
+      const usuarioId = req.usuarioId;
       const { varianteId } = req.params;
 
       if (!varianteId) {
@@ -70,7 +70,7 @@ export class CartController {
 
   static clearCart(req, res, next) {
     try {
-      const usuarioId = req.headers['x-usuario-id'] || null;
+      const usuarioId = req.usuarioId;
       const cart = CartService.getOrCreateCart(usuarioId);
       CartService.clearCart(cart);
       res.json(cart.toJSON());

@@ -19,11 +19,12 @@ app.use(express.static(frontendPath));
 app.use('/public', express.static(path.join(frontendPath, 'public')));
 app.use('/src', express.static(path.join(frontendPath, 'src')));
 
-// Ruta principal que sirve checkout.html
+// Ruta principal que sirve el catálogo de la tienda
 app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
+  res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));
 });
 
+// Ruta de la pasarela de pago (Feature 003)
 app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
@@ -226,9 +227,9 @@ try {
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   app.listen(CONSTANTS.PORT, () => {
     console.log(`[TiendaOnline] Servidor activo en http://localhost:${CONSTANTS.PORT}`);
-    console.log(`  - Catálogo: http://localhost:${CONSTANTS.PORT}/catalogo`);
+    console.log(`  - Catálogo: http://localhost:${CONSTANTS.PORT}/`);
     console.log(`  - Carrito: http://localhost:${CONSTANTS.PORT}/carrito`);
-    console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
+    console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/checkout`);
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
     console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);
     console.log(`  - Informes Ventas: http://localhost:${CONSTANTS.PORT}/admin/ventas`);

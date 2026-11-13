@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { CONSTANTS } from '../config/constants.js';
+import { Account } from './account.model.js';
 
 /**
  * Catálogo inicial de artesanías para pruebas y demostración
@@ -262,6 +263,32 @@ class MemoryStore {
     this.reviews = new Map();
     // Indexado por producto: productoId -> Array de reseñas
     this.reviewsByProduct = new Map();
+
+    // Cuentas de demostración precargadas (Feature 004)
+    this.seedDefaultAccounts();
+  }
+
+  /**
+   * Siembra la cuenta de administrador por defecto del taller.
+   * La contraseña se almacena hasheada con scrypt + salt (nunca en texto plano, Principio V).
+   * Los valores por defecto son credenciales de demostración (como los números de tarjeta de prueba)
+   * y pueden sobrescribirse mediante las variables de entorno ADMIN_EMAIL y ADMIN_PASSWORD.
+   * El registro público sigue exigiendo el mínimo de 8 caracteres de FR-001.
+   */
+  seedDefaultAccounts() {
+    const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@gmail.com').trim().toLowerCase();
+    if (this.getAccountByEmail(adminEmail)) return;
+
+    const salt = Account.generateSalt();
+    const admin = new Account({
+      nombre: 'Administrador',
+      email: adminEmail,
+      passwordHash: Account.hashPassword(process.env.ADMIN_PASSWORD || 'admin1234', salt),
+      salt,
+      rol: CONSTANTS.ROLES.ADMIN
+    });
+
+    this.saveAccount(admin);
   }
 
   // === MÉTODOS DE INVENTARIO Y RESERVAS ===

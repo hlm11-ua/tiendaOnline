@@ -41,7 +41,10 @@ export class Session {
   }
 
   touch() {
+    // Renovación deslizante: la sesión permanece activa 30 días desde el último acceso (FR-002, SC-002)
     this.lastAccessAt = new Date().toISOString();
+    const durationMs = CONSTANTS.SESSION?.DURATION_MS || (30 * 24 * 60 * 60 * 1000);
+    this.expiresAt = new Date(new Date(this.lastAccessAt).getTime() + durationMs).toISOString();
   }
 
   invalidate() {
@@ -54,6 +57,7 @@ export class Session {
       cuentaId: this.cuentaId,
       createdAt: this.createdAt,
       expiresAt: this.expiresAt,
+      diasValidez: CONSTANTS.SESSION?.DURATION_DAYS || 30,
       lastAccessAt: this.lastAccessAt,
       activo: this.activo
     };

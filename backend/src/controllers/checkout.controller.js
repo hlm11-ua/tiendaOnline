@@ -135,6 +135,27 @@ export class CheckoutController {
   }
 
   /**
+   * POST /api/pagos/:sesionPagoId/liberar
+   * Libera la reserva de existencias de una sesión de checkout abandonada
+   * (el comprador salió de la pasarela sin completar el pago). Solo afecta a
+   * reservas ACTIVE: las consolidadas (pedido pagado) y expiradas se ignoran,
+   * de modo que ninguna venta confirmada puede deshacerse.
+   */
+  static liberar(req, res, next) {
+    try {
+      const { sesionPagoId } = req.params;
+      if (!sesionPagoId) {
+        throw new AppError('Se requiere el identificador de la sesión de pago.', 400, 'PARAMETROS_INCOMPLETOS');
+      }
+
+      StockReservationService.releaseReservation(sesionPagoId);
+      res.status(200).json({ liberada: true });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * POST /api/pagos/verificar-3ds
    * Resuelve el desafío bancario 3D Secure para compras > 100 €
    */

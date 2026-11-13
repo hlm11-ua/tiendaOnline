@@ -7,6 +7,7 @@ export class AuthController {
   static registro(req, res, next) {
     try {
       const { nombre, email, password } = req.body || {};
+      // El registro público siempre crea cuentas 'cliente': el rol no se acepta del cuerpo (FR-001)
       const resultado = AuthService.register({ nombre, email, password });
       res.status(201).json(resultado);
     } catch (err) {
@@ -32,10 +33,8 @@ export class AuthController {
    */
   static me(req, res, next) {
     try {
-      // req.user proviene de requireAuth middleware
-      res.status(200).json({
-        usuario: req.user.toJSON ? req.user.toJSON() : req.user
-      });
+      // req.user proviene de requireAuth middleware; el contrato define el perfil directamente
+      res.status(200).json(req.user.toJSON ? req.user.toJSON() : req.user);
     } catch (err) {
       next(err);
     }
@@ -61,7 +60,7 @@ export class AuthController {
       }
 
       res.status(200).json({
-        mensaje: 'Sesión cerrada con éxito.'
+        mensaje: 'Sesión cerrada correctamente.'
       });
     } catch (err) {
       next(err);
