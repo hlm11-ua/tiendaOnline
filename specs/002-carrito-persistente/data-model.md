@@ -23,6 +23,8 @@ Representa el contenedor de compra del comprador, persistido en el cliente para 
 | `fechaActualizacion` | `string` | Sí | Marca de tiempo ISO 8601 de la última alteración. | Formato ISO 8601 UTC. |
 | `estado` | `string` | Sí | Estado operativo de la cesta para tramitación. | `'vacio' \| 'listo' \| 'bloqueado'` |
 
+> **Nota de terminología**: el campo `usuarioId` de esta feature identifica la cuenta del comprador autenticado y es el mismo identificador que las features 003, 004 y 007 denominan `cuentaId` (el `id` de la cuenta en `store.accounts`). Se mantienen ambos nombres por compatibilidad con los contratos ya publicados; no representan entidades distintas.
+
 ---
 
 ### 1.2. Línea de Carrito (`CartItem`)
