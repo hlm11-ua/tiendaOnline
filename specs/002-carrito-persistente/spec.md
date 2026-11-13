@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-13
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: "Como usuario quiero guardar en mi carrito $n$ productos y que el carrito persista si abandono la sesión y vuelvo más tarde, sin que supere la cantidad real que hay del mismo en el stock."
 
@@ -42,6 +42,7 @@ Como comprador, quiero añadir $n$ unidades de productos o variantes a mi cesta 
 5. **Given** un usuario anónimo con productos en su cesta local, **When** inicia sesión en su cuenta que ya tenía un carrito previo guardado, **Then** el sistema fusiona ambos carritos sumando las unidades de artículos coincidentes (sin exceder el stock disponible de cada uno) e incorporando los artículos no repetidos, y muestra una notificación informativa si alguna cantidad fue ajustada al límite de existencias.
 6. **Given** un producto guardado en la cesta con un precio unitario de 20,00 €, **When** el artesano modifica el precio en catálogo a 25,00 € y el usuario abre el carrito o pulsa "Tramitar pedido", **Then** el sistema actualiza el precio a 25,00 €, recalcula el total y muestra una notificación informativa advirtiendo del cambio de importe.
 7. **Given** un carrito sin artículos o tras vaciar todas sus líneas, **When** el usuario visualiza la cesta, **Then** el sistema muestra el mensaje "Tu cesta está vacía", proporciona un enlace para volver al catálogo de piezas y mantiene el botón "Tramitar pedido" inhabilitado con un total de 0,00 €.
+8. **Given** un comprador visualizando la cesta, **When** la página del carrito presenta la sección "Te puede interesar", **Then** solo aparecen artículos del catálogo con existencias disponibles (ningún producto agotado), y si todos los productos del catálogo están agotados la sección no se muestra.
 
 ### Edge Cases
 
@@ -64,6 +65,7 @@ Como comprador, quiero añadir $n$ unidades de productos o variantes a mi cesta 
 - **FR-006**: El sistema DEBE verificar el stock disponible al abrir la vista del carrito, al modificar cantidades y al pulsar "Tramitar pedido"; si el inventario disponible de un producto disminuye por compras concurrentes, DEBE reajustar automáticamente la cantidad al stock disponible y advertir al comprador mediante un aviso visual claro.
 - **FR-007**: Al iniciar sesión un usuario con artículos en el carrito anónimo, el sistema DEBE fusionar dicho carrito con el existente en su cuenta, combinando artículos distintos y sumando cantidades coincidentes sin superar el límite de existencias en stock de cada variante; si alguna cantidad debe recortarse para respetar el stock máximo disponible, el sistema DEBE notificarlo de forma destacada al comprador tras el inicio de sesión.
 - **FR-008**: Si un producto o variante presente en el carrito es eliminado o despublicado del catálogo, el sistema DEBE marcarlo como "No disponible", excluirlo del cálculo del total e impedir la tramitación del pedido hasta que el usuario lo elimine de la cesta.
+- **FR-009**: La página del carrito DEBE presentar una sección "Te puede interesar" con una selección de artículos del catálogo que cuenten con existencias disponibles, excluyendo cualquier producto agotado; si todos los productos del catálogo están agotados o no hay catálogo, la sección NO DEBE mostrarse.
 
 ### Out of Scope
 

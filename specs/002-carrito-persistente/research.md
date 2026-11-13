@@ -14,7 +14,7 @@
 - **SC-002**: Persistencia en el 100% de los casos al reabrir el navegador en el mismo perfil de usuario.
 
 ### Decisión
-- Para **visitantes anónimos**: Utilizar `window.localStorage` bajo la clave `tienda_online_cart_v1`. Estructura serializada en JSON conteniendo `items` (array de objetos `{ varianteId, productoId, titulo, precioUnitario, cantidad, stockDisponible }`) y `fechaActualizacion`.
+- Para **visitantes anónimos**: Utilizar `window.localStorage` bajo la clave `tienda_online_cart_v1`. Estructura serializada en JSON conteniendo `id`, `usuarioId`, `items` (array de objetos `{ varianteId, productoId, titulo, precioUnitario, cantidad, stockDisponible, estado }`), `gastosEnvioEstimados` y `fechaActualizacion`.
 - Para **usuarios autenticados**: Almacenar el carrito en el backend dentro de `MemoryStore` (`store.carts.get(usuarioId)`), garantizando consistencia entre dispositivos una vez iniciada la sesión.
 - Clase cliente unificada `CartStorageService` que abstrae el origen de datos (`LocalStorage` o sincronización con API) ofreciendo una interfaz única al UI.
 
@@ -98,10 +98,10 @@
 ### Decisión
 - **Frontend**: Componente o helper `QuantityInputHandler`:
   - Escuchar eventos `keydown` e `input` para restringir teclas permitidas (dígitos 0-9).
-  - Al perder el foco (`blur`) o presionar Enter:
-    - Si el valor es `0` o está vacío: solicitar confirmación / invocar eliminación inmediata de la línea.
-    - Si `parseado <= 0` o `isNaN`: restaurar el valor anterior.
-    - Si `parseado > stockDisponible`: fijar en `stockDisponible` y mostrar alerta en línea "Cantidad ajustada al stock máximo".
+   - Al perder el foco (`blur`) o presionar Enter:
+     - Si el valor es `0`: invocar la eliminación inmediata de la línea (FR-004).
+     - Si el valor está vacío, `parseado <= 0`, es decimal, negativo o `isNaN`: restaurar el último valor entero válido (la entrada vacía no elimina la línea).
+     - Si `parseado > stockDisponible`: rechazar la entrada, restaurar el último valor válido (que nunca supera el stock) y mostrar alerta en línea `Cantidad máxima disponible alcanzada (N unidad(es))`.
 - **Backend**: En los endpoints de modificación de cantidad (`PUT /api/carrito/items/:varianteId`):
   - Validar con `Number.isInteger(cantidad) && cantidad >= 0`.
   - Si `cantidad === 0`, eliminar la línea.

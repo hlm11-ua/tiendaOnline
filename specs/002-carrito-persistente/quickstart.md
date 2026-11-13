@@ -4,7 +4,7 @@
 **Responsable**: Desarrollador 2  
 **Fecha**: 2026-10-19 (Actualizado: 2026-11-02)
 
-Esta guía describe cómo ejecutar el entorno y verificar de principio a fin los 7 escenarios de aceptación y los criterios de éxito cuantitativos del carrito de compras persistente.
+Esta guía describe cómo ejecutar el entorno y verificar de principio a fin los escenarios de aceptación y los criterios de éxito cuantitativos del carrito de compras persistente.
 
 ---
 
@@ -117,6 +117,14 @@ La aplicación estará disponible en `http://localhost:3000`. La vista del carri
    - Enlace o botón destacado: `"Explorar piezas artesanales"`.
    - Botón `"Tramitar pedido"` estrictamente inhabilitado (o no interactivo).
    - Importe total en `0,00 €`.
+
+---
+
+### Escenario 8: Sugerencias "Te puede interesar" sin artículos agotados (FR-009)
+1. Abre `http://localhost:3000/carrito` y desplázate a la sección "Te puede interesar".
+2. **Resultado esperado**:
+   - Solo aparecen artículos del catálogo con existencias disponibles (ningún producto agotado).
+   - Si agotas todas las variantes de todos los productos del catálogo (o no hay catálogo activo), la sección no se muestra.
 
 ---
 
