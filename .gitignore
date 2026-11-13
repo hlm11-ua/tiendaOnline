@@ -3,6 +3,7 @@ node_modules/
 package-lock.json
 .opencode/
 opencode.json
+.specify/integrations/opencode.manifest.json
 
 # Environment and secrets
 .env
