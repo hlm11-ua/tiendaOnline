@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cesta de Compras | TiendaOnline</title>
+  <meta name="description" content="Revisa tu cesta de compras de piezas artesanales: ajusta cantidades, verifica existencias en tiempo real y tramita tu pedido con envío gratuito.">
+
+  <!-- Tipografía moderna Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Estilos de la cesta de compras -->
+  <link rel="stylesheet" href="/src/styles/cart.css">
+</head>
+<body>
+  <!-- Encabezado del sitio -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      <a href="/catalogo" class="brand-wrapper" id="link-home">
+        <span class="brand-icon" aria-hidden="true">🛍️</span>
+        <span class="brand-title">TiendaOnline</span>
+      </a>
+      <div class="header-badge" id="badge-cesta">
+        <span aria-hidden="true">🧺</span>
+        <span>Cesta de Compras Persistente</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal de la Cesta -->
+  <main class="main-content" role="main">
+    <a href="/catalogo" class="cart-volver-enlace" id="link-volver-catalogo">← Volver al catálogo</a>
+    <h1 class="cart-page-title">Tu Cesta de Compras</h1>
+    <p class="cart-page-subtitle">Las existencias se verifican en tiempo real antes de tramitar tu pedido.</p>
+
+    <div class="cart-page-grid">
+      <!-- Columna principal: tabla de artículos -->
+      <section class="cart-card" aria-labelledby="cart-titulo-articulos">
+        <h2 id="cart-titulo-articulos" class="sr-only">Artículos de la cesta</h2>
+
+        <!-- Panel de avisos de reajuste (stock, precios y disponibilidad) -->
+        <div class="cart-avisos-panel hidden" id="cart-avisos-panel" role="alert"></div>
+
+        <!-- Caja de errores operativos -->
+        <div class="cart-error-box hidden" id="cart-error-box"></div>
+
+        <!-- Tabla de artículos (se renderiza dinámicamente) -->
+        <div id="cart-table-container"></div>
+      </section>
+
+      <!-- Columna lateral: resumen de la compra -->
+      <aside class="summary-card" id="cart-resumen" aria-labelledby="cart-titulo-resumen">
+        <h2 id="cart-titulo-resumen" class="card-title">Resumen de la Compra</h2>
+        <p class="card-subtitle" id="cart-resumen-subtitulo">Importes en euros con envío gratuito estimado</p>
+
+        <div class="summary-totals">
+          <div class="total-line">
+            <span>Subtotal de artículos:</span>
+            <span class="font-mono" id="cart-subtotal">0,00 €</span>
+          </div>
+          <div class="total-line">
+            <span>Gastos de envío estimados:</span>
+            <span class="font-mono text-success" id="cart-gastos-envio">0,00 €</span>
+          </div>
+          <div class="total-line total-final">
+            <span>Total:</span>
+            <span class="font-mono" id="cart-total">0,00 €</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn-primario" id="btn-tramitar-pedido" disabled>🔒 Tramitar pedido</button>
+        <button type="button" class="btn-secundario" id="btn-vaciar-carrito" disabled>Vaciar carrito</button>
+      </aside>
+    </div>
+
+    <!-- Sección de sugerencias: artículos aleatorios del catálogo -->
+    <section class="sugerencias-seccion" id="sugerencias-seccion" aria-labelledby="sugerencias-titulo">
+      <div class="sugerencias-cabecera">
+        <h2 id="sugerencias-titulo" class="sugerencias-titulo">Te puede interesar</h2>
+        <a href="/catalogo" class="sugerencias-ver-mas" id="link-ver-mas-catalogo">Ver más →</a>
+      </div>
+      <div class="sugerencias-grid" id="sugerencias-grid"></div>
+    </section>
+  </main>
+
+  <!-- Orquestación frontend mediante módulos ES6 -->
+  <script type="module">
+    import { CartView } from '/src/components/cart-view.js';
+    import { CartStorageService } from '/src/services/cart-storage.service.js';
+    import { catalogApiService } from '/src/services/catalog-api.service.js';
+    import { CONSTANTS } from '/src/services/constants.service.js';
+
+    // Identificación de sesión: se admite x-usuario-id vía parámetro de URL para pruebas;
+    // sin usuario se opera en modo anónimo con persistencia en LocalStorage.
+    const params = new URLSearchParams(window.location.search);
+    const usuarioId = params.get('usuarioId');
+    if (usuarioId) {
+      CartStorageService.setUsuarioId(usuarioId);
+    }
+
+    const cartView = new CartView({
+      containerId: 'cart-table-container',
+      usuarioId: usuarioId || null,
+      onNavigateCheckout: () => {
+        window.location.href = '/checkout';
+      }
+    });
+
+    // Sugerencias: una selección aleatoria del catálogo ("Te puede interesar"),
+    // mostrando únicamente artículos con existencias disponibles (no agotados)
+    async function renderSugerencias() {
+      const grid = document.getElementById('sugerencias-grid');
+      if (!grid) return;
+
+      try {
+        const { productos } = await catalogApiService.getProductos({ enStock: true });
+        const seleccion = [...(productos || [])].sort(() => Math.random() - 0.5).slice(0, 10);
+
+        if (seleccion.length === 0) {
+          document.getElementById('sugerencias-seccion').classList.add('hidden');
+          return;
+        }
+
+        grid.innerHTML = seleccion.map(prod => {
+          const imagenPrincipal = Array.isArray(prod.imagenes) && prod.imagenes.length > 0
+            ? (prod.imagenes.find(img => img.esPrincipal) || prod.imagenes[0]).url
+            : '/public/uploads/placeholder.webp';
+          const precio = prod.precioFormateado || `${prod.precioBase.toFixed(2)} €`;
+          return `
+            <article class="sugerencia-card">
+              <div class="sugerencia-imagen-container">
+                <img src="${imagenPrincipal}" alt="${prod.titulo}" class="sugerencia-imagen" loading="lazy"
+                  onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'200\\' viewBox=\\'0 0 300 200\\'><rect fill=\\'%231e293b\\' width=\\'300\\' height=\\'200\\'/><text fill=\\'%2394a3b8\\' font-family=\\'sans-serif\\' font-size=\\'14\\' text-anchor=\\'middle\\' x=\\'150\\' y=\\'105\\'>Artesan\\u00EDa</text></svg>';">
+              </div>
+              <div class="sugerencia-body">
+                <h3 class="sugerencia-titulo">${prod.titulo}</h3>
+                <div class="sugerencia-footer">
+                  <span class="sugerencia-precio font-mono">${precio}</span>
+                  <a href="/carrito?anadirProducto=${encodeURIComponent(prod.id)}" class="sugerencia-comprar" aria-label="Añadir ${prod.titulo} a la cesta">Comprar</a>
+                </div>
+              </div>
+            </article>`;
+        }).join('');
+      } catch {
+        document.getElementById('sugerencias-seccion').classList.add('hidden');
+      }
+    }
+
+    await cartView.init();
+    renderSugerencias();
+
+    // "Comprar" desde el catálogo: la pieza entra en la cesta automáticamente
+    // y la página muestra de inmediato el artículo, su subtotal y el total.
+    const productoAAnadir = params.get('anadirProducto');
+    if (productoAAnadir) {
+      history.replaceState(null, '', usuarioId ? `/carrito?usuarioId=${encodeURIComponent(usuarioId)}` : '/carrito');
+      try {
+        const producto = await catalogApiService.getProductoPorId(productoAAnadir);
+        // Solo se añade la pieza si existe alguna variante con existencias;
+        // si todas están agotadas se muestra el aviso directamente en la cesta
+        const variante = (producto.variantes || []).find(v => v.stockDisponible > 0);
+        if (variante) {
+          await cartView.addItem({
+            varianteId: variante.id,
+            cantidad: 1,
+            titulo: producto.titulo,
+            precioUnitario: producto.precioBase
+          });
+        } else {
+          cartView.marcarAviso({
+            varianteId: producto.id,
+            titulo: producto.titulo,
+            tipo: CONSTANTS.CART.NOTICE_TYPES.STOCK_EXHAUSTED,
+            mensaje: `El artículo '${producto.titulo}' está agotado y no se ha podido añadir a la cesta.`
+          });
+          cartView.renderAvisos();
+        }
+      } catch {
+        cartView.mostrarError('No se ha podido añadir la pieza solicitada. Compruébalo en el catálogo.');
+      }
+    }
+  </script>
+</body>
+</html>

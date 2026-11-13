@@ -28,6 +28,10 @@ app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
 
+app.get('/checkout.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
+});
+
 // Rutas del catálogo público de productos y filtros (Feature 001)
 app.get('/catalogo', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));
@@ -109,8 +113,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Los routers de pagos, pedidos, logística, administración de catálogo, ventas, catálogo público y autenticación se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, authRouter) {
+// Los routers de pagos, pedidos, logística, administración de catálogo, ventas, catálogo público, carrito y reseñas se montan a través de una función o importación diferida
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, reviewRouter, authRouter) {
+  if (paymentRouter && typeof paymentRouter === 'object' && !paymentRouter.handle && !paymentRouter.name && paymentRouter.paymentRouter !== undefined) {
+    ({ paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, reviewRouter, authRouter } = paymentRouter);
+  }
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
   }
@@ -135,14 +142,27 @@ export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, cata
   if (catalogRouter) {
     app.use('/api/catalogo', catalogRouter);
   }
+  if (reviewRouter) {
+    app.use('/api/resenas', reviewRouter);
+  }
   // Middleware de error al final de la cadena
   app.use(errorHandler);
 }
 
 // Inicialización de rutas por defecto si ya existen
 try {
-  const { paymentRoutes } = await import('./routes/payment.routes.js');
-  const { orderRoutes } = await import('./routes/order.routes.js');
+  let paymentRoutes = null;
+  try {
+    const paymentModule = await import('./routes/payment.routes.js');
+    paymentRoutes = paymentModule.paymentRoutes;
+  } catch (errPayment) {}
+
+  let orderRoutes = null;
+  try {
+    const orderModule = await import('./routes/order.routes.js');
+    orderRoutes = orderModule.orderRoutes;
+  } catch (errOrder) {}
+
   let authRoutes = null;
   try {
     const authModule = await import('./routes/auth.routes.js');
@@ -150,42 +170,54 @@ try {
   } catch (errAuth) {
     // Rutas de auth aún no inicializadas
   }
+    
   let logisticsRoutes = null;
   try {
     const logisticsModule = await import('./routes/logistics.routes.js');
     logisticsRoutes = logisticsModule.logisticsRoutes;
-  } catch (errLogistics) {
-    // Rutas de logística aún no inicializadas
-  }
+  } catch (errLogistics) {}
+
   let catalogAdminRoutes = null;
   try {
     const catalogModule = await import('./routes/catalog-admin.routes.js');
     catalogAdminRoutes = catalogModule.catalogAdminRoutes;
-  } catch (errCatalog) {
-    // Rutas de administración de catálogo aún no inicializadas
-  }
+  } catch (errCatalog) {}
+
   let cartRoutes = null;
   try {
     const cartModule = await import('./routes/cart.routes.js');
     cartRoutes = cartModule.cartRoutes;
-  } catch (errCart) {
-    // Rutas de carrito aún no inicializadas
-  }
+  } catch (errCart) {}
+
   let salesReportRoutes = null;
   try {
     const salesModule = await import('./routes/sales-report.routes.js');
     salesReportRoutes = salesModule.salesReportRoutes;
-  } catch (errSales) {
-    // Rutas de ventas aún no inicializadas
-  }
+  } catch (errSales) {}
+
   let catalogRoutes = null;
   try {
-    const catalogModule = await import('./routes/catalog.routes.js');
-    catalogRoutes = catalogModule.catalogRoutes;
-  } catch (errPublicCatalog) {
-    // Rutas de catálogo público aún no inicializadas
-  }
-  registerRoutes(paymentRoutes, orderRoutes, logisticsRoutes, catalogAdminRoutes, salesReportRoutes, catalogRoutes, cartRoutes, authRoutes);
+    const catalogPublicModule = await import('./routes/catalog.routes.js');
+    catalogRoutes = catalogPublicModule.catalogRoutes;
+  } catch (errPublicCatalog) {}
+
+  let reviewRoutes = null;
+  try {
+    const reviewModule = await import('./routes/review.routes.js');
+    reviewRoutes = reviewModule.reviewRoutes;
+  } catch (errReview) {}
+
+  registerRoutes(
+    paymentRoutes,
+    orderRoutes,
+    logisticsRoutes,
+    catalogAdminRoutes,
+    salesReportRoutes,
+    catalogRoutes,
+    cartRoutes,
+    reviewRoutes,
+    authRoutes
+  );
 } catch (e) {
   app.use(errorHandler);
 }

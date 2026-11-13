@@ -4,6 +4,7 @@ import { ProductGrid } from './product-grid.js';
 import { CatalogFilters } from './catalog-filters.js';
 import { UrlSync } from './url-sync.js';
 import { EmptyState } from './empty-state.js';
+import { ProductReviewsModal } from '../resenas/product-reviews-modal.js';
 
 /**
  * Controlador principal de la vista de catálogo
@@ -22,10 +23,19 @@ export class CatalogApp {
     this.productGrid = null;
     this.catalogFilters = null;
     this.emptyState = null;
+    this.reviewsModal = null;
   }
 
   async init() {
-    this.productGrid = new ProductGrid('#products-grid', '#results-count');
+    this.reviewsModal = new ProductReviewsModal({
+      onUpdate: () => {
+        this.cargarProductos();
+      }
+    });
+
+    this.productGrid = new ProductGrid('#products-grid', '#results-count', (productoId, titulo) => {
+      this.reviewsModal.abrir(productoId, titulo);
+    });
 
     // 1. Inicializar componente de estado vacío (Story 4)
     this.emptyState = new EmptyState({

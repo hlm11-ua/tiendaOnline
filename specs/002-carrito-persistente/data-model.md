@@ -32,7 +32,7 @@ Representa cada variante de producto artesanal incorporada al carrito de compra.
 | :--- | :--- | :--- | :--- | :--- |
 | `varianteId` | `string` | Sí | Identificador de la variante de artesanía (ej. `var-001-azul`). | Clave única en el catálogo. |
 | `productoId` | `string` | Sí | Identificador del producto matriz (ej. `art-001`). | Referencia válida a catálogo. |
-| `titulo` | `string` | Sí | Nombre y descripción de la pieza artesanal. | Longitud entre 3 y 150 caracteres. |
+| `titulo` | `string` | Sí | Nombre y descripción de la pieza artesanal. | Heredado del catálogo vigente; si no se localiza se usa el literal de reserva `Pieza Artesanal`. |
 | `precioUnitario` | `number` | Sí | Precio unitario vigente en catálogo en euros (€). | `> 0.00`. Redondeado a 2 decimales. |
 | `cantidad` | `number` | Sí | Unidades deseadas por el comprador. | Entero positivo (`1 <= cantidad <= stockDisponible`). |
 | `stockDisponible`| `number` | Sí | Existencias físicas reales verificadas en tiempo real. | Entero `>= 0`. |

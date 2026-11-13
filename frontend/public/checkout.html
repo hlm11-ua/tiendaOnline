@@ -31,6 +31,8 @@
 
   <!-- Contenedor Principal de Checkout -->
   <main class="main-content" role="main">
+    <a href="/catalogo" class="checkout-volver-enlace" id="link-volver-catalogo">← Volver al catálogo</a>
+
     <h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">Pasarela de Pago Seguro con Tarjeta Bancaria</h1>
 
     <!-- Temporizador regresivo de reserva de stock -->
@@ -41,30 +43,11 @@
       <!-- Columna Izquierda: Formulario de pago -->
       <div id="checkout-form-container"></div>
 
-      <!-- Columna Derecha: Resumen de compra y selector de prueba -->
+      <!-- Columna Derecha: Resumen de la cesta real del comprador (Feature 002) -->
       <aside class="summary-card" id="order-summary-sidebar" aria-labelledby="summary-title">
         <div class="card-header">
           <h2 id="summary-title" class="card-title">Resumen de la Cesta</h2>
-          <p class="card-subtitle">Artículos reservados para esta compra</p>
-        </div>
-
-        <!-- Selector de cestas para verificación rápida de escenarios -->
-        <div class="cart-preset-selector">
-          <span class="preset-title">Seleccionar Cesta de Prueba:</span>
-          <div class="preset-options">
-            <label class="preset-option-label">
-              <input type="radio" name="cart-preset" value="direct" id="preset-cesta-direct" checked>
-              <span><strong>Cesta 1 (45,00 €)</strong> — Jarrón cerámica (&le; 100 €)</span>
-            </label>
-            <label class="preset-option-label">
-              <input type="radio" name="cart-preset" value="3ds" id="preset-cesta-3ds">
-              <span><strong>Cesta 2 (140,00 €)</strong> — Manta artesanal (&gt; 100 €)</span>
-            </label>
-            <label class="preset-option-label">
-              <input type="radio" name="cart-preset" value="orfebreria" id="preset-cesta-orfebreria">
-              <span><strong>Cesta 3 (220,00 €)</strong> — Pieza de orfebrería (Stock único: 1 ud)</span>
-            </label>
-          </div>
+          <p class="card-subtitle">Artículos de tu cesta que vas a comprar</p>
         </div>
 
         <div class="cart-items-list" id="cart-items-container">
@@ -102,22 +85,89 @@
     import { Payment3DSModal } from '/src/components/payment-3ds-modal.js';
     import { OrderReceipt } from '/src/components/order-receipt.js';
     import { CheckoutForm } from '/src/components/checkout-form.js';
+    import { CartStorageService } from '/src/services/cart-storage.service.js';
+    import { CartApiService } from '/src/services/cart-api.service.js';
 
-    // Cestas predefinidas para validar los escenarios del Quickstart
-    const PRESETS = {
-      direct: [
-        { varianteId: 'var-001-azul', cantidad: 1, nombre: 'Jarrón de Cerámica Esmaltada Azul', precioUnitario: 45.00 }
-      ],
-      '3ds': [
-        { varianteId: 'var-002-natural', cantidad: 1, nombre: 'Manta de Lana Merina Tejida a Mano', precioUnitario: 140.00 }
-      ],
-      orfebreria: [
-        { varianteId: 'var-004-unico', cantidad: 1, nombre: 'Pieza Única de Orfebrería en Cobre', precioUnitario: 220.00 }
-      ]
-    };
-
-    let activeItems = PRESETS.direct;
+    let activeItems = [];
     let currentSession = null;
+
+    const formatoEUR = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+    const formatEUR = (importe) => formatoEUR.format(Number(importe) || 0);
+
+    // Feature 002: el checkout consume la cesta persistente real del comprador
+    // (LocalStorage para anónimos o carrito remoto vía parámetro usuarioId)
+    async function cargarCestaPersistente() {
+      const params = new URLSearchParams(window.location.search);
+      const usuarioId = params.get('usuarioId');
+      if (usuarioId) {
+        CartStorageService.setUsuarioId(usuarioId);
+      }
+
+      let lineas;
+      try {
+        const carrito = await CartStorageService.getCart();
+        lineas = (carrito?.items || []).filter(
+          it => it.varianteId && Number(it.cantidad) > 0 &&
+                it.estado !== 'agotado' && it.estado !== 'no_disponible'
+        );
+      } catch {
+        lineas = [];
+      }
+
+      if (lineas.length === 0) {
+        return [];
+      }
+
+      // FR-005 / FR-006: al tramitar el pedido se sincronizan precios vigentes y
+      // existencias reales contra el catálogo antes de reservar e iniciar el cobro
+      try {
+        const validacion = await CartApiService.validarStock(
+          lineas.map(it => ({
+            varianteId: it.varianteId,
+            cantidad: it.cantidad,
+            precioUnitario: it.precioUnitario
+          }))
+        );
+        const porVariante = new Map(validacion.items.map(v => [v.varianteId, v]));
+
+        return lineas
+          .map(linea => {
+            const v = porVariante.get(linea.varianteId);
+            if (!v) return null;
+            const disponible = v.estado === 'disponible' || v.estado === 'reajustado';
+            const cantidad = disponible ? v.cantidadAjustada : 0;
+            if (cantidad <= 0) return null;
+            return {
+              varianteId: linea.varianteId,
+              cantidad,
+              nombre: linea.titulo || v.titulo,
+              precioUnitario: v.precioVigente ?? linea.precioUnitario,
+              stockDisponible: v.stockDisponible
+            };
+          })
+          .filter(Boolean);
+      } catch {
+        // Sin validación disponible: la reserva del backend decide de forma autoritativa
+        return lineas.map(it => ({
+          varianteId: it.varianteId,
+          cantidad: it.cantidad,
+          nombre: it.titulo || it.varianteId,
+          precioUnitario: it.precioUnitario
+        }));
+      }
+    }
+
+    // FR-001 / FR-008: sin artículos válidos no hay nada que cobrar (zero-state)
+    function mostrarCestaVacia() {
+      activeItems = [];
+      currentSession = null;
+      renderSidebarItems([], 0);
+      const timerContainer = document.getElementById('reservation-timer-container');
+      if (timerContainer) timerContainer.innerHTML = '';
+      timer.stop();
+      const formContainer = document.getElementById('checkout-form-container');
+      if (formContainer) formContainer.classList.add('hidden');
+    }
 
     // 1. Instanciar componentes
     const timer = new ReservationTimer({
@@ -156,16 +206,20 @@
     const receipt = new OrderReceipt({
       containerId: 'receipt-container',
       onNewOrder: () => {
-        // Reiniciar flujo con una nueva sesión
+        // La cesta se ha vaciado tras el cobro: el checkout vuelve al estado vacío
         document.getElementById('receipt-container').classList.add('hidden');
         document.getElementById('checkout-view').classList.remove('hidden');
-        iniciarSesionCheckout(activeItems);
+        mostrarCestaVacia();
       }
     });
 
     const checkoutForm = new CheckoutForm({
       containerId: 'checkout-form-container',
       onSubmit: async (datos) => {
+        if (!currentSession) {
+          checkoutForm.showError('No hay una sesión de compra activa. Vuelve a tu cesta e inténtalo de nuevo.');
+          return;
+        }
         try {
           const res = await PaymentApiService.procesarPago({
             sesionPagoId: currentSession.sesionPagoId,
@@ -189,37 +243,69 @@
     });
 
     // 2. Transición a pantalla de justificante al confirmar compra
-    function finalizarConExito(pedido) {
+    async function finalizarConExito(pedido) {
       timer.stop();
       document.getElementById('reservation-timer-container').innerHTML = '';
       document.getElementById('checkout-view').classList.add('hidden');
       document.getElementById('receipt-container').classList.remove('hidden');
       receipt.render(pedido);
+
+      // Feature 002: vaciado automático de la cesta tras confirmación de cobro
+      try {
+        await CartStorageService.clearCart();
+        if (CartStorageService.usuarioId) {
+          await CartApiService.vaciarCarrito(CartStorageService.usuarioId);
+        }
+      } catch {
+        // El justificante de compra ya se ha emitido; el vaciado es best-effort
+      }
     }
 
-    // 3. Renderizar artículos en la barra lateral
+    // 3. Renderizar los artículos reales de la cesta en la barra lateral
     function renderSidebarItems(items, total) {
       const container = document.getElementById('cart-items-container');
       const subtotalLabel = document.getElementById('label-subtotal');
       const totalLabel = document.getElementById('label-total-sidebar');
 
-      const totalFormateado = `${Number(total).toFixed(2).replace('.', ',')} €`;
-      subtotalLabel.textContent = totalFormateado;
-      totalLabel.textContent = totalFormateado;
+      if (!items || items.length === 0) {
+        if (subtotalLabel) subtotalLabel.textContent = formatEUR(0);
+        if (totalLabel) totalLabel.textContent = formatEUR(0);
+        if (container) {
+          container.innerHTML = `
+            <div class="checkout-empty-state">
+              <span class="empty-icon" aria-hidden="true">🧺</span>
+              <p class="empty-title">Tu cesta está vacía</p>
+              <p class="empty-text">Añade piezas artesanales a tu cesta para poder tramitar el pedido.</p>
+              <a href="/carrito" class="empty-btn">Volver a la cesta</a>
+              <a href="/catalogo" class="empty-link">Explorar piezas artesanales</a>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      const subtotal = items.reduce((acc, it) => acc + Number(it.precioUnitario) * Number(it.cantidad), 0);
+      if (subtotalLabel) subtotalLabel.textContent = formatEUR(subtotal);
+      if (totalLabel) totalLabel.textContent = formatEUR(total ?? subtotal);
 
       container.innerHTML = items.map(item => `
         <div class="cart-item-row">
           <div class="item-info">
             <div class="item-title">${item.nombre}</div>
-            <div class="item-meta">Cant: ${item.cantidad} × ${Number(item.precioUnitario).toFixed(2).replace('.', ',')} €</div>
+            <div class="item-meta">Cant: ${item.cantidad} × ${formatEUR(item.precioUnitario)}</div>
           </div>
-          <div class="item-subtotal font-mono">${Number(item.precioUnitario * item.cantidad).toFixed(2).replace('.', ',')} €</div>
+          <div class="item-subtotal font-mono">${formatEUR(Number(item.precioUnitario) * Number(item.cantidad))}</div>
         </div>
       `).join('');
     }
 
     // 4. Iniciar sesión de checkout y bloqueo de 10 min
     async function iniciarSesionCheckout(items) {
+      if (!items || items.length === 0) {
+        mostrarCestaVacia();
+        return;
+      }
+
       try {
         checkoutForm.clearError();
         const payload = items.map(it => ({ varianteId: it.varianteId, cantidad: it.cantidad }));
@@ -237,20 +323,38 @@
         });
         renderSidebarItems(items, sesion.total);
       } catch (err) {
-        checkoutForm.showError(`No se pudo iniciar la reserva de compra: ${err.message}`);
+        // FR-008: sin existencias suficientes la tramitación queda bloqueada con aviso claro
+        if (err.status === 409 || err.codigo === 'STOCK_INSUFICIENTE') {
+          checkoutForm.showError('No hay existencias suficientes para tramitar tu pedido: alguna pieza de tu cesta se ha agotado o está reservada por otro comprador. Revisa tu cesta para ajustar las cantidades o retirar los artículos afectados.');
+          checkoutForm.setSubmitting(true);
+        } else {
+          checkoutForm.showError(`No se pudo iniciar la reserva de compra: ${err.message}`);
+        }
+        avisarEnlaceCesta();
       }
     }
 
-    // 5. Manejar selector de cestas de prueba
-    document.querySelectorAll('input[name="cart-preset"]').forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        activeItems = PRESETS[e.target.value] || PRESETS.direct;
-        iniciarSesionCheckout(activeItems);
-      });
-    });
+    function avisarEnlaceCesta() {
+      const errorBox = document.querySelector('#checkout-error-box');
+      if (errorBox && !errorBox.querySelector('.error-cart-link')) {
+        const enlace = document.createElement('a');
+        enlace.href = '/carrito';
+        enlace.className = 'error-cart-link';
+        enlace.textContent = '→ Revisar mi cesta';
+        errorBox.appendChild(document.createElement('br'));
+        errorBox.appendChild(enlace);
+      }
+    }
 
-    // Iniciar con la cesta por defecto
-    iniciarSesionCheckout(activeItems);
+    // 5. Arranque: consumir la cesta persistente real del comprador
+    (async () => {
+      // Renderizar el formulario desde el principio para disponer del cuadro de avisos
+      checkoutForm.setSessionData({ sesionPagoId: null, items: [], total: 0 });
+
+      const items = await cargarCestaPersistente();
+      activeItems = items;
+      iniciarSesionCheckout(items);
+    })();
   </script>
 </body>
 </html>

@@ -192,6 +192,22 @@ describe('Servicio Web de Checkout y Estáticos', () => {
 
       const resService = await fetch(`http://localhost:${port}/src/services/catalog-api.service.js`);
       assert.strictEqual(resService.status, 200);
+
+      // Reseñas y valoraciones (Feature 005)
+      const resResenasCss = await fetch(`http://localhost:${port}/src/styles/resenas.css`);
+      assert.strictEqual(resResenasCss.status, 200);
+      const resenasCss = await resResenasCss.text();
+      assert.ok(resenasCss.includes('.reviews-modal-dialog'));
+      assert.ok(resenasCss.includes('.star-rating-selector'));
+
+      const resModalReviews = await fetch(`http://localhost:${port}/src/components/resenas/product-reviews-modal.js`);
+      assert.strictEqual(resModalReviews.status, 200);
+
+      const resFormReviews = await fetch(`http://localhost:${port}/src/components/resenas/review-form.js`);
+      assert.strictEqual(resFormReviews.status, 200);
+
+      const resReviewsApi = await fetch(`http://localhost:${port}/src/services/review-api.service.js`);
+      assert.strictEqual(resReviewsApi.status, 200);
     } finally {
       server.close();
     }

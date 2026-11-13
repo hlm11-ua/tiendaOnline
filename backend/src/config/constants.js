@@ -187,6 +187,28 @@ export const CONSTANTS = {
     salido_tienda: 'Salido de la tienda',
     entregado: 'Entregado'
   },
+  // Configuración de Reseñas y Valoraciones de Productos (Feature 005)
+  REVIEWS: {
+    MIN_RATING: 1,
+    MAX_RATING: 5,
+    MIN_COMMENT_LENGTH: 3,
+    MAX_COMMENT_LENGTH: 1000,
+    ELIGIBILITY_STATUS: {
+      VERIFIED_PURCHASE: 'COMPRA_VERIFICADA',
+      NO_PURCHASE: 'SIN_COMPRA',
+      UNAUTHENTICATED: 'NO_AUTENTICADO',
+      ALREADY_REVIEWED: 'YA_VALORADO'
+    },
+    MESSAGES: {
+      SUCCESS: '¡Gracias por tu valoración! Tu reseña ha sido publicada con éxito.',
+      ALREADY_REVIEWED: 'Ya has publicado una valoración para este producto.',
+      PURCHASE_REQUIRED: 'Solo los clientes que hayan comprado previamente este producto y recibido su pedido pueden valorarlo.',
+      AUTH_REQUIRED: 'Inicia sesión con tu cuenta para comprobar si puedes valorar este producto.',
+      INVALID_RATING: 'La puntuación debe ser un número entero entre 1 y 5 estrellas.',
+      EMPTY_COMMENT: 'El comentario es obligatorio y debe tener al menos 3 caracteres.',
+      NO_REVIEWS: 'Este producto aún no cuenta con valoraciones. ¡Sé el primero en opinar tras comprarlo!'
+    }
+  },
 
   // Puerto por defecto
   PORT: process.env.PORT || 3000

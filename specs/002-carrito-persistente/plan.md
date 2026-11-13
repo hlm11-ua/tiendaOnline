@@ -57,7 +57,7 @@ Implementar un sistema de carrito de compras resiliente y transparente para la t
 | **I. Simplicidad ante todo** | **PASS** | Solución directa: `LocalStorage` en cliente y `MemoryStore` en backend. Sin bases de datos pesadas ni ORMs prematuros para v1. |
 | **II. Idioma y mercado** | **PASS** | Idioma español `es-ES` en todos los mensajes, avisos y contratos. Moneda única euro (`€`) formateada con `Intl.NumberFormat`. Tarifa plana estándar de envío fijada en 0,00 € en v1. |
 | **III. Cero alcance fantasma** | **PASS** | No se incluyen cupones, temporizadores de reserva ni listas de deseos (todos explícitamente en *Out of Scope*). |
-| **IV. Verificable por personas no técnicas** | **PASS** | Los 7 escenarios de aceptación se pueden comprobar íntegramente mediante la interfaz de usuario en el navegador sin inspeccionar bases de datos. |
+| **IV. Verificable por personas no técnicas** | **PASS** | Los escenarios de aceptación se pueden comprobar íntegramente mediante la interfaz de usuario en el navegador sin inspeccionar bases de datos. |
 | **V. Respeto por los datos del usuario** | **PASS** | No se solicitan ni almacenan datos personales en el carrito anónimo; solo variantes, cantidades y precios. Cero secretos en código. |
 
 ---
@@ -102,7 +102,7 @@ backend/
 │
 frontend/
 ├── public/
-│   ├── cart.html                   # Vista dedicada del carrito y cesta de compras
+│   ├── cart.html                   # Vista dedicada del carrito, cesta de compras y sugerencias "Te puede interesar" (FR-009)
 │   └── checkout.html               # [Existente] Pasarela de pago integrada; consume cesta y vacía al pagar
 └── src/
     ├── components/
