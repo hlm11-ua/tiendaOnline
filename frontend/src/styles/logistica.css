@@ -114,9 +114,8 @@ body {
 .nav-link {
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.5rem 0.85rem;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.8rem;
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
 }
@@ -744,6 +743,10 @@ body {
 }
 
 .hidden {
+  display: none !important;
+}
+
+[hidden] {
   display: none !important;
 }
 

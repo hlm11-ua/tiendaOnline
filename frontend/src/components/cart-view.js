@@ -25,38 +25,19 @@ export class CartView {
   }
 
   /**
-   * FR-007: al iniciar sesión (usuarioId presente) fusiona la cesta anónima
-   * guardada en LocalStorage con el carrito de la cuenta, muestra los avisos
-   * de reajuste y vacía el almacenamiento local tras adoptar la cesta fusionada
+   * FR-007: al abrir la cesta con sesión iniciada se fusiona la cesta anónima
+   * guardada en LocalStorage con el carrito de la cuenta (red de seguridad por
+   * si el inicio de sesión ocurrió en otra página) y se muestran los avisos
    */
   async fusionarCarritoLocal() {
     if (!this.usuarioId) return;
 
-    const local = CartStorageService.readLocal();
-    const itemsLocales = (local?.items || [])
-      .filter(it => it.varianteId && Number(it.cantidad) > 0)
-      .map(it => ({
-        varianteId: it.varianteId,
-        cantidad: it.cantidad,
-        precioUnitario: it.precioUnitario
-      }));
+    const resultado = await CartStorageService.fusionarConCuenta(this.usuarioId);
+    if (!resultado) return;
 
-    if (itemsLocales.length === 0) return;
-
-    try {
-      const resultado = await CartApiService.fusionarCarritos({
-        usuarioId: this.usuarioId,
-        itemsLocales
-      });
-
-      // Adoptar la cesta fusionada y limpiar la persistencia local anónima
-      CartStorageService.removeLocal();
-      this.carrito = resultado.carrito;
-      this.avisos = (resultado.avisosReajuste || []).map(aviso => ({ ...aviso }));
-      this.render();
-    } catch {
-      // Sin fusión posible (ej. usuario inexistente): se continúa con la carga normal
-    }
+    this.carrito = resultado.carrito;
+    this.avisos = (resultado.avisosReajuste || []).map(aviso => ({ ...aviso }));
+    this.render();
   }
 
   bindGlobalActions() {

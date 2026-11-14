@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { CONSTANTS } from '../config/constants.js';
+import { Account } from './account.model.js';
 
 /**
  * Catálogo inicial de artesanías para pruebas y demostración
@@ -253,11 +254,41 @@ class MemoryStore {
     // Carritos de compra (002): usuarioId/sessionId -> Carrito
     this.carts = new Map();
 
+    // Cuentas de usuario y sesiones (Feature 004)
+    this.accounts = new Map();
+    this.accountsByEmail = new Map();
+    this.sessions = new Map();
     // Reseñas y valoraciones (Feature 005)
     // Clave compuesta: `${usuarioId}:${productoId}` -> Review
     this.reviews = new Map();
     // Indexado por producto: productoId -> Array de reseñas
     this.reviewsByProduct = new Map();
+
+    // Cuentas de demostración precargadas (Feature 004)
+    this.seedDefaultAccounts();
+  }
+
+  /**
+   * Siembra la cuenta de administrador por defecto del taller.
+   * La contraseña se almacena hasheada con scrypt + salt (nunca en texto plano, Principio V).
+   * Los valores por defecto son credenciales de demostración (como los números de tarjeta de prueba)
+   * y pueden sobrescribirse mediante las variables de entorno ADMIN_EMAIL y ADMIN_PASSWORD.
+   * El registro público sigue exigiendo el mínimo de 8 caracteres de FR-001.
+   */
+  seedDefaultAccounts() {
+    const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@gmail.com').trim().toLowerCase();
+    if (this.getAccountByEmail(adminEmail)) return;
+
+    const salt = Account.generateSalt();
+    const admin = new Account({
+      nombre: 'Administrador',
+      email: adminEmail,
+      passwordHash: Account.hashPassword(process.env.ADMIN_PASSWORD || 'admin1234', salt),
+      salt,
+      rol: CONSTANTS.ROLES.ADMIN
+    });
+
+    this.saveAccount(admin);
   }
 
   // === MÉTODOS DE INVENTARIO Y RESERVAS ===
@@ -735,6 +766,66 @@ class MemoryStore {
     });
   }
 
+  // === MÉTODOS DE CUENTAS DE USUARIO Y SESIONES (004) ===
+
+  saveAccount(account) {
+    if (!account || !account.id) return null;
+    this.accounts.set(account.id, account);
+    if (account.email) {
+      this.accountsByEmail.set(account.email.toLowerCase(), account.id);
+    }
+    return account;
+  }
+
+  getAccountById(id) {
+    if (!id) return null;
+    return this.accounts.get(id) || null;
+  }
+
+  getAccountByEmail(email) {
+    if (!email) return null;
+    const accountId = this.accountsByEmail.get(email.toLowerCase());
+    if (!accountId) return null;
+    return this.accounts.get(accountId) || null;
+  }
+
+  saveSession(session) {
+    if (!session || !session.token) return null;
+    this.sessions.set(session.token, session);
+    return session;
+  }
+
+  getSessionByToken(token) {
+    if (!token) return null;
+    return this.sessions.get(token) || null;
+  }
+
+  deleteSession(token) {
+    if (!token) return false;
+    const session = this.sessions.get(token);
+    if (session) {
+      session.activo = false;
+      return this.sessions.delete(token);
+    }
+    return false;
+  }
+
+  getOrdersByAccountId(cuentaId, email = null) {
+    if (!cuentaId && !email) return [];
+    const normalizedEmail = email ? email.toLowerCase() : null;
+
+    const matched = Array.from(this.orders.values()).filter(order => {
+      if (cuentaId && order.cuentaId === cuentaId) {
+        return true;
+      }
+      if (normalizedEmail && order.clienteEmail && order.clienteEmail.toLowerCase() === normalizedEmail) {
+        return true;
+      }
+      return false;
+    });
+
+    return matched.sort((a, b) => new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0));
+  }
   // === MÉTODOS DE RESEÑAS Y VALORACIONES (005) ===
 
   /**

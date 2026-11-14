@@ -19,11 +19,12 @@ app.use(express.static(frontendPath));
 app.use('/public', express.static(path.join(frontendPath, 'public')));
 app.use('/src', express.static(path.join(frontendPath, 'src')));
 
-// Ruta principal que sirve checkout.html
+// Ruta principal que sirve el catálogo de la tienda
 app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
+  res.sendFile(path.join(frontendPath, 'public', 'catalogo.html'));
 });
 
+// Ruta de la pasarela de pago (Feature 003)
 app.get('/checkout', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'checkout.html'));
 });
@@ -93,6 +94,15 @@ app.get('/admin/ventas.html', (req, res) => {
   res.sendFile(path.join(frontendPath, 'public', 'admin', 'ventas.html'));
 });
 
+// Rutas del área de cuentas y seguimiento de pedidos (Feature 004)
+app.get('/cuenta', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cuenta.html'));
+});
+
+app.get('/cuenta.html', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'public', 'cuenta.html'));
+});
+
 // Endpoint de salud del sistema
 app.get('/api/health', (req, res) => {
   res.json({
@@ -105,12 +115,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // Los routers de pagos, pedidos, logística, administración de catálogo, ventas, catálogo público, carrito y reseñas se montan a través de una función o importación diferida
-export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, reviewRouter) {
+export function registerRoutes(paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, reviewRouter, authRouter) {
   if (paymentRouter && typeof paymentRouter === 'object' && !paymentRouter.handle && !paymentRouter.name && paymentRouter.paymentRouter !== undefined) {
-    ({ paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, reviewRouter } = paymentRouter);
+    ({ paymentRouter, orderRouter, logisticsRouter, catalogAdminRouter, salesReportRouter, catalogRouter, cartRouter, reviewRouter, authRouter } = paymentRouter);
   }
   if (paymentRouter) {
     app.use('/api/pagos', paymentRouter);
+  }
+  if (authRouter) {
+    app.use('/api/auth', authRouter);
   }
   if (orderRouter) {
     app.use('/api/pedidos', orderRouter);
@@ -151,6 +164,14 @@ try {
     orderRoutes = orderModule.orderRoutes;
   } catch (errOrder) {}
 
+  let authRoutes = null;
+  try {
+    const authModule = await import('./routes/auth.routes.js');
+    authRoutes = authModule.authRoutes;
+  } catch (errAuth) {
+    // Rutas de auth aún no inicializadas
+  }
+    
   let logisticsRoutes = null;
   try {
     const logisticsModule = await import('./routes/logistics.routes.js');
@@ -195,7 +216,8 @@ try {
     salesReportRoutes,
     catalogRoutes,
     cartRoutes,
-    reviewRoutes
+    reviewRoutes,
+    authRoutes
   );
 } catch (e) {
   app.use(errorHandler);
@@ -205,11 +227,12 @@ try {
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename)) {
   app.listen(CONSTANTS.PORT, () => {
     console.log(`[TiendaOnline] Servidor activo en http://localhost:${CONSTANTS.PORT}`);
-    console.log(`  - Catálogo: http://localhost:${CONSTANTS.PORT}/catalogo`);
+    console.log(`  - Catálogo: http://localhost:${CONSTANTS.PORT}/`);
     console.log(`  - Carrito: http://localhost:${CONSTANTS.PORT}/carrito`);
-    console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/`);
+    console.log(`  - Checkout: http://localhost:${CONSTANTS.PORT}/checkout`);
     console.log(`  - Logística: http://localhost:${CONSTANTS.PORT}/logistica`);
     console.log(`  - Panel Catálogo: http://localhost:${CONSTANTS.PORT}/admin`);
     console.log(`  - Informes Ventas: http://localhost:${CONSTANTS.PORT}/admin/ventas`);
+    console.log(`  - Cuentas de Usuario: http://localhost:${CONSTANTS.PORT}/cuenta`);
   });
 }

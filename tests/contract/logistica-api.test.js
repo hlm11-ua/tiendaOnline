@@ -15,6 +15,8 @@ async function request(path, options = {}) {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        // Rutas operativas del taller protegidas por rol admin (hardening F1)
+        'x-user-role': 'admin',
         ...(options.headers || {})
       }
     });

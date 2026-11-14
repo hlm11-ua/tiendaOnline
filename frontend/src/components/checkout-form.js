@@ -1,9 +1,12 @@
 import { CardTokenizerService } from '../services/card-tokenizer.service.js';
+import { AccountApiService } from '../services/account-api.service.js';
 
 /**
- * Componente: Formulario de Pago y Datos de Comprador Invitado
+ * Componente: Formulario de Pago y Datos de Comprador
  * Integra la captura de datos personales, tarjeta bancaria, detección de marca,
  * tokenización en cliente (PCI-DSS) y protección contra doble clic.
+ * Si el comprador tiene sesión iniciada (Feature 004), autocompleta sus datos
+ * y vincula la compra resultante a su cuenta.
  */
 export class CheckoutForm {
   constructor({ containerId, onSubmit, onCartChange }) {
@@ -14,6 +17,8 @@ export class CheckoutForm {
     this.total = 0;
     this.sesionPagoId = null;
     this.isSubmitting = false;
+    this.accountService = new AccountApiService();
+    this.cuentaId = null;
   }
 
   /**
@@ -267,6 +272,33 @@ export class CheckoutForm {
     `;
 
     this.attachEventListeners();
+    this.applyAccountPrefill();
+  }
+
+  /**
+   * Si hay una sesión iniciada (Feature 004), autocompleta nombre y correo del
+   * comprador y recuerda el identificador de cuenta para vincular el pedido.
+   */
+  async applyAccountPrefill() {
+    try {
+      if (!this.accountService.isAuthenticated()) return;
+
+      const usuario = await this.accountService.getMe();
+      this.cuentaId = usuario?.id || null;
+
+      const nameInput = this.container.querySelector('#input-cliente-nombre');
+      const emailInput = this.container.querySelector('#input-cliente-email');
+
+      if (usuario?.nombre && nameInput && !nameInput.value) {
+        nameInput.value = usuario.nombre;
+      }
+      if (usuario?.email && emailInput && !emailInput.value) {
+        emailInput.value = usuario.email;
+      }
+    } catch {
+      // Sin sesión válida se continúa como comprador invitado
+      this.cuentaId = null;
+    }
   }
 
   attachEventListeners() {
@@ -391,6 +423,7 @@ export class CheckoutForm {
             sesionPagoId: this.sesionPagoId,
             clienteNombre,
             clienteEmail,
+            cuentaId: this.cuentaId,
             tokenTarjeta: tokenResult.token,
             cardInfo: {
               marca: tokenResult.marca,

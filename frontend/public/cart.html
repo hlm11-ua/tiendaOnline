@@ -89,16 +89,32 @@
   <script type="module">
     import { CartView } from '/src/components/cart-view.js';
     import { CartStorageService } from '/src/services/cart-storage.service.js';
+    import { CartApiService } from '/src/services/cart-api.service.js';
+    import { AccountApiService } from '/src/services/account-api.service.js';
+    import { PaymentApiService } from '/src/services/payment-api.service.js';
     import { catalogApiService } from '/src/services/catalog-api.service.js';
     import { CONSTANTS } from '/src/services/constants.service.js';
 
-    // Identificación de sesión: se admite x-usuario-id vía parámetro de URL para pruebas;
-    // sin usuario se opera en modo anónimo con persistencia en LocalStorage.
-    const params = new URLSearchParams(window.location.search);
-    const usuarioId = params.get('usuarioId');
-    if (usuarioId) {
-      CartStorageService.setUsuarioId(usuarioId);
+    // Si el comprador abandonó la pasarela de pago sin pagar, la reserva de stock
+    // de esa sesión de checkout se libera aquí para que la cesta refleje las
+    // existencias reales (los artículos solo se venden tras confirmar el pago)
+    try {
+      const sesionAbandonada = sessionStorage.getItem('tienda_online_checkout_sesion');
+      if (sesionAbandonada) {
+        await PaymentApiService.liberarSesion(sesionAbandonada);
+      }
+    } catch {
+      // Sin efecto: la reserva expirará sola si no puede liberarse ahora
     }
+    sessionStorage.removeItem('tienda_online_checkout_sesion');
+
+    // Identificación de sesión (Feature 004): si hay una cuenta con sesión iniciada,
+    // el carrito pertenece a esa cuenta; el parámetro de URL usuarioId se mantiene
+    // únicamente para pruebas. Sin usuario se opera en modo anónimo (LocalStorage).
+    const params = new URLSearchParams(window.location.search);
+    const accountService = new AccountApiService();
+    const usuarioId = params.get('usuarioId') || accountService.getUser()?.id || null;
+    CartStorageService.setUsuarioId(usuarioId);
 
     const cartView = new CartView({
       containerId: 'cart-table-container',

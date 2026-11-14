@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { app } from '../../backend/src/server.js';
 
 describe('Servicio Web de Checkout y Estáticos', () => {
-  it('debe servir checkout.html en la raíz /', async () => {
+  it('debe servir el catálogo en la raíz / y checkout en /checkout', async () => {
     const server = app.listen(0);
     const port = server.address().port;
 
@@ -11,9 +11,14 @@ describe('Servicio Web de Checkout y Estáticos', () => {
       const res = await fetch(`http://localhost:${port}/`);
       assert.strictEqual(res.status, 200);
       const text = await res.text();
-      assert.ok(text.includes('Pasarela de Pago Seguro con Tarjeta'));
-      assert.ok(text.includes('checkout-form-container'));
-      assert.ok(text.includes('reservation-timer-container'));
+      assert.ok(text.includes('Catálogo de Productos Artesanales'));
+
+      const resCheckout = await fetch(`http://localhost:${port}/checkout`);
+      assert.strictEqual(resCheckout.status, 200);
+      const checkoutText = await resCheckout.text();
+      assert.ok(checkoutText.includes('Pasarela de Pago Seguro con Tarjeta'));
+      assert.ok(checkoutText.includes('checkout-form-container'));
+      assert.ok(checkoutText.includes('reservation-timer-container'));
     } finally {
       server.close();
     }

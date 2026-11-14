@@ -23,9 +23,10 @@
 
       <nav class="header-nav" aria-label="Navegación principal">
         <a href="/catalogo.html" class="nav-link active">Catálogo</a>
-        <a href="/checkout" class="nav-link">Cesta / Pago</a>
+        <a href="/carrito" class="nav-link">Cesta</a>
         <a href="/logistica.html" class="nav-link">Envíos</a>
-        <a href="/admin/catalogo.html" class="nav-link">Administración</a>
+        <a href="/cuenta" class="nav-link">Mi Cuenta</a>
+        <a href="/admin/catalogo.html" class="nav-link" id="nav-admin" hidden>Administración</a>
       </nav>
     </div>
   </header>
@@ -118,5 +119,24 @@
 
   <!-- Controlador Frontend en ES Modules -->
   <script type="module" src="/src/components/catalogo/main.js"></script>
+
+  <!-- El enlace "Administración" solo se muestra al rol administrador (Feature 004) -->
+  <script type="module">
+    import { AccountApiService } from '/src/services/account-api.service.js';
+
+    const navAdmin = document.getElementById('nav-admin');
+    const accountService = new AccountApiService();
+
+    if (navAdmin) {
+      try {
+        const usuario = accountService.isAuthenticated()
+          ? await accountService.getMe()
+          : null;
+        navAdmin.hidden = usuario?.rol !== 'admin';
+      } catch {
+        navAdmin.hidden = true;
+      }
+    }
+  </script>
 </body>
 </html>

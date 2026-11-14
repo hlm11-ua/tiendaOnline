@@ -1,8 +1,20 @@
 /**
  * Cliente HTTP frontend para interactuar con la API del carrito (Feature 002)
  * Contrato: specs/002-carrito-persistente/contracts/cart-api.yaml
+ * Si existe una sesión de usuario (Feature 004), envía el token para que el
+ * carrito quede vinculado a esa cuenta en el servidor.
  */
+import { SESSION_TOKEN_KEY } from './account-api.service.js';
+
 export class CartApiService {
+  static getSessionToken() {
+    try {
+      return localStorage.getItem(SESSION_TOKEN_KEY) || null;
+    } catch {
+      return null;
+    }
+  }
+
   static async request(endpoint, options = {}) {
     const res = await fetch(endpoint, {
       ...options,
@@ -78,6 +90,15 @@ export class CartApiService {
   }
 
   static buildSessionHeaders(usuarioId) {
-    return usuarioId ? { 'x-usuario-id': usuarioId } : {};
+    const headers = {};
+    if (usuarioId) {
+      headers['x-usuario-id'] = String(usuarioId);
+    }
+    const token = this.getSessionToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      headers['X-Session-Token'] = token;
+    }
+    return headers;
   }
 }

@@ -165,6 +165,28 @@ export const CONSTANTS = {
     }
   },
 
+  // Configuración de Cuentas de Usuario y Fases de Pedido (Feature 004)
+  SESSION: {
+    DURATION_DAYS: 30,
+    DURATION_MS: 30 * 24 * 60 * 60 * 1000,
+    TOKEN_BYTES: 32
+  },
+  PASSWORD: {
+    MIN_LENGTH: 8
+  },
+  ORDER_PHASES: {
+    PENDING: 'pendiente',
+    PAID: 'pagado',
+    SHIPPED: 'salido_tienda',
+    DELIVERED: 'entregado'
+  },
+  PHASE_LABELS: {
+    pendiente: 'Pendiente',
+    pagado: 'Pagado',
+    en_preparacion: 'En preparación',
+    salido_tienda: 'Salido de la tienda',
+    entregado: 'Entregado'
+  },
   // Configuración de Reseñas y Valoraciones de Productos (Feature 005)
   REVIEWS: {
     MIN_RATING: 1,
