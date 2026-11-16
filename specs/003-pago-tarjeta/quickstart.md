@@ -23,9 +23,9 @@ Para permitir la verificación funcional completa en la interfaz sin requerir ta
 | Escenario de Prueba | Número de Tarjeta (PAN) | Caducidad | CVV | Resultado Esperado |
 |---------------------|--------------------------|-----------|-----|--------------------|
 | **Éxito Directo ($\le 100\text{ \euro}$)** | `4242 4242 4242 4242` | `12/28` | `123` | Cargo autorizado de inmediato; pedido creado en estado "pagado". |
-| **Éxito con 3DS ($> 100\text{ \euro}$)** | `4000 0000 0000 3000` | `12/28` | `123` | Solicita modal 3D Secure con código OTP (código válido: `1234`). |
+| **Éxito con 3DS ($> 100\text{ \euro}$)** | `4000 0000 0006 3000` | `12/28` | `123` | Solicita modal 3D Secure con código OTP (código válido: `1234`). |
 | **Fondos Insuficientes** | `4000 0000 0000 0101` | `12/28` | `123` | Denegado por saldo insuficiente; cesta intacta, stock liberado. |
-| **Tarjeta Denegada/Bloqueada**| `4000 0000 0000 0180` | `12/28` | `123` | Denegado por entidad emisora; mensaje en español; stock liberado. |
+| **Tarjeta Denegada/Bloqueada**| `4000 0000 0004 0180` | `12/28` | `123` | Denegado por entidad emisora; mensaje en español; stock liberado. |
 | **Error de Comunicación** | `4000 0000 0000 9999` | `12/28` | `123` | Simula corte de red con la pasarela; sin pedido ni cargo. |
 
 ---
@@ -53,7 +53,7 @@ Para permitir la verificación funcional completa en la interfaz sin requerir ta
 ### Escenario 2: Compra Superior a $100\text{ \euro}$ con Desafío 3D Secure
 1. Añadir artículos al carrito por un importe superior a $100\text{ \euro}$ (ej. Manta artesanal de $140,00\text{ \euro}$).
 2. Pulsar **"Tramitar Pedido"** e introducir los datos de contacto.
-3. Introducir los datos de tarjeta: `4000 0000 0000 3000`, fecha `12/28`, CVV `123`.
+3. Introducir los datos de tarjeta: `4000 0000 0006 3000`, fecha `12/28`, CVV `123`.
 4. Pulsar **"Pagar 140,00 €"**.
 5. **Resultado esperado**:
    - Se abre un modal de verificación bancaria reforzada 3D Secure solicitando el código de confirmación recibido en el móvil.

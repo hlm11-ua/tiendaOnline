@@ -328,7 +328,7 @@ export class CheckoutForm {
 
     if (btnTest3ds) {
       btnTest3ds.addEventListener('click', () => {
-        this.fillTestCard('4000 0000 0000 3000', '12/28', '123', 'Marcos Ortiz');
+        this.fillTestCard('4000 0000 0006 3000', '12/28', '123', 'Marcos Ortiz');
       });
     }
 
@@ -340,7 +340,7 @@ export class CheckoutForm {
 
     if (btnTestDenied) {
       btnTestDenied.addEventListener('click', () => {
-        this.fillTestCard('4000 0000 0000 0180', '12/28', '123', 'Javier Beltrán');
+        this.fillTestCard('4000 0000 0004 0180', '12/28', '123', 'Javier Beltrán');
       });
     }
 

@@ -41,6 +41,18 @@ async function request(path, options = {}) {
   }
 }
 
+// Fechas relativas al día de ejecución: con fechas fijas los pedidos acaban
+// saliendo del período "30_dias" y la prueba falla con el paso del tiempo.
+function fechaUtcHaceDias(dias, horas, minutos = 0) {
+  const fecha = new Date();
+  fecha.setUTCDate(fecha.getUTCDate() - dias);
+  fecha.setUTCHours(horas, minutos, 0, 0);
+  return fecha.toISOString();
+}
+
+const FECHA_P1 = fechaUtcHaceDias(3, 10);
+const DIA_P1 = FECHA_P1.slice(0, 10);
+
 describe('Batería de Validación Automatizada de Escenarios de quickstart.md (Feature 008)', () => {
   beforeEach(() => {
     store.reset();
@@ -52,7 +64,7 @@ describe('Batería de Validación Automatizada de Escenarios de quickstart.md (F
       clienteEmail: 'laura@example.com',
       total: 90.00,
       estado: CONSTANTS.ORDER_STATUS.PAID,
-      fechaCreacion: '2026-10-14T10:00:00.000Z',
+      fechaCreacion: FECHA_P1,
       lineas: [
         new OrderLine({ productoId: 'art-001', titulo: 'Jarrón de Cerámica Azul', precioUnitario: 45.00, cantidad: 2, subtotal: 90.00 })
       ]
@@ -64,7 +76,7 @@ describe('Batería de Validación Automatizada de Escenarios de quickstart.md (F
       clienteEmail: 'marcos@example.com',
       total: 140.00,
       estado: CONSTANTS.ORDER_STATUS.DELIVERED,
-      fechaCreacion: '2026-10-15T15:30:00.000Z',
+      fechaCreacion: fechaUtcHaceDias(2, 15, 30),
       lineas: [
         new OrderLine({ productoId: 'art-002', titulo: 'Manta de Lana Merina', precioUnitario: 140.00, cantidad: 1, subtotal: 140.00 })
       ]
@@ -76,7 +88,7 @@ describe('Batería de Validación Automatizada de Escenarios de quickstart.md (F
       clienteEmail: 'elena@example.com',
       total: 57.00,
       estado: CONSTANTS.ORDER_STATUS.IN_PREPARATION,
-      fechaCreacion: '2026-10-16T12:00:00.000Z',
+      fechaCreacion: fechaUtcHaceDias(1, 12),
       lineas: [
         new OrderLine({ productoId: 'art-003', titulo: 'Tabla de Corte en Madera', precioUnitario: 28.50, cantidad: 2, subtotal: 57.00 })
       ]
@@ -129,8 +141,8 @@ describe('Batería de Validación Automatizada de Escenarios de quickstart.md (F
   });
 
   it('Escenario 3: Filtrado por Rango Personalizado de Fechas (FR-002)', async () => {
-    // Filtrar únicamente el día 2026-10-14 (solo pedido p1)
-    const res = await request('/api/admin/ventas/resumen?periodo=personalizado&fechaInicio=2026-10-14&fechaFin=2026-10-14', {
+    // Filtrar únicamente el día del pedido p1 (hace 3 días)
+    const res = await request(`/api/admin/ventas/resumen?periodo=personalizado&fechaInicio=${DIA_P1}&fechaFin=${DIA_P1}`, {
       headers: { 'x-user-role': 'admin' }
     });
 
