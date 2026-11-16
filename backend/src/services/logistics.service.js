@@ -58,8 +58,8 @@ export class LogisticsService {
   static despacharPedido(codigoReferencia, { transportista, numeroSeguimiento, notas = null }) {
     const order = this.getOrderByReference(codigoReferencia);
 
-    // El pedido debe estar en preparación o pagado para poder despacharse
-    if (order.estado !== CONSTANTS.ORDER_STATUS.IN_PREPARATION && order.estado !== CONSTANTS.ORDER_STATUS.PAID) {
+    // Flujo secuencial (FR-002): solo se despacha un pedido que ya está "en preparación"
+    if (order.estado !== CONSTANTS.ORDER_STATUS.IN_PREPARATION) {
       throw new AppError(
         `No se puede despachar: el pedido se encuentra en estado "${order.estado}". Debe estar en preparación.`,
         400,

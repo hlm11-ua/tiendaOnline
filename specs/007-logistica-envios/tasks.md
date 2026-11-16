@@ -118,3 +118,11 @@ El alcance MVP para esta funcionalidad corresponde íntegramente a **User Story 
 2. Desarrollar la máquina de estados, asignación de tracking con transportista y generación de avisos automáticos.
 3. Validar con los 5 escenarios de prueba de [quickstart.md](./quickstart.md).
 4. Finalizar con la auditoría de idioma y ejecución de pruebas (Fase 4).
+
+---
+
+## Phase 5: Convergence
+
+- [X] T021 Rechazar el despacho de pedidos en estado "pagado" en `backend/src/services/logistics.service.js` (exigir "en_preparacion" antes de "salido_tienda") y ajustar las pruebas de `tests/contract/logistica-api.test.js` y `tests/integration/` que despachen sin preparar per FR-002 (contradicts)
+- [X] T022 Registrar los avisos de salida y de rectificación en el panel de la cuenta del comprador registrado y mostrarlos en `frontend/public/cuenta.html` (vía `backend/src/services/account-order.service.js` y `frontend/src/components/cuenta/`) per FR-004 (partial)
+- [X] T023 Ordenar el listado de pedidos del taller por estado y después por fecha en `backend/src/models/store.js` (`getOrdersByStatus`) per FR-001 (partial)

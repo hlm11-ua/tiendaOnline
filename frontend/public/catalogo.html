@@ -5,28 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Catálogo de Productos Artesanales | TiendaOnline</title>
   <meta name="description" content="Explora piezas artesanales únicas hechas a mano en España: cerámica, textil, madera y joyería con envío seguro en euros.">
-  <link rel="stylesheet" href="/src/styles/catalogo.css">
-  <link rel="stylesheet" href="/src/styles/resenas.css">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Tema común de la tienda (Feature 009) -->
+  <link rel="stylesheet" href="/src/styles/tema-ceramica.css">
+  <link rel="stylesheet" href="/src/styles/catalogo.css">
+  <link rel="stylesheet" href="/src/styles/resenas.css">
 </head>
 <body>
 
   <!-- Cabecera Principal -->
-  <header class="catalogo-header">
-    <div class="header-container">
-      <a href="/catalogo.html" class="logo-link" aria-label="TiendaOnline Artesanías - Inicio">
-        <span>TiendaOnline</span>
-        <span class="logo-badge">Artesanías</span>
+  <header class="site-header" role="banner">
+    <div class="site-header__inner">
+      <a href="/catalogo" class="site-header__brand" id="link-home" aria-label="TiendaOnline - Ir al catálogo">
+        <span class="site-header__logo" aria-hidden="true">🏺</span>
+        <span class="site-header__name">TiendaOnline</span>
       </a>
-
-      <nav class="header-nav" aria-label="Navegación principal">
-        <a href="/catalogo.html" class="nav-link active">Catálogo</a>
-        <a href="/carrito" class="nav-link">Cesta</a>
-        <a href="/logistica.html" class="nav-link">Envíos</a>
-        <a href="/cuenta" class="nav-link">Mi Cuenta</a>
-        <a href="/admin/catalogo.html" class="nav-link" id="nav-admin" hidden>Administración</a>
+      <nav class="site-header__nav" aria-label="Navegación principal">
+        <a href="/catalogo" class="site-header__link" aria-current="page">Catálogo</a>
+        <a href="/carrito" class="site-header__link">Cesta</a>
+        <a href="/logistica" class="site-header__link">Envíos</a>
+        <a href="/cuenta" class="site-header__link">Mi Cuenta</a>
+        <a href="/admin/catalogo" class="site-header__link" id="nav-admin" hidden>Administración</a>
       </nav>
     </div>
   </header>
@@ -119,24 +122,7 @@
 
   <!-- Controlador Frontend en ES Modules -->
   <script type="module" src="/src/components/catalogo/main.js"></script>
-
-  <!-- El enlace "Administración" solo se muestra al rol administrador (Feature 004) -->
-  <script type="module">
-    import { AccountApiService } from '/src/services/account-api.service.js';
-
-    const navAdmin = document.getElementById('nav-admin');
-    const accountService = new AccountApiService();
-
-    if (navAdmin) {
-      try {
-        const usuario = accountService.isAuthenticated()
-          ? await accountService.getMe()
-          : null;
-        navAdmin.hidden = usuario?.rol !== 'admin';
-      } catch {
-        navAdmin.hidden = true;
-      }
-    }
-  </script>
+  <!-- Enlace "Administración" visible solo para el rol administrador (Feature 009) -->
+  <script type="module" src="/src/components/site-header.js"></script>
 </body>
 </html>

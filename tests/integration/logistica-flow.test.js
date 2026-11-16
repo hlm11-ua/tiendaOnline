@@ -138,4 +138,53 @@ describe('Pruebas de Integración: Ciclo Logístico Completo de Envío y Notific
     assert.equal(resAvisos.body.avisos[1].tipo, 'rectificacion_tracking');
     assert.ok(resAvisos.body.avisos[1].cuerpoTexto.includes('SEUR-CORREGIDO-99'));
   });
+
+  it('Aviso en la cuenta: el comprador registrado ve los avisos de salida y rectificación en "Mis compras" (FR-004)', async () => {
+    const resRegistro = await request('/api/auth/registro', {
+      method: 'POST',
+      body: JSON.stringify({
+        nombre: 'Marta Alfarera',
+        email: 'marta.alfarera@example.com',
+        password: 'passwordSeguro123'
+      })
+    });
+    assert.equal(resRegistro.status, 201);
+    const token = resRegistro.body.sesion.token;
+
+    const pedido = new Order({
+      clienteNombre: 'Marta Alfarera',
+      clienteEmail: 'marta.alfarera@example.com',
+      cuentaId: resRegistro.body.usuario.id,
+      total: 64.00,
+      estado: CONSTANTS.ORDER_STATUS.PAID,
+      transaccionId: 'tx-flow-cuenta-001'
+    });
+    store.saveOrder(pedido);
+
+    await request(`/api/logistica/pedidos/${pedido.codigoReferencia}/preparar`, { method: 'POST' });
+    await request(`/api/logistica/pedidos/${pedido.codigoReferencia}/despachar`, {
+      method: 'POST',
+      body: JSON.stringify({ transportista: 'GLS', numeroSeguimiento: 'GLS-ES-554433' })
+    });
+    await request(`/api/logistica/pedidos/${pedido.codigoReferencia}/rectificar-tracking`, {
+      method: 'POST',
+      body: JSON.stringify({ transportista: 'GLS', numeroSeguimiento: 'GLS-ES-554434', motivo: 'Errata' })
+    });
+
+    const resHistorial = await request('/api/pedidos/mis-compras', {
+      headers: { Authorization: `Bearer ${token}`, 'x-user-role': '' }
+    });
+    assert.equal(resHistorial.status, 200);
+    const avisos = resHistorial.body.pedidos[0].avisosEnvio;
+    assert.equal(avisos.length, 2);
+    assert.equal(avisos[0].tipo, 'salida_almacen');
+    assert.equal(avisos[1].tipo, 'rectificacion_tracking');
+    assert.ok(avisos[1].cuerpoTexto.includes('GLS-ES-554434'));
+
+    const resDetalle = await request(`/api/pedidos/mis-compras/${pedido.codigoReferencia}`, {
+      headers: { Authorization: `Bearer ${token}`, 'x-user-role': '' }
+    });
+    assert.equal(resDetalle.status, 200);
+    assert.equal(resDetalle.body.avisosEnvio.length, 2);
+  });
 });

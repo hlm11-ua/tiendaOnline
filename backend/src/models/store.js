@@ -688,7 +688,17 @@ class MemoryStore {
       ? all.filter(o => o.estado === estado)
       : all;
 
-    return filtered.sort((a, b) => new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0));
+    // FR-001 (007): primero por estado según el flujo del taller, después por fecha (más reciente primero)
+    const ordenEstados = ['pagado', 'en_preparacion', 'salido_tienda', 'entregado'];
+    const rango = (estado) => {
+      const i = ordenEstados.indexOf(estado);
+      return i === -1 ? ordenEstados.length : i;
+    };
+
+    return filtered.sort((a, b) =>
+      (rango(a.estado) - rango(b.estado)) ||
+      (new Date(b.fechaCreacion || 0) - new Date(a.fechaCreacion || 0))
+    );
   }
 
   updateOrderStatus(codigoReferencia, nuevoEstado) {

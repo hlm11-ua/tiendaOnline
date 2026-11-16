@@ -73,7 +73,7 @@ export class ProductGrid {
           alt="${prod.titulo}" 
           class="product-image"
           loading="lazy"
-          onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'200\\' viewBox=\\'0 0 300 200\\'><rect fill=\\'%231e293b\\' width=\\'300\\' height=\\'200\\'/><text fill=\\'%2394a3b8\\' font-family=\\'sans-serif\\' font-size=\\'14\\' text-anchor=\\'middle\\' x=\\'150\\' y=\\'105\\'>Artesan\\u00EDa</text></svg>';"
+          onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'200\\' viewBox=\\'0 0 300 200\\'><rect fill=\\'%23E9DAC6\\' width=\\'300\\' height=\\'200\\'/><text fill=\\'%236A5242\\' font-family=\\'sans-serif\\' font-size=\\'14\\' text-anchor=\\'middle\\' x=\\'150\\' y=\\'105\\'>Artesan\\u00EDa</text></svg>';"
         >
         <span class="product-badge-stock ${stockBadgeClass}">
           ${stockBadgeText}

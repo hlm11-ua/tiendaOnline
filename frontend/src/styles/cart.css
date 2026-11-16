@@ -1,42 +1,4 @@
-/* ==========================================================================
-   TiendaOnline - Carrito de Compras Persistente (cart.css)
-   Feature 002: vista de cesta, avisos de reajuste y estado de cesta vacía
-   ========================================================================== */
 
-:root {
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-
-  /* Paleta cromática compartida con el resto de la tienda */
-  --bg-primary: #0b0f19;
-  --bg-secondary: #111827;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --card-border: rgba(255, 255, 255, 0.08);
-
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-
-  --accent-primary: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-
-  --success-color: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --success-border: rgba(16, 185, 129, 0.3);
-
-  --warning-color: #f59e0b;
-  --warning-bg: rgba(245, 158, 11, 0.12);
-  --warning-border: rgba(245, 158, 11, 0.3);
-
-  --error-color: #ef4444;
-  --error-bg: rgba(239, 68, 68, 0.12);
-  --error-border: rgba(239, 68, 68, 0.3);
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-}
 
 * {
   box-sizing: border-box;
@@ -75,55 +37,6 @@ body {
 }
 
 /* ==========================================================================
-   Header
-   ========================================================================== */
-.site-header {
-  background: rgba(17, 24, 39, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--card-border);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-
-.header-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: var(--text-main);
-}
-
-.brand-icon {
-  font-size: 1.4rem;
-}
-
-.brand-title {
-  font-weight: 700;
-  font-size: 1.15rem;
-}
-
-.header-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  border: 1px solid var(--card-border);
-  border-radius: 999px;
-  padding: 0.35rem 0.85rem;
-}
-
-/* ==========================================================================
    Contenido principal
    ========================================================================== */
 .main-content {
@@ -150,7 +63,7 @@ body {
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 25px -5px rgba(59, 42, 32, 0.14);
 }
 
 /* ==========================================================================
@@ -310,7 +223,7 @@ body {
 .cart-btn-menos:hover:not(:disabled),
 .cart-btn-mas:hover:not(:disabled) {
   background: var(--accent-primary);
-  color: #ffffff;
+  color: var(--text-on-accent);
 }
 
 .cart-btn-menos:disabled,
@@ -332,7 +245,7 @@ body {
 
 .cart-cantidad-input:focus {
   outline: none;
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(168, 75, 42, 0.15);
 }
 
 .cart-cantidad-limite {
@@ -378,7 +291,7 @@ body {
 .cart-empty-enlace {
   display: inline-block;
   background: var(--accent-gradient);
-  color: #ffffff;
+  color: var(--text-on-accent);
   text-decoration: none;
   font-weight: 600;
   border-radius: var(--radius-md);
@@ -459,7 +372,7 @@ body {
   display: block;
   width: 100%;
   background: var(--accent-gradient);
-  color: #ffffff;
+  color: var(--text-on-accent);
   border: none;
   border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
@@ -534,7 +447,7 @@ body {
 }
 
 .sugerencias-ver-mas {
-  color: #a5b4fc;
+  color: var(--accent-primary);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
@@ -602,7 +515,7 @@ body {
 
 .sugerencia-comprar {
   background: var(--accent-gradient);
-  color: #ffffff;
+  color: var(--text-on-accent);
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 600;

@@ -38,18 +38,20 @@ export class OrderHistoryComponent {
     }
   }
 
+  // Clases de estado compartidas con el resto de la tienda (tema-ceramica.css, FR-009 de la Feature 009)
   getBadgeClass(estado) {
     switch (estado) {
       case 'pendiente':
-        return 'badge-warning';
+        return 'badge-pendiente';
       case 'pagado':
+        return 'badge-pagado';
       case 'en_preparacion':
-        return 'badge-info';
+        return 'badge-en_preparacion';
       case 'salido_tienda':
       case 'salido de la tienda':
-        return 'badge-primary';
+        return 'badge-salido_tienda';
       case 'entregado':
-        return 'badge-success';
+        return 'badge-entregado';
       default:
         return 'badge-secondary';
     }
@@ -78,12 +80,13 @@ export class OrderHistoryComponent {
       const data = await this.accountService.getMisCompras();
       this.pedidos = data.pedidos || [];
 
-      // Firma de cambios: referencia, fase, tracking e importe de cada pedido
+      // Firma de cambios: referencia, fase, tracking, importe y avisos recibidos de cada pedido
       const firma = JSON.stringify(this.pedidos.map(p => [
         p.codigoReferencia,
         p.fase || p.estado,
         p.envio?.numeroSeguimiento || null,
-        p.total
+        p.total,
+        Array.isArray(p.avisosEnvio) ? p.avisosEnvio.length : 0
       ]));
       const cambiado = firma !== this.lastSignature;
       this.lastSignature = firma;
@@ -134,6 +137,72 @@ export class OrderHistoryComponent {
       clearInterval(this.autoRefreshTimer);
       this.autoRefreshTimer = null;
     }
+  }
+
+  escapeHtml(texto) {
+    return String(texto ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  getAvisoIcono(tipo) {
+    switch (tipo) {
+      case 'salida_almacen':
+        return '🚚';
+      case 'rectificacion_tracking':
+        return '✏️';
+      case 'confirmacion_entrega':
+        return '📦';
+      default:
+        return '✉️';
+    }
+  }
+
+  /**
+   * Buzón de avisos de envío de la cuenta (FR-004 de la Feature 007):
+   * reúne los avisos de salida, rectificación y entrega de todos los pedidos del comprador
+   */
+  renderBuzonAvisos() {
+    const avisos = this.pedidos
+      .flatMap(p => (Array.isArray(p.avisosEnvio) ? p.avisosEnvio : [])
+        .map(a => ({ ...a, codigoReferencia: a.codigoReferencia || p.codigoReferencia })))
+      .sort((a, b) => new Date(b.fechaEmision || 0) - new Date(a.fechaEmision || 0));
+
+    if (avisos.length === 0) {
+      return `
+        <section class="avisos-buzon" aria-labelledby="avisos-buzon-titulo">
+          <h3 id="avisos-buzon-titulo">Avisos de envío</h3>
+          <p class="avisos-vacio">Aún no has recibido avisos de envío. Te avisaremos aquí cuando tu pedido salga de la tienda.</p>
+        </section>
+      `;
+    }
+
+    const items = avisos.map(a => `
+      <li class="aviso-item aviso-${this.escapeHtml(a.tipo)}">
+        <span class="aviso-icono" aria-hidden="true">${this.getAvisoIcono(a.tipo)}</span>
+        <div class="aviso-contenido">
+          <strong class="aviso-asunto">${this.escapeHtml(a.asunto)}</strong>
+          <span class="aviso-meta">
+            Pedido ${this.escapeHtml(a.codigoReferencia)} · ${this.formatDate(a.fechaEmision)}
+          </span>
+          ${a.numeroSeguimiento ? `
+            <span class="aviso-tracking">
+              ${a.transportista ? `${this.escapeHtml(a.transportista)} · ` : ''}Código de seguimiento: <code>${this.escapeHtml(a.numeroSeguimiento)}</code>
+            </span>` : ''}
+        </div>
+      </li>
+    `).join('');
+
+    return `
+      <section class="avisos-buzon" aria-labelledby="avisos-buzon-titulo">
+        <h3 id="avisos-buzon-titulo">Avisos de envío (${avisos.length})</h3>
+        <ul class="avisos-lista">
+          ${items}
+        </ul>
+      </section>
+    `;
   }
 
   renderError(msg) {
@@ -223,6 +292,7 @@ export class OrderHistoryComponent {
             </tbody>
           </table>
         </div>
+        ${this.renderBuzonAvisos()}
       `;
     }
 
