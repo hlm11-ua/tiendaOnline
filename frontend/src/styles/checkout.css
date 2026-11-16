@@ -1,49 +1,4 @@
-/* ==========================================================================
-   TiendaOnline - Pasarela de Pago Seguro con Tarjeta (checkout.css)
-   Cumple con estándares de diseño moderno, accesibilidad y responsividad
-   ========================================================================== */
 
-:root {
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-
-  /* Paleta cromática */
-  --bg-primary: #0b0f19;
-  --bg-secondary: #111827;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-border-focus: rgba(99, 102, 241, 0.5);
-
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-
-  --accent-primary: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --accent-glow: rgba(99, 102, 241, 0.25);
-
-  --success-color: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --success-border: rgba(16, 185, 129, 0.3);
-
-  --warning-color: #f59e0b;
-  --warning-bg: rgba(245, 158, 11, 0.12);
-  --warning-border: rgba(245, 158, 11, 0.3);
-
-  --error-color: #ef4444;
-  --error-bg: rgba(239, 68, 68, 0.12);
-  --error-border: rgba(239, 68, 68, 0.3);
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-
-  --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-  --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-}
 
 * {
   box-sizing: border-box;
@@ -60,61 +15,6 @@ body {
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
-}
-
-/* ==========================================================================
-   Header de la Aplicación
-   ========================================================================== */
-.site-header {
-  background: rgba(17, 24, 39, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--card-border);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-
-.header-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.brand-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: var(--text-main);
-}
-
-.brand-icon {
-  font-size: 1.5rem;
-}
-
-.brand-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.header-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.3rem 0.75rem;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: 9999px;
-  color: #a5b4fc;
 }
 
 /* ==========================================================================
@@ -170,37 +70,37 @@ body {
 }
 
 .timer-normal {
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  color: #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid rgba(168, 75, 42, 0.25);
+  color: var(--text-main);
 }
 
 .timer-urgent {
   background: var(--warning-bg);
   border: 1px solid var(--warning-border);
-  color: #fef08a;
+  color: var(--warning-color);
   animation: pulse-border 1.5s infinite;
 }
 
 .timer-expired {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fca5a5;
+  color: var(--error-color);
 }
 
 @keyframes pulse-border {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 0 0 rgba(138, 90, 11, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    box-shadow: 0 0 0 6px rgba(138, 90, 11, 0);
   }
 }
 
 .btn-timer-simular {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #cbd5e1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
   font-size: 0.75rem;
   padding: 0.25rem 0.6rem;
   border-radius: var(--radius-sm);
@@ -209,8 +109,8 @@ body {
 }
 
 .btn-timer-simular:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  background: var(--bg-secondary);
+  color: var(--text-main);
 }
 
 /* ==========================================================================
@@ -244,8 +144,8 @@ body {
    Selector de Tarjetas de Prueba (Quickstart Assistant)
    ========================================================================== */
 .test-cards-panel {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px dashed rgba(99, 102, 241, 0.35);
+  background: var(--bg-secondary);
+  border: 1px dashed rgba(168, 75, 42, 0.35);
   border-radius: var(--radius-md);
   padding: 0.85rem 1rem;
   margin-bottom: 1.5rem;
@@ -257,7 +157,7 @@ body {
   gap: 0.4rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #a5b4fc;
+  color: var(--accent-primary);
   margin-bottom: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -270,9 +170,9 @@ body {
 }
 
 .btn-test-card {
-  background: rgba(30, 41, 59, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
   font-size: 0.78rem;
   padding: 0.35rem 0.65rem;
   border-radius: var(--radius-sm);
@@ -281,24 +181,24 @@ body {
 }
 
 .btn-test-card:hover {
-  background: rgba(99, 102, 241, 0.25);
-  border-color: rgba(99, 102, 241, 0.5);
-  color: #fff;
+  background: rgba(168, 75, 42, 0.25);
+  border-color: rgba(168, 75, 42, 0.5);
+  color: var(--text-main);
 }
 
 /* ==========================================================================
    Vista Previa Visual de Tarjeta Bancaria
    ========================================================================== */
 .card-visual-preview {
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  background: linear-gradient(135deg, #4A3326 0%, #6B4430 55%, var(--accent-hover) 100%);
   border-radius: var(--radius-md);
   padding: 1.25rem;
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 20px -5px rgba(59, 42, 32, 0.17);
   margin-bottom: 1.5rem;
-  color: #fff;
+  color: var(--text-on-accent);
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--card-border);
 }
 
 .card-visual-preview::after {
@@ -308,7 +208,7 @@ body {
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -319,13 +219,13 @@ body {
   text-transform: uppercase;
   text-align: right;
   margin-bottom: 0.85rem;
-  color: #e0e7ff;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .preview-chip {
   width: 36px;
   height: 28px;
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  background: linear-gradient(135deg, #D9B26A 0%, #A8823E 100%);
   border-radius: 4px;
   margin-bottom: 1rem;
 }
@@ -335,7 +235,7 @@ body {
   font-size: 1.15rem;
   letter-spacing: 0.12em;
   margin-bottom: 1rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 4px rgba(59, 42, 32, 0.14);
 }
 
 .preview-footer {
@@ -347,7 +247,7 @@ body {
 .preview-label {
   display: block;
   font-size: 0.65rem;
-  color: #a5b4fc;
+  color: rgba(255, 255, 255, 0.78);
   letter-spacing: 0.05em;
   margin-bottom: 2px;
 }
@@ -363,7 +263,7 @@ body {
 .fieldset-legend {
   font-size: 1.05rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--text-main);
   margin-bottom: 1rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid var(--card-border);
@@ -388,17 +288,17 @@ body {
   display: block;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #cbd5e1;
+  color: var(--text-muted);
   margin-bottom: 0.4rem;
 }
 
 .form-input {
   width: 100%;
   padding: 0.75rem 0.95rem;
-  background: rgba(15, 23, 42, 0.75);
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
-  color: #fff;
+  color: var(--text-main);
   font-size: 0.95rem;
   font-family: inherit;
   transition: all 0.2s ease;
@@ -406,9 +306,9 @@ body {
 
 .form-input:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-  background: rgba(15, 23, 42, 0.95);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(168, 75, 42, 0.25);
+  background: var(--card-bg);
 }
 
 .input-with-badge {
@@ -423,9 +323,9 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.2rem 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  color: #cbd5e1;
+  color: var(--text-muted);
 }
 
 .security-guarantee-note {
@@ -434,7 +334,7 @@ body {
   gap: 0.6rem;
   font-size: 0.8rem;
   color: var(--text-muted);
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--bg-secondary);
   padding: 0.75rem;
   border-radius: var(--radius-sm);
   margin-top: 1rem;
@@ -464,7 +364,7 @@ body {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: #fff;
+  color: var(--text-on-accent);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
@@ -480,14 +380,14 @@ body {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e2e8f0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: var(--bg-secondary);
+  color: var(--text-main);
 }
 
 .btn-submit-pay {
@@ -530,7 +430,7 @@ body {
 }
 
 .cart-preset-selector {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--card-bg);
   border-radius: var(--radius-md);
   padding: 0.85rem;
   margin-bottom: 1.25rem;
@@ -556,7 +456,7 @@ body {
   gap: 0.6rem;
   font-size: 0.85rem;
   cursor: pointer;
-  color: #e2e8f0;
+  color: var(--text-main);
 }
 
 .summary-totals {
@@ -578,7 +478,7 @@ body {
 .total-final {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   padding-top: 0.5rem;
 }
 
@@ -588,7 +488,7 @@ body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(59, 42, 32, 0.45);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -599,8 +499,8 @@ body {
 }
 
 .modal-3ds-card {
-  background: #1e293b;
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(168, 75, 42, 0.35);
   border-radius: var(--radius-lg);
   max-width: 480px;
   width: 100%;
@@ -622,7 +522,7 @@ body {
   gap: 0.4rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #818cf8;
+  color: var(--accent-primary);
 }
 
 .btn-close-modal {
@@ -646,7 +546,7 @@ body {
 }
 
 .summary-box-3ds {
-  background: rgba(15, 23, 42, 0.8);
+  background: var(--card-bg);
   border-radius: var(--radius-sm);
   padding: 0.85rem 1rem;
   margin-bottom: 1rem;
@@ -660,8 +560,8 @@ body {
 }
 
 .test-helper-3ds {
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: rgba(168, 75, 42, 0.12);
+  border: 1px solid rgba(168, 75, 42, 0.25);
   border-radius: var(--radius-sm);
   padding: 0.75rem;
   font-size: 0.82rem;
@@ -673,9 +573,9 @@ body {
 }
 
 .btn-quick-fill {
-  background: #4f46e5;
+  background: var(--accent-primary);
   border: none;
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: 0.75rem;
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
@@ -737,7 +637,7 @@ body {
 }
 
 .receipt-status-banner {
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
@@ -756,7 +656,7 @@ body {
 
 .ref-value {
   font-size: 1.15rem;
-  color: #818cf8;
+  color: var(--accent-primary);
 }
 
 .badge {
@@ -777,7 +677,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--bg-secondary);
   padding: 1.25rem;
   border-radius: var(--radius-md);
   margin-bottom: 1.5rem;
@@ -786,7 +686,7 @@ body {
 .meta-title {
   font-size: 0.85rem;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
   letter-spacing: 0.05em;
 }
@@ -807,7 +707,7 @@ body {
 
 .receipt-table td {
   padding: 0.85rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--card-border);
   font-size: 0.95rem;
 }
 
@@ -819,7 +719,7 @@ body {
 
 .total-amount {
   font-size: 1.35rem;
-  color: #10b981;
+  color: var(--success-color);
 }
 
 .receipt-footer-notes {
@@ -848,7 +748,7 @@ body {
 .alert-error {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fca5a5;
+  color: var(--error-color);
 }
 
 .hidden {
@@ -890,8 +790,8 @@ body {
 .spinner-sm {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+  border: 2px solid var(--card-border);
+  border-top-color: var(--card-border);
   border-radius: 50%;
   display: inline-block;
   animation: spin 0.8s linear infinite;
@@ -941,7 +841,7 @@ body {
 .checkout-empty-state .empty-btn {
   display: inline-block;
   background: var(--accent-gradient);
-  color: #ffffff;
+  color: var(--text-on-accent);
   text-decoration: none;
   font-weight: 600;
   border-radius: var(--radius-md);
@@ -967,7 +867,7 @@ body {
 }
 
 .error-cart-link {
-  color: #fca5a5;
+  color: var(--error-color);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -977,23 +877,23 @@ body {
    ========================================================================== */
 @media print {
   body {
-    background: #fff;
-    color: #000;
+    background: var(--card-bg);
+    color: var(--text-main);
   }
-  .site-header, .receipt-actions, .btn-timer-simular, .test-cards-panel {
+   .receipt-actions, .btn-timer-simular, .test-cards-panel {
     display: none !important;
   }
   .receipt-card {
     border: 1px solid #ccc;
     box-shadow: none;
-    background: #fff;
-    color: #000;
+    background: var(--card-bg);
+    color: var(--text-main);
   }
   .receipt-table td, .receipt-table th {
-    color: #000;
+    color: var(--text-main);
     border-color: #ccc;
   }
   .ref-value, .total-amount {
-    color: #000 !important;
+    color: var(--text-main) !important;
   }
 }

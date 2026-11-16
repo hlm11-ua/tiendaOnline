@@ -34,7 +34,7 @@ Conjunto cerrado de variables CSS definidas una sola vez en `frontend/src/styles
 **Validation rules**:
 - Cada par texto/fondo usado debe cumplir 4,5:1 (FR-007).
 - Ninguna hoja de página redefine estas variables en su propio `:root`.
-- No aparecen en ninguna hoja ni componente los valores retirados: `#4f46e5`, `#4338ca`, `#7c3aed`, `#6366f1`, `#818cf8`, `#a5b4fc`, `#8b5cf6`, `#0b0f19`, `#111827`, `#1f2937`, `rgba(30, 41, 59, …)`, `rgba(17, 24, 39, …)`, `rgba(15, 23, 42, …)`, `rgba(99, 102, 241, …)`, `rgba(79, 70, 229, …)` (SC-004).
+- No aparecen en ninguna hoja ni componente los valores retirados: `#4f46e5`, `#4338ca`, `#7c3aed`, `#6366f1`, `#818cf8`, `#a5b4fc`, `#8b5cf6`, `#0b0f19`, `#111827`, `#1f2937`, `#1e293b`, `rgba(30, 41, 59, …)`, `rgba(17, 24, 39, …)`, `rgba(15, 23, 42, …)`, `rgba(99, 102, 241, …)`, `rgba(79, 70, 229, …)` (SC-004).
 
 ---
 

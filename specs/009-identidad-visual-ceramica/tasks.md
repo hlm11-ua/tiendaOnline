@@ -26,8 +26,8 @@ Aplicación web: `frontend/public/` (páginas), `frontend/src/styles/` (hojas), 
 
 **Propósito**: Crear la hoja de tema con los tokens de la paleta, que todo lo demás consume.
 
-- [ ] T001 Crear `frontend/src/styles/tema-ceramica.css` con el bloque `:root` de tokens de [data-model.md](./data-model.md#entidad-1-paleta-de-colores-tierra-tokens): fondos, superficies, bordes, texto (incluido `--text-on-accent: #FFFFFF`), acento (`--accent-primary #A84B2A`, `--accent-hover #8A3B1F`, `--accent-gradient`, `--accent-soft` terracota al 12%, `--accent-artisan`), éxito/aviso/error con sus `-bg` y `-border`, `--status-pendiente|pagado|preparacion|salido|entregado`, todos los alias existentes (`--normal-*`, `--danger-*`, `--stock-in-*`, `--stock-out-*`, `--pending-*`, `--prep-*`, `--shipped-*`, `--bg-card`, `--bg-card-hover`, `--border-color`, `--border-focus`, `--card-border-focus`, `--accent-glow`), tipografías (`--font-family` Nunito Sans, `--font-heading` Fraunces, `--font-mono` JetBrains Mono, con alternativas del sistema), radios y sombras marrones suaves
-- [ ] T002 Añadir a `frontend/src/styles/tema-ceramica.css` los estilos base: `body` (fondo `--bg-primary`, color `--text-main`, `--font-family`), `h1–h4` con `--font-heading`, enlaces en `--accent-primary`, `:focus-visible` con contorno terracota y `::selection` en `--accent-soft`
+- [X] T001 Crear `frontend/src/styles/tema-ceramica.css` con el bloque `:root` de tokens de [data-model.md](./data-model.md#entidad-1-paleta-de-colores-tierra-tokens): fondos, superficies, bordes, texto (incluido `--text-on-accent: #FFFFFF`), acento (`--accent-primary #A84B2A`, `--accent-hover #8A3B1F`, `--accent-gradient`, `--accent-soft` terracota al 12%, `--accent-artisan`), éxito/aviso/error con sus `-bg` y `-border`, `--status-pendiente|pagado|preparacion|salido|entregado`, todos los alias existentes (`--normal-*`, `--danger-*`, `--stock-in-*`, `--stock-out-*`, `--pending-*`, `--prep-*`, `--shipped-*`, `--bg-card`, `--bg-card-hover`, `--border-color`, `--border-focus`, `--card-border-focus`, `--accent-glow`), tipografías (`--font-family` Nunito Sans, `--font-heading` Fraunces, `--font-mono` JetBrains Mono, con alternativas del sistema), radios y sombras marrones suaves
+- [X] T002 Añadir a `frontend/src/styles/tema-ceramica.css` los estilos base: `body` (fondo `--bg-primary`, color `--text-main`, `--font-family`), `h1–h4` con `--font-heading`, enlaces en `--accent-primary`, `:focus-visible` con contorno terracota y `::selection` en `--accent-soft`
 
 ---
 
@@ -37,10 +37,10 @@ Aplicación web: `frontend/public/` (páginas), `frontend/src/styles/` (hojas), 
 
 **⚠️ CRITICAL**: Ninguna historia puede validarse hasta completar esta fase.
 
-- [ ] T003 [P] Sustituir el `<link>` de Google Fonts y enlazar `/src/styles/tema-ceramica.css` antes de la hoja propia en `frontend/public/catalogo.html`, `frontend/public/cart.html` y `frontend/public/checkout.html`, siguiendo [contracts/cabecera-comun.md §1](./contracts/cabecera-comun.md#1-inclusión-en-cada-página)
-- [ ] T004 [P] Ídem en `frontend/public/cuenta.html`, `frontend/public/logistica.html`, `frontend/public/admin/catalogo.html` y `frontend/public/admin/ventas.html`
-- [ ] T005 [P] Eliminar el bloque `:root` de colores, tipografías, radios y sombras de `frontend/src/styles/catalogo.css`, `frontend/src/styles/cart.css` y `frontend/src/styles/checkout.css` (los valores pasan a venir del tema)
-- [ ] T006 [P] Eliminar el bloque `:root` de `frontend/src/styles/cuenta.css`, `frontend/src/styles/logistica.css` y `frontend/src/styles/admin-catalogo.css`
+- [X] T003 [P] Sustituir el `<link>` de Google Fonts y enlazar `/src/styles/tema-ceramica.css` antes de la hoja propia en `frontend/public/catalogo.html`, `frontend/public/cart.html` y `frontend/public/checkout.html`, siguiendo [contracts/cabecera-comun.md §1](./contracts/cabecera-comun.md#1-inclusión-en-cada-página)
+- [X] T004 [P] Ídem en `frontend/public/cuenta.html`, `frontend/public/logistica.html`, `frontend/public/admin/catalogo.html` y `frontend/public/admin/ventas.html`
+- [X] T005 [P] Eliminar el bloque `:root` de colores, tipografías, radios y sombras de `frontend/src/styles/catalogo.css`, `frontend/src/styles/cart.css` y `frontend/src/styles/checkout.css` (los valores pasan a venir del tema)
+- [X] T006 [P] Eliminar el bloque `:root` de `frontend/src/styles/cuenta.css`, `frontend/src/styles/logistica.css` y `frontend/src/styles/admin-catalogo.css`
 
 **Checkpoint**: Las 7 páginas cargan el tema; los elementos que ya usaban variables aparecen en tonos tierra.
 
@@ -54,17 +54,17 @@ Aplicación web: `frontend/public/` (páginas), `frontend/src/styles/` (hojas), 
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T007 [US1] Crear `tests/integration/identidad-visual.test.js` (mismo patrón que `tests/integration/static-serving.test.js`: `app.listen(0)` + `fetch`) que, para `/catalogo`, `/carrito`, `/checkout`, `/cuenta`, `/logistica`, `/admin/catalogo` y `/admin/ventas`, compruebe que el HTML contiene `tema-ceramica.css`, `class="site-header"`, los enlaces `href="/catalogo"`, `href="/carrito"`, `href="/logistica"`, `href="/cuenta"`, `id="nav-admin"` y exactamente un `aria-current="page"`; y que las dos páginas de administración contienen `class="admin-subnav"`. Verificar que falla antes de T009–T013
+- [X] T007 [US1] Crear `tests/integration/identidad-visual.test.js` (mismo patrón que `tests/integration/static-serving.test.js`: `app.listen(0)` + `fetch`) que, para `/catalogo`, `/carrito`, `/checkout`, `/cuenta`, `/logistica`, `/admin/catalogo` y `/admin/ventas`, compruebe que el HTML contiene `tema-ceramica.css`, `class="site-header"`, los enlaces `href="/catalogo"`, `href="/carrito"`, `href="/logistica"`, `href="/cuenta"`, `id="nav-admin"` y exactamente un `aria-current="page"`; y que las dos páginas de administración contienen `class="admin-subnav"`. Verificar que falla antes de T009–T013
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Añadir a `frontend/src/styles/tema-ceramica.css` los estilos de `.site-header` (fondo blanco cálido, borde inferior arena, fija arriba), `.site-header__inner`, `__brand`, `__logo`, `__name` (Fraunces), `__nav`, `__link` (color `--text-muted`, hover `--accent-primary`), `__link[aria-current="page"]` (color terracota + subrayado o fondo `--accent-soft`), `.admin-subnav` y `.admin-subnav__link`, y el ajuste a dos filas sin desplazamiento horizontal por debajo de 720 px (research §7)
-- [ ] T009 [P] [US1] Crear `frontend/src/components/site-header.js` según [contracts/cabecera-comun.md §3](./contracts/cabecera-comun.md#3-comportamiento-de-site-headerjs): si `#nav-admin` está oculto, usar `AccountApiService` (`isAuthenticated()` + `getMe()`) para mostrarlo solo cuando `rol === 'admin'`, y ocultarlo ante cualquier error
-- [ ] T010 [P] [US1] En `frontend/public/catalogo.html`, sustituir la cabecera `catalogo-header` por el marcado común con `aria-current="page"` en "Catálogo", eliminar el `<script type="module">` en línea que gestiona `nav-admin` y añadir `<script type="module" src="/src/components/site-header.js">`
-- [ ] T011 [P] [US1] En `frontend/public/cart.html` y `frontend/public/checkout.html`, sustituir la cabecera propia por el marcado común con `aria-current="page"` en "Cesta"; trasladar el distintivo "🧺 Cesta de Compras Persistente" y "🔒 Pasarela Bancaria Segura (PSD2 / TLS)" al inicio del `<main>` como etiqueta informativa (conservar sus IDs `badge-cesta` y `badge-seguridad`); añadir `site-header.js`
-- [ ] T012 [P] [US1] En `frontend/public/cuenta.html` y `frontend/public/logistica.html`, sustituir la cabecera por el marcado común con `aria-current="page"` en "Mi Cuenta" y "Envíos" respectivamente; en `logistica.html` eliminar el script en línea de `nav-admin` y añadir `site-header.js`; en `cuenta.html` mantener `setAdminNav` (sin `site-header.js`)
-- [ ] T013 [P] [US1] En `frontend/public/admin/catalogo.html` y `frontend/public/admin/ventas.html`, sustituir la cabecera por el marcado común con `#nav-admin` visible y `aria-current="page"`, y añadir debajo la `.admin-subnav` con "Catálogo e Inventario", "Informes de Ventas" y "Gestión Logística" marcando la sección actual; conservar el indicador "👤 Administrador" dentro de la subnavegación
-- [ ] T014 [P] [US1] Eliminar de `frontend/src/styles/catalogo.css`, `cart.css`, `checkout.css`, `cuenta.css`, `logistica.css` y `admin-catalogo.css` las reglas de las cabeceras antiguas (`.catalogo-header`, `.site-header`, `.header-container`, `.brand-*`, `.logo-*`, `.badge-admin`, `.header-nav`, `.nav-link`, `.header-badge`, `.user-indicator`) que ya no se usan o que entran en conflicto con el tema; mantener el estilo de `.header-badge` reubicado como etiqueta informativa
+- [X] T008 [US1] Añadir a `frontend/src/styles/tema-ceramica.css` los estilos de `.site-header` (fondo blanco cálido, borde inferior arena, fija arriba), `.site-header__inner`, `__brand`, `__logo`, `__name` (Fraunces), `__nav`, `__link` (color `--text-muted`, hover `--accent-primary`), `__link[aria-current="page"]` (color terracota + subrayado o fondo `--accent-soft`), `.admin-subnav` y `.admin-subnav__link`, y el ajuste a dos filas sin desplazamiento horizontal por debajo de 720 px (research §7)
+- [X] T009 [P] [US1] Crear `frontend/src/components/site-header.js` según [contracts/cabecera-comun.md §3](./contracts/cabecera-comun.md#3-comportamiento-de-site-headerjs): si `#nav-admin` está oculto, usar `AccountApiService` (`isAuthenticated()` + `getMe()`) para mostrarlo solo cuando `rol === 'admin'`, y ocultarlo ante cualquier error
+- [X] T010 [P] [US1] En `frontend/public/catalogo.html`, sustituir la cabecera `catalogo-header` por el marcado común con `aria-current="page"` en "Catálogo", eliminar el `<script type="module">` en línea que gestiona `nav-admin` y añadir `<script type="module" src="/src/components/site-header.js">`
+- [X] T011 [P] [US1] En `frontend/public/cart.html` y `frontend/public/checkout.html`, sustituir la cabecera propia por el marcado común con `aria-current="page"` en "Cesta"; trasladar el distintivo "🧺 Cesta de Compras Persistente" y "🔒 Pasarela Bancaria Segura (PSD2 / TLS)" al inicio del `<main>` como etiqueta informativa (conservar sus IDs `badge-cesta` y `badge-seguridad`); añadir `site-header.js`
+- [X] T012 [P] [US1] En `frontend/public/cuenta.html` y `frontend/public/logistica.html`, sustituir la cabecera por el marcado común con `aria-current="page"` en "Mi Cuenta" y "Envíos" respectivamente; en `logistica.html` eliminar el script en línea de `nav-admin` y añadir `site-header.js`; en `cuenta.html` mantener `setAdminNav` (sin `site-header.js`)
+- [X] T013 [P] [US1] En `frontend/public/admin/catalogo.html` y `frontend/public/admin/ventas.html`, sustituir la cabecera por el marcado común con `#nav-admin` visible y `aria-current="page"`, y añadir debajo la `.admin-subnav` con "Catálogo e Inventario", "Informes de Ventas" y "Gestión Logística" marcando la sección actual; conservar el indicador "👤 Administrador" dentro de la subnavegación
+- [X] T014 [P] [US1] Eliminar de `frontend/src/styles/catalogo.css`, `cart.css`, `checkout.css`, `cuenta.css`, `logistica.css` y `admin-catalogo.css` las reglas de las cabeceras antiguas (`.catalogo-header`, `.site-header`, `.header-container`, `.brand-*`, `.logo-*`, `.badge-admin`, `.header-nav`, `.nav-link`, `.header-badge`, `.user-indicator`) que ya no se usan o que entran en conflicto con el tema; mantener el estilo de `.header-badge` reubicado como etiqueta informativa
 
 **Checkpoint**: US1 completa. T007 pasa y los Escenarios 1 y 2 del quickstart se cumplen.
 
@@ -78,20 +78,20 @@ Aplicación web: `frontend/public/` (páginas), `frontend/src/styles/` (hojas), 
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T015 [US2] Ampliar `tests/integration/identidad-visual.test.js` para descargar cada hoja de `/src/styles/` y comprobar que no contiene ningún color retirado de la lista de [data-model.md](./data-model.md#entidad-1-paleta-de-colores-tierra-tokens) (comparación sin distinguir mayúsculas ni espacios en `rgba(...)`), y que solo `tema-ceramica.css` define `--accent-primary:`
+- [X] T015 [US2] Ampliar `tests/integration/identidad-visual.test.js` para descargar cada hoja de `/src/styles/` y comprobar que no contiene ningún color retirado de la lista de [data-model.md](./data-model.md#entidad-1-paleta-de-colores-tierra-tokens) (comparación sin distinguir mayúsculas ni espacios en `rgba(...)`), y que solo `tema-ceramica.css` define `--accent-primary:`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Sustituir los colores fijos por variables del tema en `frontend/src/styles/catalogo.css` (incluidas tarjetas de producto, chips de categoría, filtros, indicadores de stock y estado vacío): blancos de texto → `--text-main`/`--text-on-accent` según el fondo; `rgba(255,255,255,…)` de bordes/fondos → `--card-border`/`--bg-secondary`; índigo/violeta → `--accent-*`; fondos oscuros → `--bg-*`/`--card-bg`; sombras negras → `--shadow-*`
-- [ ] T017 [P] [US2] Ídem en `frontend/src/styles/resenas.css` (modal de reseñas, estrellas en `--accent-artisan`, formulario)
-- [ ] T018 [P] [US2] Ídem en `frontend/src/styles/cart.css`
-- [ ] T019 [P] [US2] Ídem en `frontend/src/styles/checkout.css` (formulario de tarjeta, temporizador `.reservation-badge`, recibo y modal 3D Secure); mantener la cadena `--accent-primary` en el archivo mediante `var(--accent-primary)`
-- [ ] T020 [P] [US2] Ídem en `frontend/src/styles/cuenta.css` (formularios de acceso, historial de pedidos, stepper de fases)
-- [ ] T021 [P] [US2] Ídem en `frontend/src/styles/logistica.css` (tabla de pedidos, pestañas de filtro, modal de despacho, visor de avisos, vista de seguimiento)
-- [ ] T022 [P] [US2] Ídem en `frontend/src/styles/admin-catalogo.css` (tabla de productos, formulario, gestor de categorías, alertas de stock, bloqueo de acceso)
-- [ ] T023 [P] [US2] Ídem en `frontend/src/styles/admin-ventas.css`, con las series de gráficos en terracota, arcilla oscuro `#7A5C3E`, oliva y ocre (research §6)
-- [ ] T024 [P] [US2] Sustituir colores en línea por `var(--…)` en `frontend/src/components/admin/admin-access-guard.js`, `admin/product-form.js`, `admin/product-list-table.js` y `admin/sales-report-view.js`
-- [ ] T025 [P] [US2] Sustituir colores en línea por `var(--…)` en `frontend/src/components/catalogo/empty-state.js`, `resenas/product-reviews-modal.js` y `resenas/review-form.js`
+- [X] T016 [P] [US2] Sustituir los colores fijos por variables del tema en `frontend/src/styles/catalogo.css` (incluidas tarjetas de producto, chips de categoría, filtros, indicadores de stock y estado vacío): blancos de texto → `--text-main`/`--text-on-accent` según el fondo; `rgba(255,255,255,…)` de bordes/fondos → `--card-border`/`--bg-secondary`; índigo/violeta → `--accent-*`; fondos oscuros → `--bg-*`/`--card-bg`; sombras negras → `--shadow-*`
+- [X] T017 [P] [US2] Ídem en `frontend/src/styles/resenas.css` (modal de reseñas, estrellas en `--accent-artisan`, formulario)
+- [X] T018 [P] [US2] Ídem en `frontend/src/styles/cart.css`
+- [X] T019 [P] [US2] Ídem en `frontend/src/styles/checkout.css` (formulario de tarjeta, temporizador `.reservation-badge`, recibo y modal 3D Secure); mantener la cadena `--accent-primary` en el archivo mediante `var(--accent-primary)`
+- [X] T020 [P] [US2] Ídem en `frontend/src/styles/cuenta.css` (formularios de acceso, historial de pedidos, stepper de fases)
+- [X] T021 [P] [US2] Ídem en `frontend/src/styles/logistica.css` (tabla de pedidos, pestañas de filtro, modal de despacho, visor de avisos, vista de seguimiento)
+- [X] T022 [P] [US2] Ídem en `frontend/src/styles/admin-catalogo.css` (tabla de productos, formulario, gestor de categorías, alertas de stock, bloqueo de acceso)
+- [X] T023 [P] [US2] Ídem en `frontend/src/styles/admin-ventas.css`, con las series de gráficos en terracota, arcilla oscuro `#7A5C3E`, oliva y ocre (research §6)
+- [X] T024 [P] [US2] Sustituir colores en línea por `var(--…)` en `frontend/src/components/admin/admin-access-guard.js`, `admin/product-form.js`, `admin/product-list-table.js` y `admin/sales-report-view.js`
+- [X] T025 [P] [US2] Sustituir colores en línea por `var(--…)` en `frontend/src/components/catalogo/empty-state.js`, `resenas/product-reviews-modal.js` y `resenas/review-form.js`
 
 **Checkpoint**: US2 completa. T015 pasa y los Escenarios 3 y 4 del quickstart se cumplen.
 
@@ -105,13 +105,13 @@ Aplicación web: `frontend/public/` (páginas), `frontend/src/styles/` (hojas), 
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T026 [US3] Ampliar `tests/integration/identidad-visual.test.js` para comprobar que `cuenta.css` y `logistica.css` colorean las etiquetas de estado mediante `var(--status-…)` y no con valores propios
+- [X] T026 [US3] Ampliar `tests/integration/identidad-visual.test.js` para comprobar que `cuenta.css` y `logistica.css` colorean las etiquetas de estado mediante `var(--status-…)` y no con valores propios
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Añadir a `frontend/src/styles/tema-ceramica.css` los estilos base compartidos de botones principal/secundario/peligro, campos (`input`, `select`, `textarea` con foco terracota), tablas (cabecera arcilla, filas con separador arena), tarjetas, mensajes de éxito/aviso/error, modales (fondo blanco cálido, velo `rgba(59, 42, 32, 0.45)`) y etiquetas de estado `.status-badge` por estado usando `--status-*`
-- [ ] T028 [P] [US3] Alinear en `frontend/src/styles/cuenta.css` y `frontend/src/styles/logistica.css` las clases de estado de pedido (stepper de fases, `badge-*`/`status-*`) al mapa `--status-*`, de modo que "salido de la tienda" y el resto tengan el mismo color en ambas páginas (FR-009)
-- [ ] T029 [P] [US3] Unificar en `frontend/src/styles/cart.css`, `checkout.css`, `cuenta.css`, `logistica.css`, `admin-catalogo.css` y `catalogo.css` los radios, alturas, pesos tipográficos y estados hover/focus de botones y campos con los del tema, eliminando las reglas duplicadas que contradigan T027
+- [X] T027 [US3] Añadir a `frontend/src/styles/tema-ceramica.css` los estilos base compartidos de botones principal/secundario/peligro, campos (`input`, `select`, `textarea` con foco terracota), tablas (cabecera arcilla, filas con separador arena), tarjetas, mensajes de éxito/aviso/error, modales (fondo blanco cálido, velo `rgba(59, 42, 32, 0.45)`) y etiquetas de estado `.status-badge` por estado usando `--status-*`
+- [X] T028 [P] [US3] Alinear en `frontend/src/styles/cuenta.css` y `frontend/src/styles/logistica.css` las clases de estado de pedido (stepper de fases, `badge-*`/`status-*`) al mapa `--status-*`, de modo que "salido de la tienda" y el resto tengan el mismo color en ambas páginas (FR-009)
+- [X] T029 [P] [US3] Unificar en `frontend/src/styles/cart.css`, `checkout.css`, `cuenta.css`, `logistica.css`, `admin-catalogo.css` y `catalogo.css` los radios, alturas, pesos tipográficos y estados hover/focus de botones y campos con los del tema, eliminando las reglas duplicadas que contradigan T027
 
 **Checkpoint**: Las tres historias funcionan y se validan por separado.
 
@@ -119,11 +119,11 @@ Aplicación web: `frontend/public/` (páginas), `frontend/src/styles/` (hojas), 
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T030 [P] Revisar en navegador a 375 px de ancho las 7 páginas y corregir en la hoja correspondiente cualquier desplazamiento horizontal (FR-010, SC-007)
-- [ ] T031 [P] Verificar con un comprobador de contraste los pares texto/fondo reales de cada página (incluidos texto sobre `--accent-soft` y etiquetas de estado) y ajustar los tokens en `frontend/src/styles/tema-ceramica.css` si alguno baja de 4,5:1 (FR-007)
-- [ ] T032 [P] Auditar que los textos nuevos de la cabecera y la subnavegación están en `es-ES` y que no se ha modificado ningún texto, precio ni flujo existente (Principios II y III, FR-011)
-- [ ] T033 Ejecutar `npm test` y confirmar que toda la batería existente y `tests/integration/identidad-visual.test.js` pasan (SC-005)
-- [ ] T034 Recorrer manualmente los 7 escenarios de `specs/009-identidad-visual-ceramica/quickstart.md`
+- [X] T030 [P] Revisar en navegador a 375 px de ancho las 7 páginas y corregir en la hoja correspondiente cualquier desplazamiento horizontal (FR-010, SC-007)
+- [X] T031 [P] Verificar con un comprobador de contraste los pares texto/fondo reales de cada página (incluidos texto sobre `--accent-soft` y etiquetas de estado) y ajustar los tokens en `frontend/src/styles/tema-ceramica.css` si alguno baja de 4,5:1 (FR-007)
+- [X] T032 [P] Auditar que los textos nuevos de la cabecera y la subnavegación están en `es-ES` y que no se ha modificado ningún texto, precio ni flujo existente (Principios II y III, FR-011)
+- [X] T033 Ejecutar `npm test` y confirmar que toda la batería existente y `tests/integration/identidad-visual.test.js` pasan (SC-005)
+- [X] T034 Recorrer manualmente los 7 escenarios de `specs/009-identidad-visual-ceramica/quickstart.md`
 
 ---
 
@@ -200,3 +200,12 @@ T024 componentes admin  | T025 componentes catálogo/reseñas
 - [P] = archivos distintos, sin dependencias pendientes.
 - Hacer commit tras cada fase o grupo lógico.
 - Ninguna tarea toca `backend/`.
+
+### Notas de implementación (2026-11-16)
+
+- **T012**: `logistica.html` conserva la gestión de `#nav-admin` dentro de su propio `init()` (que además decide si mostrar el panel del taller), igual que `cuenta.html` con `setAdminNav`; no carga `site-header.js` para no consultar el rol dos veces.
+- **T026**: la comprobación de Mi Cuenta se hace sobre `order-history.js`, que ahora usa las clases `badge-<estado>` del tema; `cuenta.css` ya no define colores por estado.
+- **Estado "pendiente"**: pasa a marrón neutro y "salido de la tienda" a mostaza, para distinguirlos (research.md §2 actualizado).
+- **Encontrado en la revisión visual y corregido**: SVG de imagen de respaldo con colores codificados (`%231e293b`) en `product-grid.js` y `cart.html`; estilos en línea de `checkout.html`; botones sin tipografía heredada; `.btn` sin relleno por defecto; cabecera por encima de los modales (`z-index`); desbordamiento horizontal de `/admin/catalogo` por debajo de 1024 px y de las métricas de stock en móvil; contraste de `.badge-category` (4,48) y de la etiqueta "En stock" sobre la foto (4,00).
+- **T033**: con `node --test --test-concurrency=1` pasan 192/196. Las 4 fallas son de informes de ventas (008) y ya fallaban en `main`. En ejecución paralela aparecen además cortes `ECONNRESET` que no dependen de esta feature.
+- **Fuera de alcance, detectado**: las tarjetas de prueba "3DS (3000)" y "Denegada (0180)" del checkout no superan la validación Luhn y se rechazan como "número de tarjeta no válido".
