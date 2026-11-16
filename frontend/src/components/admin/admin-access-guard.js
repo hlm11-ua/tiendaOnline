@@ -22,14 +22,15 @@ const GUARD_CSS = `
     padding: 2rem;
   }
   .admin-access-denied__card {
+    box-shadow: var(--shadow-card);
     max-width: 460px;
     width: 100%;
     text-align: center;
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
     padding: 2.5rem 2rem;
-    color: #e2e8f0;
+    color: var(--text-main);
   }
   .admin-access-denied__icon {
     font-size: 3rem;
@@ -39,13 +40,13 @@ const GUARD_CSS = `
     font-size: 1.35rem;
     font-weight: 700;
     margin: 0 0 0.75rem;
-    color: #f8fafc;
+    color: var(--text-main);
   }
   .admin-access-denied__text {
     font-size: 0.95rem;
     line-height: 1.6;
     margin: 0 0 1.5rem;
-    color: #94a3b8;
+    color: var(--text-muted);
   }
   .admin-access-denied__actions {
     display: flex;
@@ -56,18 +57,18 @@ const GUARD_CSS = `
   .admin-access-denied__btn {
     display: inline-block;
     padding: 0.6rem 1.2rem;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #ffffff;
+    background: var(--accent-primary);
+    color: var(--text-on-accent);
     border: none;
     cursor: pointer;
   }
   .admin-access-denied__btn--secondary {
-    background: rgba(148, 163, 184, 0.15);
-    color: #e2e8f0;
+    background: var(--bg-secondary);
+    color: var(--text-main);
   }
 `;
 

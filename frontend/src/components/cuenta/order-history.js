@@ -38,18 +38,20 @@ export class OrderHistoryComponent {
     }
   }
 
+  // Clases de estado compartidas con el resto de la tienda (tema-ceramica.css, FR-009 de la Feature 009)
   getBadgeClass(estado) {
     switch (estado) {
       case 'pendiente':
-        return 'badge-warning';
+        return 'badge-pendiente';
       case 'pagado':
+        return 'badge-pagado';
       case 'en_preparacion':
-        return 'badge-info';
+        return 'badge-en_preparacion';
       case 'salido_tienda':
       case 'salido de la tienda':
-        return 'badge-primary';
+        return 'badge-salido_tienda';
       case 'entregado':
-        return 'badge-success';
+        return 'badge-entregado';
       default:
         return 'badge-secondary';
     }

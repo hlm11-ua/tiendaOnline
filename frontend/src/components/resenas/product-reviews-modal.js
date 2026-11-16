@@ -49,7 +49,7 @@ export class ProductReviewsModal {
             </button>
           </header>
           <div class="reviews-modal-body" id="modal-reviews-body">
-            <p style="color: #94a3b8; text-align: center;">Cargando valoraciones...</p>
+            <p style="color: var(--text-muted); text-align: center;">Cargando valoraciones...</p>
           </div>
         </div>
       `;
@@ -97,7 +97,7 @@ export class ProductReviewsModal {
     if (titleEl) titleEl.textContent = `Opiniones sobre ${titulo}`;
     if (subtitleEl) subtitleEl.textContent = 'Valoraciones reales de compradores verificados';
     if (bodyEl) {
-      bodyEl.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 2rem;">Cargando opiniones...</p>';
+      bodyEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Cargando opiniones...</p>';
     }
 
     try {
@@ -199,7 +199,7 @@ export class ProductReviewsModal {
           <div>
             <strong>✓ Ya has valorado este producto</strong>
             <p style="margin-top: 0.25rem;">Tu opinión de <strong>${previa?.puntuacion || 5} estrellas</strong> ya está publicada en la tienda.</p>
-            ${previa?.comentario ? `<p style="margin-top: 0.4rem; font-style: italic; color: #cbd5e1;">"${previa.comentario}"</p>` : ''}
+            ${previa?.comentario ? `<p style="margin-top: 0.4rem; font-style: italic; color: var(--text-muted);">"${previa.comentario}"</p>` : ''}
           </div>
         </div>
       `;

@@ -6,10 +6,12 @@
   <title>Pasarela de Pago Seguro con Tarjeta | TiendaOnline</title>
   <meta name="description" content="Tramita tu compra online de forma rápida y segura con tarjeta bancaria. Confirmación condicionada, reserva de existencias y autenticación reforzada 3D Secure.">
 
-  <!-- Tipografía moderna Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Tema común de la tienda (Feature 009) -->
+  <link rel="stylesheet" href="/src/styles/tema-ceramica.css">
 
   <!-- Estilos de la pasarela de pago -->
   <link rel="stylesheet" href="/src/styles/checkout.css">
@@ -17,20 +19,27 @@
 <body>
   <!-- Encabezado del sitio -->
   <header class="site-header" role="banner">
-    <div class="header-container">
-      <a href="/" class="brand-wrapper" id="link-home">
-        <span class="brand-icon" aria-hidden="true">🛍️</span>
-        <span class="brand-title">TiendaOnline</span>
+    <div class="site-header__inner">
+      <a href="/catalogo" class="site-header__brand" id="link-home" aria-label="TiendaOnline - Ir al catálogo">
+        <span class="site-header__logo" aria-hidden="true">🏺</span>
+        <span class="site-header__name">TiendaOnline</span>
       </a>
-      <div class="header-badge" id="badge-seguridad">
-        <span aria-hidden="true">🔒</span>
-        <span>Pasarela Bancaria Segura (PSD2 / TLS)</span>
-      </div>
+      <nav class="site-header__nav" aria-label="Navegación principal">
+        <a href="/catalogo" class="site-header__link">Catálogo</a>
+        <a href="/carrito" class="site-header__link" aria-current="page">Cesta</a>
+        <a href="/logistica" class="site-header__link">Envíos</a>
+        <a href="/cuenta" class="site-header__link">Mi Cuenta</a>
+        <a href="/admin/catalogo" class="site-header__link" id="nav-admin" hidden>Administración</a>
+      </nav>
     </div>
   </header>
 
   <!-- Contenedor Principal de Checkout -->
   <main class="main-content" role="main">
+    <div class="header-badge" id="badge-seguridad">
+      <span aria-hidden="true">🔒</span>
+      <span>Pasarela Bancaria Segura (PSD2 / TLS)</span>
+    </div>
     <a href="/catalogo" class="checkout-volver-enlace" id="link-volver-catalogo">← Volver al catálogo</a>
 
     <h1 class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">Pasarela de Pago Seguro con Tarjeta Bancaria</h1>
@@ -61,11 +70,11 @@
           </div>
           <div class="total-line">
             <span>Gastos de envío:</span>
-            <span class="font-bold text-success" style="color: #10b981;">Gratis</span>
+            <span class="font-bold text-success" style="color: var(--success-color);">Gratis</span>
           </div>
           <div class="total-line total-final">
             <span>Total a pagar:</span>
-            <span class="font-mono text-primary" id="label-total-sidebar" style="color: #818cf8;">45,00 €</span>
+            <span class="font-mono text-primary" id="label-total-sidebar" style="color: var(--accent-primary);">45,00 €</span>
           </div>
         </div>
       </aside>
@@ -377,5 +386,7 @@
       iniciarSesionCheckout(items);
     })();
   </script>
+  <!-- Enlace "Administración" visible solo para el rol administrador (Feature 009) -->
+  <script type="module" src="/src/components/site-header.js"></script>
 </body>
 </html>

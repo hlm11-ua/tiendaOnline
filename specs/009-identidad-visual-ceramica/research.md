@@ -36,13 +36,15 @@ Texto blanco sobre botón terracota: 5,67 (normal) y 7,70 (hover terracota oscur
 
 | Estado | Color |
 |--------|-------|
-| pendiente | ocre |
-| pagado | terracota |
+| pendiente | marrón neutro `#735C4B` |
+| pagado | terracota `#A84B2A` |
 | en preparación | marrón arcilla `#7A5C3E` |
-| salido de la tienda | ocre oscuro/mostaza sobre fondo suave |
-| entregado | verde oliva |
+| salido de la tienda | mostaza `#7A6410` |
+| entregado | verde oliva `#56652F` |
 
-Cada estado usa el color como texto/borde sobre un fondo del mismo tono al 12–15% de opacidad.
+Cada estado usa el color como texto/borde sobre un fondo del mismo tono al 13% de opacidad. Contraste del texto sobre ese fondo: 4,61 (pagado) a 5,17 (entregado), todos ≥ 4,5.
+
+*Ajuste durante la implementación*: "pendiente" pasa de ocre a marrón neutro porque ocre y mostaza eran casi indistinguibles; el ocre queda reservado para avisos.
 
 **Rationale**: Hoy `cuenta.css` y `logistica.css` asignan colores distintos al mismo estado ("salido" es índigo en uno y ámbar en otro). Un único mapa cumple FR-009.
 

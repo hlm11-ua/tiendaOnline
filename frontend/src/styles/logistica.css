@@ -1,51 +1,4 @@
-/* ==========================================================================
-   TiendaOnline - Módulo de Gestión Logística y Seguimiento (logistica.css)
-   Diseño moderno, accesible y responsivo para el taller y los clientes
-   ========================================================================== */
 
-:root {
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-
-  /* Colores */
-  --bg-primary: #0b0f19;
-  --bg-secondary: #111827;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-border-focus: rgba(99, 102, 241, 0.5);
-
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-
-  --accent-primary: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-
-  --prep-color: #38bdf8;
-  --prep-bg: rgba(56, 189, 248, 0.15);
-  --prep-border: rgba(56, 189, 248, 0.4);
-
-  --shipped-color: #f59e0b;
-  --shipped-bg: rgba(245, 158, 11, 0.15);
-  --shipped-border: rgba(245, 158, 11, 0.4);
-
-  --success-color: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.15);
-  --success-border: rgba(16, 185, 129, 0.4);
-
-  --error-color: #ef4444;
-  --error-bg: rgba(239, 68, 68, 0.15);
-  --error-border: rgba(239, 68, 68, 0.4);
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
-
-  --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-  --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-}
 
 * {
   box-sizing: border-box;
@@ -61,68 +14,6 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-/* Header */
-.site-header {
-  background: rgba(17, 24, 39, 0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--card-border);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-
-.header-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.brand-link {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: var(--text-main);
-}
-
-.brand-logo-icon {
-  font-size: 1.75rem;
-}
-
-.brand-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-
-.brand-badge {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.nav-link {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.95rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-}
-
-.nav-link:hover, .nav-link.active {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Contenedor principal */
@@ -168,8 +59,8 @@ body {
 
 .mode-tab-btn.active {
   background: var(--accent-gradient);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  color: var(--text-on-accent);
+  box-shadow: 0 4px 12px rgba(168, 75, 42, 0.3);
 }
 
 /* Panel de logística */
@@ -218,7 +109,7 @@ body {
 }
 
 .filter-tab {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(59, 42, 32, 0.03);
   border: 1px solid var(--card-border);
   color: var(--text-muted);
   padding: 0.4rem 0.85rem;
@@ -230,14 +121,14 @@ body {
 }
 
 .filter-tab:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-secondary);
   color: var(--text-main);
 }
 
 .filter-tab.active {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
-  color: #ffffff;
+  color: var(--text-on-accent);
 }
 
 /* Tabla de pedidos */
@@ -252,7 +143,7 @@ body {
 }
 
 .logistics-table th {
-  background: rgba(17, 24, 39, 0.6);
+  background: var(--bg-secondary);
   color: var(--text-muted);
   text-transform: uppercase;
   font-size: 0.72rem;
@@ -265,12 +156,12 @@ body {
 
 .logistics-table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--card-border);
   vertical-align: middle;
 }
 
 .order-table-row:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(59, 42, 32, 0.03);
 }
 
 .customer-info {
@@ -290,10 +181,10 @@ body {
 }
 
 .tracking-code {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  color: #a5b4fc;
+  color: var(--accent-primary);
 }
 
 /* Badges de estado */
@@ -305,31 +196,30 @@ body {
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: capitalize;
 }
 
 .badge-paid {
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
-  color: var(--success-color);
+  background: var(--status-pagado-bg);
+  border: 1px solid var(--status-pagado-border);
+  color: var(--status-pagado);
 }
 
 .badge-prep {
-  background: var(--prep-bg);
-  border: 1px solid var(--prep-border);
-  color: var(--prep-color);
+  background: var(--status-preparacion-bg);
+  border: 1px solid var(--status-preparacion-border);
+  color: var(--status-preparacion);
 }
 
 .badge-shipped {
-  background: var(--shipped-bg);
-  border: 1px solid var(--shipped-border);
-  color: var(--shipped-color);
+  background: var(--status-salido-bg);
+  border: 1px solid var(--status-salido-border);
+  color: var(--status-salido);
 }
 
 .badge-delivered {
-  background: rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.5);
-  color: #34d399;
+  background: var(--status-entregado-bg);
+  border: 1px solid var(--status-entregado-border);
+  color: var(--status-entregado);
 }
 
 /* Botones */
@@ -359,66 +249,66 @@ body {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: #ffffff;
+  color: var(--text-on-accent);
   border: none;
 }
 
 .btn-primary:hover {
   opacity: 0.95;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 12px rgba(168, 75, 42, 0.4);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-secondary);
   color: var(--text-main);
   border: 1px solid var(--card-border);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-secondary);
 }
 
 .btn-prep {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(122, 92, 62, 0.15);
+  color: var(--status-preparacion);
+  border: 1px solid rgba(122, 92, 62, 0.4);
 }
 
 .btn-prep:hover {
-  background: #38bdf8;
-  color: #0b0f19;
+  background: var(--status-preparacion);
+  color: var(--bg-primary);
 }
 
 .btn-ship {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(138, 90, 11, 0.15);
+  color: var(--warning-color);
+  border: 1px solid rgba(138, 90, 11, 0.4);
 }
 
 .btn-ship:hover {
-  background: #f59e0b;
-  color: #0b0f19;
+  background: var(--warning-color);
+  color: var(--bg-primary);
 }
 
 .btn-deliver {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(86, 101, 47, 0.15);
+  color: var(--success-color);
+  border: 1px solid rgba(86, 101, 47, 0.4);
 }
 
 .btn-deliver:hover {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--success-color);
+  color: var(--text-on-accent);
 }
 
 .btn-success {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--success-color);
+  color: var(--text-on-accent);
 }
 
 .btn-success:hover {
-  background: #059669;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background: var(--success-color);
+  box-shadow: 0 4px 12px rgba(86, 101, 47, 0.4);
 }
 
 .btn-outline {
@@ -429,7 +319,7 @@ body {
 
 .btn-outline:hover {
   color: var(--text-main);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--card-border);
 }
 
 .btn-ghost {
@@ -439,7 +329,7 @@ body {
 }
 
 .btn-ghost:hover {
-  color: #a5b4fc;
+  color: var(--accent-primary);
 }
 
 .actions-group {
@@ -487,7 +377,7 @@ body {
 
 .form-input, .form-select, .form-textarea {
   width: 100%;
-  background: rgba(17, 24, 39, 0.8);
+  background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   color: var(--text-main);
@@ -500,11 +390,11 @@ body {
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
   border-color: var(--card-border-focus);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(168, 75, 42, 0.2);
 }
 
 .tracking-details-card {
-  background: rgba(17, 24, 39, 0.6);
+  background: var(--bg-secondary);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
   padding: 1.75rem;
@@ -544,7 +434,7 @@ body {
   left: -50%;
   width: 100%;
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
   z-index: 1;
 }
 
@@ -570,20 +460,20 @@ body {
 }
 
 .step-completed .step-indicator {
-  background: #10b981;
-  border-color: #10b981;
-  color: #ffffff;
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: var(--text-on-accent);
 }
 
 .step-completed::before {
-  background: #10b981;
+  background: var(--success-color);
 }
 
 .step-current .step-indicator {
   background: var(--accent-primary);
-  border-color: #a5b4fc;
-  color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+  border-color: var(--accent-primary);
+  color: var(--text-on-accent);
+  box-shadow: 0 0 0 4px rgba(168, 75, 42, 0.3);
 }
 
 .step-upcoming .step-indicator {
@@ -591,7 +481,7 @@ body {
 }
 
 .shipment-badge-card {
-  background: rgba(30, 41, 59, 0.6);
+  background: var(--bg-secondary);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -612,8 +502,8 @@ body {
 }
 
 .delivery-confirmation-card {
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(86, 101, 47, 0.08);
+  border: 1px solid rgba(86, 101, 47, 0.3);
   border-radius: var(--radius-md);
   padding: 1.5rem;
   text-align: center;
@@ -624,8 +514,8 @@ body {
 }
 
 .delivery-completed-card {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(86, 101, 47, 0.12);
+  border: 1px solid rgba(86, 101, 47, 0.4);
   border-radius: var(--radius-md);
   padding: 1.25rem;
   display: flex;
@@ -641,7 +531,7 @@ body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(59, 42, 32, 0.45);
   backdrop-filter: blur(8px);
   z-index: 50;
 }
@@ -651,7 +541,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #111827;
+  background: var(--bg-secondary);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-modal);
@@ -692,7 +582,7 @@ body {
 
 .btn-close:hover {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
 }
 
 .modal-body {
@@ -708,7 +598,7 @@ body {
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
   border-top: 1px solid var(--card-border);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-secondary);
 }
 
 .form-group {
@@ -739,7 +629,7 @@ body {
 .alert-error {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
-  color: #fca5a5;
+  color: var(--error-color);
 }
 
 .hidden {
@@ -752,7 +642,7 @@ body {
 
 /* Visor de Correo Simulado */
 .notice-card {
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--bg-secondary);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -776,26 +666,26 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.5rem;
-  background: rgba(17, 24, 39, 0.6);
+  background: var(--bg-secondary);
   padding: 0.75rem;
   border-radius: var(--radius-sm);
   margin-bottom: 0.75rem;
 }
 
 .email-mockup-wrapper {
-  background: #050811;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
 .email-mockup-bar {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary);
   padding: 0.4rem 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--card-border);
 }
 
 .dot {
@@ -804,9 +694,9 @@ body {
   border-radius: 9999px;
 }
 
-.dot-red { background: #ef4444; }
-.dot-yellow { background: #f59e0b; }
-.dot-green { background: #10b981; }
+.dot-red { background: var(--error-color); }
+.dot-yellow { background: var(--warning-color); }
+.dot-green { background: var(--success-color); }
 
 .email-client-title {
   margin-left: 0.5rem;
@@ -817,7 +707,7 @@ body {
 .email-body-text {
   padding: 1rem;
   font-size: 0.8rem;
-  color: #e2e8f0;
+  color: var(--text-main);
   white-space: pre-wrap;
   line-height: 1.6;
 }
@@ -830,7 +720,7 @@ body {
 .text-sm { font-size: 0.875rem; }
 .text-lg { font-size: 1.125rem; }
 .text-muted { color: var(--text-muted); }
-.text-primary { color: #818cf8; }
+.text-primary { color: var(--accent-primary); }
 .text-success { color: var(--success-color); }
 .text-right { text-align: right; }
 .text-center { text-align: center; }
