@@ -279,12 +279,19 @@ class MemoryStore {
     const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@gmail.com').trim().toLowerCase();
     if (this.getAccountByEmail(adminEmail)) return;
 
-    const salt = Account.generateSalt();
+    // scrypt es deliberadamente costoso y síncrono: se calcula una sola vez por proceso y se
+    // reutiliza en cada reset() del almacén (las pruebas lo llaman antes de cada caso).
+    const password = process.env.ADMIN_PASSWORD || 'admin1234';
+    if (!this.adminCredentialCache || this.adminCredentialCache.password !== password) {
+      const salt = Account.generateSalt();
+      this.adminCredentialCache = { password, salt, passwordHash: Account.hashPassword(password, salt) };
+    }
+
     const admin = new Account({
       nombre: 'Administrador',
       email: adminEmail,
-      passwordHash: Account.hashPassword(process.env.ADMIN_PASSWORD || 'admin1234', salt),
-      salt,
+      passwordHash: this.adminCredentialCache.passwordHash,
+      salt: this.adminCredentialCache.salt,
       rol: CONSTANTS.ROLES.ADMIN
     });
 

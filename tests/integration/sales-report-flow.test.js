@@ -5,6 +5,15 @@ import { Order, OrderLine } from '../../backend/src/models/order.model.js';
 import { CONSTANTS } from '../../backend/src/config/constants.js';
 import { SalesReportService } from '../../backend/src/services/sales-report.service.js';
 
+// Fechas relativas al día de ejecución: con fechas fijas los pedidos acaban
+// saliendo del período "30_dias" y la prueba falla con el paso del tiempo.
+function fechaUtcHaceDias(dias, horas, minutos = 0) {
+  const fecha = new Date();
+  fecha.setUTCDate(fecha.getUTCDate() - dias);
+  fecha.setUTCHours(horas, minutos, 0, 0);
+  return fecha.toISOString();
+}
+
 describe('Pruebas de Integración: Agregaciones de Ventas, Ranking Top 5 y Exportación CSV', () => {
   beforeEach(() => {
     store.reset();
@@ -137,7 +146,7 @@ describe('Pruebas de Integración: Agregaciones de Ventas, Ranking Top 5 y Expor
   });
 
   it('debe generar el archivo CSV con formato español compatible con Excel (FR-005)', async () => {
-    const fechaTest = '2026-10-14T12:00:00.000Z';
+    const fechaTest = fechaUtcHaceDias(1, 12);
     const pedido = new Order({
       codigoReferencia: 'PED-20261014-TEST',
       clienteNombre: 'Comprador Test',

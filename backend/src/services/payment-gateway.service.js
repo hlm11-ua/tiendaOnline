@@ -23,14 +23,16 @@ export class PaymentGatewayService {
       marcaTarjeta = 'American Express';
     }
 
-    // Extraer últimos 4 si vienen en el token
-    const tokenMatch = cleanToken.match(/(\d{4})(_\d+)?$/);
-    if (tokenMatch) {
-      ultimosCuatro = tokenMatch[1];
+    // Token: tok_<marca>_<número de tarjeta>_<sufijo>. El escenario de prueba se decide por los
+    // últimos 4 dígitos del número de tarjeta, nunca por el sufijo (marca de tiempo), que puede
+    // contener por azar "0101", "0180" o "9999" y denegar una tarjeta válida.
+    const segmentoTarjeta = cleanToken.split('_').find(parte => /^\d{4,19}$/.test(parte));
+    if (segmentoTarjeta) {
+      ultimosCuatro = segmentoTarjeta.slice(-4);
     }
 
     // 1. Simulación de errores bancarios según tarjeta de prueba
-    if (cleanToken.includes('0101') || cleanToken.includes('insufficient_funds')) {
+    if (ultimosCuatro === '0101' || cleanToken.includes('insufficient_funds')) {
       const tx = new PaymentTransaction({
         id: transaccionId,
         pasarelaRef,
@@ -46,7 +48,7 @@ export class PaymentGatewayService {
       throw new AppError(tx.mensajeError, 400, 'FONDOS_INSUFICIENTES');
     }
 
-    if (cleanToken.includes('0180') || cleanToken.includes('denied')) {
+    if (ultimosCuatro === '0180' || cleanToken.includes('denied')) {
       const tx = new PaymentTransaction({
         id: transaccionId,
         pasarelaRef,
@@ -62,7 +64,7 @@ export class PaymentGatewayService {
       throw new AppError(tx.mensajeError, 400, 'TARJETA_DENEGADA');
     }
 
-    if (cleanToken.includes('9999') || cleanToken.includes('error')) {
+    if (ultimosCuatro === '9999' || cleanToken.includes('error')) {
       const tx = new PaymentTransaction({
         id: transaccionId,
         pasarelaRef,
