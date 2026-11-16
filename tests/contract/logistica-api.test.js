@@ -73,6 +73,42 @@ describe('Contratos de API Logística (/api/logistica)', () => {
       assert.equal(res.body.pedidos[0].estado, 'pagado');
     });
 
+    it('debe ordenar el listado por estado del flujo y, dentro de cada estado, por fecha más reciente (200, FR-001)', async () => {
+      const crear = (estado, fechaCreacion, transaccionId) => {
+        const pedido = new Order({
+          clienteNombre: 'Cliente Orden',
+          clienteEmail: 'orden@example.com',
+          total: 10.00,
+          estado,
+          fechaCreacion,
+          transaccionId
+        });
+        store.saveOrder(pedido);
+        return pedido.codigoReferencia;
+      };
+
+      // pedidoPrueba (pagado) se crea en beforeEach con la fecha actual
+      const entregado = crear(CONSTANTS.ORDER_STATUS.DELIVERED, '2026-11-15T10:00:00.000Z', 'tx-ord-1');
+      const salido = crear(CONSTANTS.ORDER_STATUS.SHIPPED, '2026-11-14T10:00:00.000Z', 'tx-ord-2');
+      const preparacionAntiguo = crear(CONSTANTS.ORDER_STATUS.IN_PREPARATION, '2026-11-01T10:00:00.000Z', 'tx-ord-3');
+      const preparacionReciente = crear(CONSTANTS.ORDER_STATUS.IN_PREPARATION, '2026-11-10T10:00:00.000Z', 'tx-ord-4');
+      const pagadoAntiguo = crear(CONSTANTS.ORDER_STATUS.PAID, '2026-10-20T10:00:00.000Z', 'tx-ord-5');
+
+      const res = await request('/api/logistica/pedidos');
+      assert.equal(res.status, 200);
+      assert.deepEqual(
+        res.body.pedidos.map(p => p.codigoReferencia),
+        [
+          pedidoPrueba.codigoReferencia,
+          pagadoAntiguo,
+          preparacionReciente,
+          preparacionAntiguo,
+          salido,
+          entregado
+        ]
+      );
+    });
+
     it('debe devolver lista vacía si ningún pedido coincide con el filtro de estado (200)', async () => {
       const res = await request('/api/logistica/pedidos?estado=entregado');
       assert.equal(res.status, 200);
@@ -119,6 +155,21 @@ describe('Contratos de API Logística (/api/logistica)', () => {
       assert.equal(res.body.pedido.envio.numeroSeguimiento, 'CORREOS-ES-123456');
       assert.ok(res.body.aviso, 'Debe devolver el aviso automático de salida generado');
       assert.equal(res.body.aviso.tipo, 'salida_almacen');
+    });
+
+    it('debe rechazar despachar un pedido "pagado" que no ha pasado por "en preparación" (400, FR-002)', async () => {
+      const res = await request(`/api/logistica/pedidos/${pedidoPrueba.codigoReferencia}/despachar`, {
+        method: 'POST',
+        body: JSON.stringify({
+          transportista: 'Correos de España',
+          numeroSeguimiento: 'CORREOS-ES-123456'
+        })
+      });
+
+      assert.equal(res.status, 400);
+      assert.equal(res.body.codigo, 'TRANSICION_ESTADO_INVALIDA');
+      assert.equal(store.getOrderByCode(pedidoPrueba.codigoReferencia).estado, 'pagado');
+      assert.equal(store.getOrderNotifications(pedidoPrueba.codigoReferencia).length, 0);
     });
 
     it('debe rechazar despachos con código de seguimiento menor a 6 caracteres (400)', async () => {

@@ -499,6 +499,82 @@ body {
 }
 
 /* Estado Vacío */
+/* Buzón de avisos de envío (Feature 007, FR-004) */
+.avisos-buzon {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.avisos-buzon h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.avisos-vacio {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.avisos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.aviso-item {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--shipped-color);
+  border-radius: var(--radius-md);
+  background: var(--shipped-bg);
+}
+
+.aviso-rectificacion_tracking {
+  border-left-color: var(--pending-color);
+  background: var(--pending-bg);
+}
+
+.aviso-confirmacion_entrega {
+  border-left-color: var(--success-color);
+  background: var(--success-bg);
+}
+
+.aviso-icono {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.aviso-contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.aviso-asunto {
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+.aviso-meta,
+.aviso-tracking {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.aviso-tracking code {
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
 .empty-state {
   text-align: center;
   padding: 4rem 1rem;
