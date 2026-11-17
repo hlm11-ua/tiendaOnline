@@ -2,7 +2,7 @@
 
 **Tienda online de artesanía española, especializada en cerámica**
 
-Equipo: 4 personas (`eab41-ua`, `ab336-ua`, `aps207-ua`, `hlm11-ua`) · Fecha de la memoria: 17 de noviembre de 2026 · Estado del código: rama `main`, commit `201333d`, más la rama `feat/demos-funcionalidades` (sin fusionar, véase [§11](#11-demo))
+Equipo: 4 personas (`eab41-ua`, `ab336-ua`, `aps207-ua`, `hlm11-ua`) · Fecha de la memoria: 17 de noviembre de 2026 · Estado del código: rama `feat/demos-funcionalidades`, que parte de `main` (commit `201333d`) y añade los arreglos encontrados al grabar las demos, la grabación de las demos y esta documentación; pendiente de fusionar en `main` (véase [§11](#11-demo))
 
 ---
 
