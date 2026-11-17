@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo de TiendaOnline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap" rel="stylesheet">
+<style>
+  /* Paleta del tema cerámica de la tienda (frontend/src/styles/tema-ceramica.css) */
+  :root {
+    --fondo: #FAF5EE; --panel: #FFFCF7; --texto: #3B2A20; --suave: #6A5242; --linea: #DCC8AF;
+    --acento: #A84B2A; --acento-hover: #8A3B1F; --acento-fondo: rgba(168, 75, 42, 0.12); --ocre: #8A5A0B;
+    --sombra: 0 8px 30px rgba(59, 42, 32, .16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fondo: #221812; --panel: #2E211A; --texto: #F3E9DC; --suave: #CDB8A3; --linea: #4A3829;
+      --acento: #E08A62; --acento-hover: #EBA07D; --acento-fondo: rgba(224, 138, 98, 0.16); --ocre: #E8B565;
+      --sombra: 0 8px 30px rgba(0, 0, 0, .4); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 16px/1.5 'Nunito Sans', system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 22px 28px 8px; max-width: 1400px; margin: 0 auto; }
+  .marca { display: flex; align-items: center; gap: 10px; }
+  .marca span { font-size: 28px; line-height: 1; }
+  h1 { font: 700 30px/1.2 'Fraunces', Georgia, "Times New Roman", serif; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--suave); max-width: 70ch; }
+  .modos { display: inline-flex; gap: 4px; margin: 18px 0 0; padding: 4px; background: var(--panel); border: 1px solid var(--linea); border-radius: 999px; }
+  .modos button { border: 0; background: none; color: var(--suave); font: 700 14px 'Nunito Sans', system-ui, sans-serif; padding: 8px 18px; border-radius: 999px; cursor: pointer; }
+  .modos button[aria-pressed="true"] { background: var(--acento); color: #fff; }
+  main { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 16px 28px 56px; align-items: start; }
+  @media (max-width: 960px) { main { grid-template-columns: 1fr; padding: 12px 16px 40px; } header { padding: 18px 16px 4px; } }
+  nav.indice { background: var(--panel); border: 1px solid var(--linea); border-radius: 16px; padding: 8px; max-height: calc(100vh - 32px); overflow: auto; position: sticky; top: 16px; }
+  @media (max-width: 960px) { nav.indice { position: static; max-height: 320px; } }
+  .grupo { margin: 10px 8px 4px; font: 800 11px/1 'Nunito Sans', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--acento); }
+  .item { display: block; width: 100%; text-align: left; border: 0; background: none; color: inherit; font: inherit; padding: 9px 12px; border-radius: 10px; cursor: pointer; }
+  .item:hover { background: var(--acento-fondo); }
+  .item[aria-current="true"] { background: var(--acento-fondo); box-shadow: inset 3px 0 0 var(--acento); }
+  .item b { display: block; font-weight: 700; font-size: 14.5px; }
+  .item small { color: var(--suave); font-size: 12.5px; }
+  .escena { min-width: 0; }
+  video { width: 100%; aspect-ratio: 16 / 9; background: #1E1510; border-radius: 14px; display: block; box-shadow: var(--sombra); }
+  .barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0 0; color: var(--suave); font-size: 14px; }
+  .barra button, .barra select { font: inherit; font-size: 14px; color: var(--texto); background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  .barra button:hover { border-color: var(--acento); color: var(--acento); }
+  .barra .actual { margin-left: auto; font-weight: 700; color: var(--texto); }
+  .ficha { background: var(--panel); border: 1px solid var(--linea); border-radius: 16px; padding: 20px 24px; margin-top: 18px; }
+  .ficha .k { font: 800 12px/1 'Nunito Sans', system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--acento); }
+  .ficha h2 { font: 700 26px/1.25 'Fraunces', Georgia, serif; margin: 6px 0 8px; }
+  .ficha p { margin: 0; max-width: 78ch; }
+  .ficha p em { font-style: normal; font-weight: 800; }
+  .ficha .meta { margin-top: 10px; color: var(--suave); font-size: 14px; }
+  ol.caps { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 4px; }
+  ol.caps button { width: 100%; display: grid; grid-template-columns: 30px 1fr auto; gap: 8px; align-items: baseline; text-align: left; border: 0; background: none; color: inherit; font: inherit; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+  ol.caps button:hover { background: var(--acento-fondo); }
+  ol.caps button[aria-current="true"] { background: var(--acento-fondo); font-weight: 700; }
+  ol.caps .n { color: var(--ocre); font-weight: 800; }
+  ol.caps .t { color: var(--suave); font-variant-numeric: tabular-nums; font-size: 13px; }
+  :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+  footer { max-width: 1400px; margin: 0 auto; padding: 0 28px 40px; color: var(--suave); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca"><span aria-hidden="true">🏺</span><h1>TiendaOnline · Demo de la tienda</h1></div>
+  <p>Todas las historias de usuario y sus escenarios, grabados sobre la tienda real. Mira la demo completa o elige una historia y salta directamente a cada escenario.</p>
+  <div class="modos" role="group" aria-label="Qué ver">
+    <button id="m-completa" aria-pressed="true">Demo completa</button>
+    <button id="m-historia" aria-pressed="false">Por historia</button>
+  </div>
+</header>
+<main>
+  <nav class="indice" id="indice" aria-label="Historias"></nav>
+  <section class="escena">
+    <video id="v" controls preload="metadata" playsinline></video>
+    <div class="barra">
+      <button id="ant">⏮ Escenario anterior</button>
+      <button id="sig">Escenario siguiente ⏭</button>
+      <label>Velocidad <select id="vel"><option value="0.75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></label>
+      <span class="actual" id="actual"></span>
+    </div>
+    <div class="ficha" id="ficha"></div>
+  </section>
+</main>
+<footer id="pie"></footer>
+<script src="datos.js"></script>
+<script>
+(() => {
+  const D = window.DEMO;
+  const $ = (id) => document.getElementById(id);
+  const v = $('v');
+  let modo = 'completa';
+  let actual = 0; // índice de historia
+
+  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const por = {};
+  D.historias.forEach((h, i) => (por[h.spec] ??= []).push(i));
+
+  function pintarIndice() {
+    const ind = $('indice');
+    ind.innerHTML = '';
+    Object.entries(por).forEach(([spec, idxs]) => {
+      const g = document.createElement('div');
+      g.className = 'grupo';
+      g.textContent = spec;
+      ind.append(g);
+      idxs.forEach((i) => {
+        const h = D.historias[i];
+        const b = document.createElement('button');
+        b.className = 'item';
+        b.dataset.i = i;
+        b.innerHTML = `<b>${h.titulo}</b><small>${h.rol} · ${h.escenarios.length} escenarios · ${mmss(h.duracion)}</small>`;
+        b.onclick = () => elegir(i, 0, true);
+        ind.append(b);
+      });
+    });
+  }
+
+  /** Escenarios de una historia, con la presentación como escenario 0. */
+  function escenarios(i) {
+    const h = D.historias[i];
+    return [{ titulo: 'Presentación de la historia', t: 0 }, ...h.escenarios].map((e, k) => ({ ...e, n: k }));
+  }
+
+  function cargar(src, t, reproducir) {
+    const ya = v.getAttribute('src') === src;
+    const ir = () => { v.currentTime = t; if (reproducir) v.play().catch(() => {}); };
+    if (ya && v.readyState > 0) return ir();
+    v.src = src;
+    v.addEventListener('loadedmetadata', ir, { once: true });
+  }
+
+  function elegir(i, k, reproducir) {
+    actual = i;
+    const h = D.historias[i];
+    const e = escenarios(i)[k];
+    if (modo === 'completa') cargar(D.completa, h.inicio + e.t, reproducir);
+    else { v.poster = h.poster; cargar(h.video, e.t, reproducir); }
+    ficha();
+  }
+
+  function posicionActual() {
+    const t = v.currentTime;
+    if (modo === 'completa') {
+      let i = D.historias.findIndex((h) => t < h.inicio + h.duracion);
+      if (i < 0) i = D.historias.length - 1;
+      return { i, t: t - D.historias[i].inicio };
+    }
+    return { i: actual, t };
+  }
+
+  function escenarioEn(i, t) {
+    const lista = escenarios(i);
+    let k = 0;
+    lista.forEach((e) => { if (t >= e.t - 0.2) k = e.n; });
+    return k;
+  }
+
+  function ficha() {
+    const h = D.historias[actual];
+    const { t } = posicionActual();
+    const k = escenarioEn(actual, t);
+    $('ficha').innerHTML = `
+      <div class="k">${h.spec}</div>
+      <h2>${h.titulo}</h2>
+      <p>${h.historia}</p>
+      <div class="meta">${h.rol} · ${h.escenarios.length} escenarios · ${mmss(h.duracion)}</div>
+      <ol class="caps">${escenarios(actual).map((e) => `
+        <li><button data-k="${e.n}" ${e.n === k ? 'aria-current="true"' : ''}>
+          <span class="n">${e.n === 0 ? '▶' : e.n}</span><span>${e.titulo}</span><span class="t">${mmss(e.t)}</span>
+        </button></li>`).join('')}</ol>`;
+    $('ficha').querySelectorAll('button[data-k]').forEach((b) => (b.onclick = () => elegir(actual, Number(b.dataset.k), true)));
+    document.querySelectorAll('.item').forEach((b) => b.setAttribute('aria-current', String(Number(b.dataset.i) === actual)));
+    $('actual').textContent = k === 0 ? 'Presentación' : `Escenario ${k} de ${h.escenarios.length}`;
+  }
+
+  function seguir() {
+    const { i, t } = posicionActual();
+    if (i !== actual || modo === 'completa') {
+      const cambia = i !== actual;
+      actual = i;
+      if (cambia) { ficha(); return; }
+    }
+    const k = escenarioEn(actual, t);
+    const marcado = $('ficha').querySelector('[aria-current="true"]');
+    if (!marcado || Number(marcado.dataset.k) !== k) ficha();
+  }
+
+  function salto(d) {
+    const { i, t } = posicionActual();
+    const k = escenarioEn(i, t) + d;
+    const n = escenarios(i).length;
+    if (k >= 0 && k < n) return elegir(i, k, true);
+    const j = i + Math.sign(d);
+    if (j >= 0 && j < D.historias.length) elegir(j, d > 0 ? 0 : escenarios(j).length - 1, true);
+  }
+
+  function poner(m) {
+    // La posición se lee antes de cambiar de modo: el segundo de la demo completa no vale en el vídeo de la historia
+    const { t } = posicionActual();
+    const k = escenarioEn(actual, Math.max(0, t));
+    modo = m;
+    $('m-completa').setAttribute('aria-pressed', String(m === 'completa'));
+    $('m-historia').setAttribute('aria-pressed', String(m === 'historia'));
+    elegir(actual, k, false);
+  }
+
+  $('m-completa').onclick = () => poner('completa');
+  $('m-historia').onclick = () => poner('historia');
+  $('ant').onclick = () => salto(-1);
+  $('sig').onclick = () => salto(1);
+  $('vel').onchange = (e) => (v.playbackRate = Number(e.target.value));
+  v.addEventListener('timeupdate', seguir);
+  v.addEventListener('ratechange', () => ($('vel').value = String(v.playbackRate)));
+  v.addEventListener('ended', () => { if (modo === 'historia' && actual < D.historias.length - 1) elegir(actual + 1, 0, true); });
+  addEventListener('keydown', (e) => {
+    if (e.target.matches('select, input')) return;
+    if (e.key === 'n') salto(1);
+    if (e.key === 'p') salto(-1);
+  });
+
+  const totalEsc = D.historias.reduce((a, h) => a + h.escenarios.length, 0);
+  $('pie').textContent = `${D.historias.length} historias · ${totalEsc} escenarios · ${mmss(D.duracion)} de demo. Atajos: «n» siguiente escenario, «p» anterior. Generado el ${new Date(D.generado).toLocaleString('es-ES')}.`;
+  pintarIndice();
+  v.poster = D.historias[0].poster;
+  elegir(0, 0, false);
+})();
+</script>
+</body>
+</html>
