@@ -147,14 +147,15 @@
 
     const productForm = new ProductForm({
       containerId: 'product-form-container',
-      onSave: async (productoData) => {
+      // ProductForm llama a onSave(idProducto, datos): idProducto es null en un alta
+      onSave: async (productoId, productoData) => {
         try {
-          if (productForm.currentProductId) {
-            await CatalogAdminApiService.actualizarProducto(productForm.currentProductId, productoData);
-            mostrarFeedback(`Producto "${productoData.nombre}" actualizado con éxito.`);
+          if (productoId) {
+            await CatalogAdminApiService.actualizarProducto(productoId, productoData);
+            mostrarFeedback(`Producto "${productoData.titulo}" actualizado con éxito.`);
           } else {
             await CatalogAdminApiService.crearProducto(productoData);
-            mostrarFeedback(`Producto "${productoData.nombre}" dado de alta con éxito.`);
+            mostrarFeedback(`Producto "${productoData.titulo}" dado de alta con éxito.`);
           }
           formContainer.classList.add('hidden');
           await cargarDatos();

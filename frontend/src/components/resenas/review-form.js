@@ -16,11 +16,8 @@ export class ReviewForm {
       : container;
     this.productoId = options.productoId;
     this.reviewApiService = options.reviewApiService;
-    this.userInfo = options.userInfo || {
-      usuarioId: localStorage.getItem('usuarioId') || 'usr-comprador',
-      usuarioNombre: localStorage.getItem('usuarioNombre') || 'Comprador verificado',
-      usuarioEmail: localStorage.getItem('usuarioEmail') || 'comprador@example.com'
-    };
+    // La identidad la aporta el modal a partir de la sesión de «Mi Cuenta»
+    this.userInfo = options.userInfo || { usuarioId: null, usuarioNombre: null, usuarioEmail: null };
     this.onSuccess = options.onSuccess || (() => {});
     this.isSubmitting = false;
   }

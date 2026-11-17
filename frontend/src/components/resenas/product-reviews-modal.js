@@ -1,4 +1,5 @@
 import { ReviewApiService } from '../../services/review-api.service.js';
+import { AccountApiService } from '../../services/account-api.service.js';
 import { ReviewForm } from './review-form.js';
 
 /**
@@ -15,13 +16,23 @@ export class ProductReviewsModal {
     this.onUpdate = options.onUpdate || (() => {});
     this.modalEl = null;
     this.productoActual = null;
-    this.userInfo = {
-      usuarioId: localStorage.getItem('usuarioId') || 'usr-comprador',
-      usuarioNombre: localStorage.getItem('usuarioNombre') || 'Comprador verificado',
-      usuarioEmail: localStorage.getItem('usuarioEmail') || 'comprador@example.com'
-    };
+    this.accountService = options.accountService || new AccountApiService();
 
     this.init();
+  }
+
+  /**
+   * Identidad del comprador con la sesión iniciada en «Mi Cuenta» (Feature 004).
+   * Se lee en cada apertura para reflejar inicios y cierres de sesión; sin sesión no hay identidad
+   * y el servidor responde que no se puede valorar.
+   */
+  get userInfo() {
+    const usuario = this.accountService.getUser();
+    return {
+      usuarioId: usuario?.id || null,
+      usuarioNombre: usuario?.nombre || null,
+      usuarioEmail: usuario?.email || null
+    };
   }
 
   /**

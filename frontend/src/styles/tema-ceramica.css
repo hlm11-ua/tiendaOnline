@@ -116,6 +116,8 @@
 
 html {
   background: var(--bg-primary);
+  /* La cabecera es fija: al desplazarse a un elemento (p. ej. un mensaje de error) se deja hueco para ella */
+  scroll-padding-top: 96px;
 }
 
 body {
